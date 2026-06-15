@@ -45,8 +45,8 @@
         "Verify grant and deny paths on Android emulator"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Accompanist Permissions (0.36.0) gates the Camera tab on CAMERA + ACCESS_FINE_LOCATION. Auto-requests on first entry via LaunchedEffect; shows rationale UI when recoverably denied and a Settings deep-link empty state when permanently denied (shouldShowRationale==false after a request). Granted -> camera placeholder. Verified all three paths (dialog, permanently-denied empty state, granted) on emulator-5554; no crash."
     },
     {
       "id": "US-004",

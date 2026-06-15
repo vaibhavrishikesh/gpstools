@@ -10,4 +10,11 @@
     <string name="camera_placeholder">Camera preview coming soon</string>
     <string name="gallery_placeholder">Your geotagged photos will appear here</string>
     <string name="settings_placeholder">Settings coming soon</string>
+
+    <!-- Camera/location permissions (US-003) -->
+    <string name="permission_title">Camera &amp; location needed</string>
+    <string name="permission_rationale">gpstools stamps each photo with where and when it was taken. To do that, it needs access to your camera and location.</string>
+    <string name="permission_denied_body">Camera and location are turned off. Open Settings to grant them, then come back to start capturing geotagged photos.</string>
+    <string name="permission_grant">Grant permissions</string>
+    <string name="permission_open_settings">Open settings</string>
 </resources>
