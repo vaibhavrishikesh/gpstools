@@ -1,0 +1,353 @@
+package com.gpstools.camera.media
+
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Typeface
+import com.gpstools.camera.settings.CoordinateFormat
+import com.gpstools.camera.settings.TimeFormat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+/**
+ * The information burned onto a captured photo as a location stamp (US-007).
+ * [timestamp] is captured at shutter-press time. Location fields are nullable so a
+ * photo taken before a fix is available still gets a date/time stamp.
+ *
+ * [projectName] and [note] are the user's custom fields (US-010); blank/empty
+ * values are simply not rendered. The optional logo image is passed separately to
+ * [drawStamp] since it's a bitmap rather than a value.
+ *
+ * [coordinateFormat] and [timeFormat] (US-014) are snapshot from the user's
+ * Settings at capture time so the stamp honours their preferred lat/long notation
+ * and clock.
+ */
+data class StampData(
+    val timestamp: Date,
+    val latitude: Double?,
+    val longitude: Double?,
+    val accuracyMeters: Float?,
+    val address: String?,
+    val projectName: String? = null,
+    val note: String? = null,
+    val coordinateFormat: CoordinateFormat = CoordinateFormat.DEFAULT,
+    val timeFormat: TimeFormat = TimeFormat.DEFAULT,
+)
+
+/** Reference width the stamp's type sizes are tuned against; everything scales from it. */
+private const val REFERENCE_WIDTH = 1080f
+/** Side length of the square map thumbnail, in REFERENCE_WIDTH units (scaled at draw). */
+private const val MAP_SIZE = 200f
+/** Larger map for the Field-Report template (drawn on the left). */
+private const val FIELD_MAP_SIZE = 240f
+/** Square box the logo is fitted into, in REFERENCE_WIDTH units (top-right corner). */
+private const val LOGO_SIZE = 150f
+/** Accent colour used for the Field-Report header band + row labels. */
+private val FIELD_ACCENT = Color.rgb(255, 193, 7)
+
+/**
+ * Draws [stamp] onto [source] in the style of [template] (US-009) and returns the
+ * composited bitmap. Type sizes scale with the image width so the stamp stays
+ * readable at any resolution, and layouts span the full width so they render
+ * correctly for both portrait and landscape captures. [source] is assumed to
+ * already be rotated upright (see PhotoStorage.toUprightBitmap).
+ *
+ * [mapThumbnail] is composited by templates whose [StampTemplate.usesMap] is true;
+ * when it's null (offline / no fix) those layouts fall back to text spanning the
+ * full width.
+ *
+ * [logo] (US-010), when present, is drawn into the top-right corner over a subtle
+ * backing so it stays visible on any background, independent of the template.
+ */
+fun drawStamp(
+    source: Bitmap,
+    stamp: StampData,
+    template: StampTemplate = StampTemplate.DEFAULT,
+    mapThumbnail: Bitmap? = null,
+    logo: Bitmap? = null,
+): Bitmap {
+    val result = if (source.isMutable && source.config == Bitmap.Config.ARGB_8888) {
+        source
+    } else {
+        source.copy(Bitmap.Config.ARGB_8888, true)
+    }
+    val canvas = Canvas(result)
+    when (template) {
+        StampTemplate.CLASSIC -> drawClassic(canvas, result, stamp, mapThumbnail)
+        StampTemplate.MINIMAL -> drawMinimal(canvas, result, stamp)
+        StampTemplate.FIELD_REPORT -> drawFieldReport(canvas, result, stamp, mapThumbnail)
+    }
+    if (logo != null) drawLogo(canvas, result, logo)
+    return result
+}
+
+// --- Classic ---------------------------------------------------------------
+
+/**
+ * Full-width semi-transparent panel at the bottom: bold wrapped address, the
+ * coordinates line, then date/time, with the map thumbnail (when present) on the
+ * right and text wrapped in the remaining width.
+ */
+private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?) {
+    val width = result.width
+    val height = result.height
+    val scale = width / REFERENCE_WIDTH
+
+    val pad = 22f * scale
+    val lineSpacing = 10f * scale
+    val shadow = 3f * scale
+
+    val titlePaint = paint(34f * scale, Typeface.SANS_SERIF, Typeface.BOLD, shadow)
+    val bodyPaint = paint(28f * scale, Typeface.SANS_SERIF, Typeface.NORMAL, shadow)
+    val monoPaint = paint(28f * scale, Typeface.MONOSPACE, Typeface.NORMAL, shadow)
+    val notePaint = paint(26f * scale, Typeface.SANS_SERIF, Typeface.ITALIC, shadow)
+
+    val mapSize = if (mapThumbnail != null) MAP_SIZE * scale else 0f
+    val mapGap = if (mapThumbnail != null) pad else 0f
+    val maxTextWidth = width - 2 * pad - mapSize - mapGap
+
+    val lines = mutableListOf<Pair<String, Paint>>()
+    stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
+        wrapText(name, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
+    }
+    stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
+        wrapText(addr, bodyPaint, maxTextWidth).forEach { lines += it to bodyPaint }
+    }
+    coordinatesLine(stamp)?.let { lines += it to monoPaint }
+    lines += dateLine(stamp) to bodyPaint
+    stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
+        wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
+    }
+
+    val textHeight = measureLines(lines, lineSpacing)
+    val contentHeight = maxOf(textHeight, mapSize)
+    val panelTop = height - (contentHeight + 2 * pad)
+
+    canvas.drawRect(0f, panelTop, width.toFloat(), height.toFloat(), panelFill(150))
+    drawLines(canvas, lines, pad, panelTop + pad, lineSpacing)
+
+    if (mapThumbnail != null) {
+        val mapLeft = width - pad - mapSize
+        val mapTop = panelTop + (contentHeight + 2 * pad - mapSize) / 2f
+        drawMap(canvas, mapThumbnail, RectF(mapLeft, mapTop, mapLeft + mapSize, mapTop + mapSize), scale)
+    }
+}
+
+// --- Minimal ---------------------------------------------------------------
+
+/**
+ * Compact translucent strip hugging the bottom: just the coordinates and date/time
+ * on a single short panel anchored bottom-left. No address, no map — the essentials.
+ */
+private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData) {
+    val width = result.width
+    val height = result.height
+    val scale = width / REFERENCE_WIDTH
+
+    val pad = 16f * scale
+    val lineSpacing = 6f * scale
+    val shadow = 3f * scale
+
+    val monoPaint = paint(26f * scale, Typeface.MONOSPACE, Typeface.NORMAL, shadow)
+    val bodyPaint = paint(24f * scale, Typeface.SANS_SERIF, Typeface.NORMAL, shadow)
+    val titlePaint = paint(26f * scale, Typeface.SANS_SERIF, Typeface.BOLD, shadow)
+    val notePaint = paint(24f * scale, Typeface.SANS_SERIF, Typeface.ITALIC, shadow)
+
+    // Minimal stays compact, but still honours the user's custom fields when set.
+    val maxTextWidth = width - 2 * pad
+    val lines = mutableListOf<Pair<String, Paint>>()
+    stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
+        wrapText(name, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
+    }
+    coordinatesLine(stamp)?.let { lines += it to monoPaint }
+    lines += dateLine(stamp) to bodyPaint
+    stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
+        wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
+    }
+
+    val textHeight = measureLines(lines, lineSpacing)
+    val textWidth = lines.maxOf { (text, paint) -> paint.measureText(text) }
+    val panelWidth = minOf(width.toFloat(), textWidth + 2 * pad)
+    val panelTop = height - (textHeight + 2 * pad)
+
+    canvas.drawRect(0f, panelTop, panelWidth, height.toFloat(), panelFill(110))
+    drawLines(canvas, lines, pad, panelTop + pad, lineSpacing)
+}
+
+// --- Field-Report ----------------------------------------------------------
+
+/**
+ * Documentation-style layout: an accent header band across the top of the panel,
+ * a larger map thumbnail on the LEFT, and labelled rows (ADDRESS / COORDINATES /
+ * ACCURACY / DATE-TIME) on the right so it reads like a proof record.
+ */
+private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?) {
+    val width = result.width
+    val height = result.height
+    val scale = width / REFERENCE_WIDTH
+
+    val pad = 22f * scale
+    val lineSpacing = 8f * scale
+    val shadow = 3f * scale
+
+    val headerPaint = paint(26f * scale, Typeface.SANS_SERIF, Typeface.BOLD, 0f).apply {
+        color = Color.BLACK
+        letterSpacing = 0.15f
+    }
+    val labelPaint = paint(20f * scale, Typeface.SANS_SERIF, Typeface.BOLD, shadow).apply {
+        color = FIELD_ACCENT
+        letterSpacing = 0.08f
+    }
+    val valuePaint = paint(26f * scale, Typeface.SANS_SERIF, Typeface.NORMAL, shadow)
+    val monoPaint = paint(26f * scale, Typeface.MONOSPACE, Typeface.NORMAL, shadow)
+
+    val headerHeight = headerPaint.descent() - headerPaint.ascent() + pad
+
+    val mapSize = if (mapThumbnail != null) FIELD_MAP_SIZE * scale else 0f
+    val mapGap = if (mapThumbnail != null) pad else 0f
+    val textLeft = pad + mapSize + mapGap
+    val maxTextWidth = width - textLeft - pad
+
+    // Each row is an optional accent label followed by one or more value lines.
+    val rows = mutableListOf<Pair<String, Paint>>()
+    stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
+        rows += "PROJECT / SITE" to labelPaint
+        wrapText(name, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
+    }
+    stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
+        rows += "ADDRESS" to labelPaint
+        wrapText(addr, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
+    }
+    coordinatesLine(stamp)?.let {
+        rows += "COORDINATES" to labelPaint
+        rows += it to monoPaint
+    }
+    rows += "DATE / TIME" to labelPaint
+    rows += dateLine(stamp) to valuePaint
+    stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
+        rows += "NOTE" to labelPaint
+        wrapText(note, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
+    }
+
+    val rowsHeight = measureLines(rows, lineSpacing)
+    val bodyHeight = maxOf(rowsHeight, mapSize)
+    val panelTop = height - (headerHeight + bodyHeight + 2 * pad)
+
+    // Panel + header band.
+    canvas.drawRect(0f, panelTop, width.toFloat(), height.toFloat(), panelFill(175))
+    canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + headerHeight, Paint().apply { color = FIELD_ACCENT })
+    canvas.drawText("FIELD REPORT", pad, panelTop + pad / 2f - headerPaint.ascent(), headerPaint)
+
+    val bodyTop = panelTop + headerHeight + pad
+    drawLines(canvas, rows, textLeft, bodyTop, lineSpacing)
+
+    if (mapThumbnail != null) {
+        val mapTop = bodyTop + (bodyHeight - mapSize) / 2f
+        drawMap(canvas, mapThumbnail, RectF(pad, mapTop, pad + mapSize, mapTop + mapSize), scale)
+    }
+}
+
+// --- Shared helpers --------------------------------------------------------
+
+private fun paint(size: Float, family: Typeface, style: Int, shadow: Float): Paint =
+    Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textSize = size
+        typeface = Typeface.create(family, style)
+        if (shadow > 0f) setShadowLayer(shadow, 0f, 0f, Color.BLACK)
+    }
+
+private fun panelFill(alpha: Int): Paint = Paint().apply { color = Color.argb(alpha, 0, 0, 0) }
+
+/** Total height of [lines] including [lineSpacing] between them. */
+private fun measureLines(lines: List<Pair<String, Paint>>, lineSpacing: Float): Float {
+    var h = 0f
+    lines.forEachIndexed { index, (_, paint) ->
+        h += paint.descent() - paint.ascent()
+        if (index < lines.size - 1) h += lineSpacing
+    }
+    return h
+}
+
+/** Draws each (text, paint) line stacked from [top], left-aligned at [left]. */
+private fun drawLines(canvas: Canvas, lines: List<Pair<String, Paint>>, left: Float, top: Float, lineSpacing: Float) {
+    var y = top
+    lines.forEach { (text, paint) ->
+        canvas.drawText(text, left, y - paint.ascent(), paint)
+        y += (paint.descent() - paint.ascent()) + lineSpacing
+    }
+}
+
+/** Draws [map] into [dst] (FILTER_BITMAP) with a white border. */
+private fun drawMap(canvas: Canvas, map: Bitmap, dst: RectF, scale: Float) {
+    canvas.drawBitmap(map, null, dst, Paint(Paint.FILTER_BITMAP_FLAG))
+    val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 2f * scale
+        color = Color.WHITE
+    }
+    canvas.drawRect(dst, borderPaint)
+}
+
+/**
+ * Draws the user's [logo] (US-010) into the top-right corner, fitted into a
+ * LOGO_SIZE square (preserving aspect ratio) over a subtle rounded backing so it
+ * stays visible regardless of the underlying photo. Independent of the template.
+ */
+private fun drawLogo(canvas: Canvas, result: Bitmap, logo: Bitmap) {
+    val width = result.width
+    val scale = width / REFERENCE_WIDTH
+    val pad = 22f * scale
+    val box = LOGO_SIZE * scale
+
+    // Fit within the square box, preserving aspect ratio.
+    val aspect = logo.width.toFloat() / logo.height.toFloat()
+    val drawW = if (aspect >= 1f) box else box * aspect
+    val drawH = if (aspect >= 1f) box / aspect else box
+
+    val right = width - pad
+    val left = right - drawW
+    val top = pad
+    val dst = RectF(left, top, left + drawW, top + drawH)
+
+    val bgPad = 8f * scale
+    val radius = 10f * scale
+    canvas.drawRoundRect(
+        RectF(dst.left - bgPad, dst.top - bgPad, dst.right + bgPad, dst.bottom + bgPad),
+        radius, radius, panelFill(120),
+    )
+    canvas.drawBitmap(logo, null, dst, Paint(Paint.FILTER_BITMAP_FLAG))
+}
+
+private fun coordinatesLine(stamp: StampData): String? {
+    val lat = stamp.latitude ?: return null
+    val lon = stamp.longitude ?: return null
+    val base = stamp.coordinateFormat.format(lat, lon)
+    val accuracy = stamp.accuracyMeters?.let { String.format(Locale.US, "  ±%d m", it.toInt()) } ?: ""
+    return base + accuracy
+}
+
+private fun dateLine(stamp: StampData): String =
+    SimpleDateFormat(stamp.timeFormat.datePattern, Locale.getDefault()).format(stamp.timestamp)
+
+/** Greedily wraps [text] to fit [maxWidth] under [paint]; never loops on long words. */
+private fun wrapText(text: String, paint: Paint, maxWidth: Float): List<String> {
+    val words = text.split(" ").filter { it.isNotEmpty() }
+    if (words.isEmpty()) return emptyList()
+    val lines = mutableListOf<String>()
+    var current = StringBuilder()
+    for (word in words) {
+        val candidate = if (current.isEmpty()) word else "$current $word"
+        if (current.isEmpty() || paint.measureText(candidate) <= maxWidth) {
+            current = StringBuilder(candidate)
+        } else {
+            lines += current.toString()
+            current = StringBuilder(word)
+        }
+    }
+    if (current.isNotEmpty()) lines += current.toString()
+    return lines
+}

@@ -1,0 +1,137 @@
+<resources>
+    <string name="app_name">gpstools</string>
+
+    <!-- Bottom navigation -->
+    <string name="tab_camera">Camera</string>
+    <string name="tab_gallery">Gallery</string>
+    <string name="tab_map">Map</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Settings — language (US-013) -->
+    <string name="settings_language">Language</string>
+    <string name="settings_language_summary">Choose the app language. \"System default\" follows your device setting.</string>
+    <string name="settings_language_system">System default</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_hindi">हिन्दी</string>
+
+    <!-- Settings — formats / NavIC / about (US-014) -->
+    <string name="settings_coord_format">Coordinate format</string>
+    <string name="settings_coord_format_summary">How latitude and longitude are written on the stamp.</string>
+    <string name="settings_coord_decimal">Decimal degrees (12.971599, 77.594566)</string>
+    <string name="settings_coord_dms">Degrees, minutes, seconds (12°58\'17.8\"N)</string>
+    <string name="settings_time_format">Time format</string>
+    <string name="settings_time_format_summary">Clock used for the date/time on the stamp.</string>
+    <string name="settings_time_24">24-hour (14:30:00)</string>
+    <string name="settings_time_12">12-hour (02:30:00 PM)</string>
+    <string name="settings_navic_title">Location accuracy &amp; NavIC</string>
+    <string name="settings_navic_body">gpstools uses your device\'s GNSS hardware for high-accuracy positioning. Most phones sold in India support NavIC (IRNSS), India\'s own satellite navigation system, alongside GPS, GLONASS, Galileo and BeiDou. Using more constellations means a faster, more reliable fix — especially across India. The accuracy shown on the stamp (±N m) is the device\'s own estimate; NavIC support and real-world accuracy depend on your phone and surroundings (open sky is best).</string>
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_version">Version %1$s</string>
+    <string name="settings_about_tagline">gpstools — geotag GPS camera with proof-ready location stamps.</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
+
+    <!-- Camera/location permissions (US-003) -->
+    <string name="permission_title">Camera &amp; location needed</string>
+    <string name="permission_rationale">gpstools stamps each photo with where and when it was taken. To do that, it needs access to your camera and location.</string>
+    <string name="permission_denied_body">Camera and location are turned off. Open Settings to grant them, then come back to start capturing geotagged photos.</string>
+    <string name="permission_grant">Grant permissions</string>
+    <string name="permission_open_settings">Open settings</string>
+
+    <!-- Camera preview (US-004) -->
+    <string name="camera_shutter">Take photo</string>
+    <string name="camera_flip">Switch camera</string>
+    <string name="camera_unavailable">Camera unavailable on this device</string>
+
+    <!-- Photo capture (US-006) -->
+    <string name="capture_saved">Photo saved</string>
+    <string name="capture_failed">Couldn\'t save photo</string>
+
+    <!-- Location read (US-005) -->
+    <string name="location_locating">Locating…</string>
+    <string name="location_geocoding">Finding address…</string>
+    <string name="location_unavailable">Location unavailable</string>
+    <string name="location_accuracy">±%1$d m accuracy</string>
+
+    <!-- Stamp templates (US-009) -->
+    <string name="template_classic">Classic</string>
+    <string name="template_minimal">Minimal</string>
+    <string name="template_field_report">Field Report</string>
+    <string name="template_picker">Stamp style</string>
+    <string name="template_selected">%1$s stamp</string>
+
+    <!-- Custom stamp fields (US-010) -->
+    <string name="custom_fields_open">Edit stamp details</string>
+    <string name="custom_fields_title">Stamp details</string>
+    <string name="custom_field_project">Project / site name</string>
+    <string name="custom_field_note">Note</string>
+    <string name="custom_field_logo">Logo</string>
+    <string name="custom_field_add_logo">Add logo</string>
+    <string name="custom_field_change_logo">Change logo</string>
+    <string name="custom_field_remove_logo">Remove logo</string>
+    <string name="custom_field_logo_added">Logo added</string>
+    <string name="custom_fields_save">Save</string>
+    <string name="custom_fields_cancel">Cancel</string>
+
+    <!-- Gallery (US-011) -->
+    <string name="gallery_empty_title">No photos yet</string>
+    <string name="gallery_empty_body">Photos you capture will show up here, newest first.</string>
+    <string name="gallery_back">Back</string>
+    <string name="gallery_share">Share</string>
+    <string name="gallery_delete">Delete</string>
+    <string name="gallery_delete_cancel">Cancel</string>
+    <string name="gallery_share_chooser">Share photo</string>
+    <string name="gallery_delete_confirm_title">Delete photo?</string>
+    <string name="gallery_delete_confirm_body">This permanently removes the photo from your device.</string>
+    <string name="gallery_meta_date">Captured %1$s</string>
+    <string name="gallery_meta_dimensions">%1$d × %2$d px</string>
+    <string name="gallery_meta_size">%1$s</string>
+
+    <!-- Map view (US-012) -->
+    <string name="map_empty_title">No map pins yet</string>
+    <string name="map_empty_body">Photos you capture with a location fix appear here, pinned to where you took them.</string>
+    <string name="map_preview_close">Close</string>
+    <string name="map_meta_coords">%1$.6f, %2$.6f</string>
+
+    <!-- Premium / one-time IAP (US-016) -->
+    <string name="premium_title">Premium</string>
+    <string name="premium_summary">One-time purchase: remove ads and unlock premium stamp templates.</string>
+    <string name="premium_buy">Remove ads &amp; unlock premium</string>
+    <string name="premium_restore">Restore purchase</string>
+    <string name="premium_restoring">Checking for previous purchases…</string>
+    <string name="premium_unlocked">Premium unlocked — thank you!</string>
+    <string name="premium_unavailable">Purchases are unavailable right now. Please try again later.</string>
+    <string name="premium_locked">Premium template — tap to unlock</string>
+    <string name="premium_debug_simulate">(debug) Simulate purchase</string>
+    <string name="premium_debug_reset">(debug) Reset purchase</string>
+
+    <!-- PDF photo-proof report (US-017) -->
+    <string name="report_select">Select</string>
+    <string name="report_cancel">Cancel selection</string>
+    <string name="report_export">Export PDF report</string>
+    <string name="report_selected_count">%1$d selected</string>
+    <string name="report_none_selected">Select photos to export</string>
+    <string name="report_generating">Generating PDF report…</string>
+    <string name="report_saved">Report saved to Downloads/gpstools</string>
+    <string name="report_failed">Couldn\'t create the report</string>
+    <string name="report_open_chooser">Open report</string>
+    <string name="report_no_viewer">No PDF viewer installed</string>
+    <string name="report_free_limit">Free reports include up to %1$d photos with a watermark. Go Pro for unlimited, watermark-free reports.</string>
+
+    <!-- Pro subscription (US-018) -->
+    <string name="pro_title">gpstools Pro</string>
+    <string name="pro_summary">Subscribe for unlimited, watermark-free PDF reports and batch export.</string>
+    <string name="pro_settings_summary">Unlimited PDF reports, batch export, no watermark.</string>
+    <string name="pro_go_pro">Go Pro</string>
+    <string name="pro_active">Pro active — unlimited reports unlocked. Thank you!</string>
+    <string name="pro_benefit_unlimited">Unlimited photos per PDF report</string>
+    <string name="pro_benefit_batch">Batch export of large photo sets</string>
+    <string name="pro_benefit_watermark">No watermark on your reports</string>
+    <string name="pro_subscribe_yearly">Subscribe yearly — %1$s</string>
+    <string name="pro_subscribe_monthly">Subscribe monthly — %1$s</string>
+    <string name="pro_yearly_note">Best value — save vs paying monthly</string>
+    <string name="pro_not_now">Not now</string>
+    <string name="pro_price_monthly">₹149 / month</string>
+    <string name="pro_price_yearly">₹999 / year</string>
+    <string name="pro_debug_simulate">(debug) Simulate subscription</string>
+    <string name="pro_debug_reset">(debug) Cancel subscription</string>
+</resources>

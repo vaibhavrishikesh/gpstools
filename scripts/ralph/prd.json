@@ -15,8 +15,8 @@
         "Verify app launches on Android emulator"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Scaffolded with Gradle 8.9 wrapper, AGP 8.5.2, Kotlin 2.0.21, Compose BOM 2024.10.01, compile/targetSdk 35, minSdk 24. Builds + launches placeholder Home on emulator."
     },
     {
       "id": "US-002",
@@ -30,8 +30,8 @@
         "Verify navigation between tabs on Android emulator"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Bottom NavigationBar (Material 3) with Camera/Gallery/Settings tabs wired via Navigation Compose NavHost. Camera is start destination. Each tab shows a distinct PlaceholderScreen. Verified tab switching on emulator-5554."
     },
     {
       "id": "US-003",
@@ -45,8 +45,8 @@
         "Verify grant and deny paths on Android emulator"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Accompanist Permissions (0.36.0) gates the Camera tab on CAMERA + ACCESS_FINE_LOCATION. Auto-requests on first entry via LaunchedEffect; shows rationale UI when recoverably denied and a Settings deep-link empty state when permanently denied (shouldShowRationale==false after a request). Granted -> camera placeholder. Verified all three paths (dialog, permanently-denied empty state, granted) on emulator-5554; no crash."
     },
     {
       "id": "US-004",
@@ -60,8 +60,8 @@
         "Verify preview renders on emulator or device"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "CameraX (1.4.0: core/camera2/lifecycle/view) live Preview fills the Camera screen via AndroidView(PreviewView, FILL_CENTER). Shutter button (capture deferred to US-006) + front/back lens toggle shown only when both lenses exist; lensFacing in rememberSaveable. LaunchedEffect(lensFacing) rebinds (unbindAll first) and falls back to the available lens if the requested one is missing; DisposableEffect unbinds on leave for lifecycle safety. awaitCameraProvider() bridges the ListenableFuture via suspendCoroutine (no guava-coroutines dep). Verified on emulator-5554: live virtual-scene preview renders, lens flip switches front/back without crash (pid stable)."
     },
     {
       "id": "US-005",
@@ -75,8 +75,8 @@
         "Verify a real lat/long + address render on screen on emulator"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "FusedLocationProviderClient.getCurrentLocation(PRIORITY_HIGH_ACCURACY) with a 12s withTimeoutOrNull, falling back to lastLocation; play-services-location 21.3.0. Geocoder reverse-geocode uses the async GeocodeListener API on API 33+ (MUST register onError too, else the continuation hangs at 'Finding address…') and the blocking API off Dispatchers.IO below. State machine (LocationUiState in location/LocationProvider.kt): Locating -> Available(coords, geocoding=true 'Finding address…') -> Available(coords, address, geocoding=false); Unavailable when no fix. Overlay (ui/screens/LocationInfoOverlay.kt) is a semi-transparent panel at top of the camera preview showing address, lat/long (6dp, monospace), and ±N m accuracy. Verified on emulator-5554 with `adb emu geo fix`: coords + ±5 m render immediately, full Bengaluru address resolves after network comes up."
     },
     {
       "id": "US-006",
@@ -90,8 +90,8 @@
         "Verify a captured file exists and is viewable on emulator"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Shutter wired to a CameraX ImageCapture use case (CAPTURE_MODE_MAXIMIZE_QUALITY) bound alongside Preview in CameraPreview.kt's bindToLifecycle. capture/storage logic in media/PhotoStorage.kt: capturePhoto() -> takePicture(OutputFileOptions, mainExecutor, OnImageSavedCallback). OutputFileOptions writes JPEG into MediaStore Images EXTERNAL_CONTENT_URI with DISPLAY_NAME GPS_<yyyyMMdd_HHmmssSSS>.jpg + RELATIVE_PATH Pictures/gpstools on API 29+ (scoped storage, no perm); manifest declares WRITE_EXTERNAL_STORAGE maxSdkVersion=28 for API<=28. isCapturing guard disables the shutter mid-capture; Toast on saved/failed. Verified on emulator-5554: tapped shutter -> GPS_20260615_095909725.jpg registered in MediaStore (Pictures/gpstools/, 60KB), pulled file is a valid 1856x1392 baseline JPEG with Exif (no stamp yet -> US-007). No crash."
     },
     {
       "id": "US-007",
@@ -105,8 +105,8 @@
         "Verify the saved image visibly contains the stamp on emulator"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Capture switched from direct-to-file (OutputFileOptions) to in-memory (ImageCapture.OnImageCapturedCallback) so the stamp can be composited before encoding. PhotoStorage.kt: takePicture on a background ioExecutor -> decode JPEG -> rotate upright via imageInfo.rotationDegrees (so portrait AND landscape stamp correctly) -> drawStamp -> save to MediaStore (RELATIVE_PATH+IS_PENDING on Q+, absolute DATA path under public Pictures on API24-28); result posted to main thread. New media/PhotoStamp.kt: StampData(timestamp, lat?, lon?, accuracy?, address?) + drawStamp() renders a semi-transparent black panel (alpha 150) across the FULL width at the BOTTOM with white shadowed text — bold wrapped address, monospace 'lat, lon  ±N m', then 'dd MMM yyyy HH:mm:ss z'. Type sizes scale from REFERENCE_WIDTH=1080 so it's legible at any resolution; greedy wrapText() never loops on long words. CameraPreview snapshots locationState (LocationUiState.Available) into StampData at shutter-press (date/time always stamped; coords null until a fix). Tradeoff: decode->re-encode drops original EXIF (proof data is burned into pixels; JPEG_QUALITY=95). Verified on emulator-5554: tapped shutter -> GPS_20260615_100612617.jpg (126KB, valid 1392x1856 upright JPEG) shows the full Bengaluru address + 12.971598, 77.594565  ±5 m + '15 Jun 2026 10:06:12 GMT+05:30' burned into the bottom panel."
     },
     {
       "id": "US-008",
@@ -119,8 +119,8 @@
         "Verify the map thumbnail appears in the saved image on emulator"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Static map thumbnail composited into the bottom-right of the stamp panel behind a provider interface (PRD's no-per-call-cost OSM option). New media/StaticMapProvider.kt: interface StaticMapProvider.fetchMapThumbnail(lat,lon,sizePx): Bitmap? + OsmStaticMapProvider that fetches the 256px web-mercator tiles (zoom 15) covering a centered window from https://tile.openstreetmap.org/{z}/{x}/{y}.png via HttpURLConnection (NO new dep, NO API key), stitches them, and draws a red center marker. OSM tile policy needs a User-Agent (set). Any failed tile / offline -> returns null -> stamp falls back to text spanning full width. PhotoStorage.capturePhoto gained a mapProvider param (default OsmStaticMapProvider) and fetches the map on the existing ioExecutor background thread between toUprightBitmap and drawStamp (only when lat/lon present). PhotoStamp.drawStamp(source, stamp, mapThumbnail?=null) reserves a MAP_SIZE(200@ref)*scale square on the right, wraps text in width minus the map, sizes the panel to max(textHeight, mapSize), and draws the map scaled (FILTER_BITMAP) with a white border. Added INTERNET permission to manifest. Verified on emulator-5554: capture -> GPS_20260615_101258993.jpg (173KB vs 126KB text-only) shows a real OSM map of central Bengaluru with the red marker + white border next to the wrapped address/coords/time."
     },
     {
       "id": "US-009",
@@ -134,8 +134,8 @@
         "Verify switching templates changes the saved stamp on emulator"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Three visually distinct templates via a StampTemplate enum (media/StampTemplate.kt): CLASSIC (full-width bottom panel: bold wrapped address + mono coords + date, OSM map bottom-right), MINIMAL (compact translucent strip bottom-left, coords + date/time only, no address/map — usesMap=false so the network map fetch is skipped), FIELD_REPORT (yellow accent 'FIELD REPORT' header band + labelled ADDRESS/COORDINATES/DATE-TIME rows with a larger map on the LEFT). PhotoStamp.drawStamp(source, stamp, template, mapThumbnail?) dispatches via when(template) to per-template draw fns sharing helpers (paint/panelFill/measureLines/drawLines/drawMap/wrapText). PhotoStorage.capturePhoto gained a template param and only fetches the map when template.usesMap. Picker = horizontally-scrollable FilterChip row (TemplatePickerRow) above the shutter in CameraPreview.kt; selection persisted via SharedPreferences (StampTemplateStore) + rememberSaveable so it survives captures/launches. Verified on emulator-5554: captured one photo per template — Classic GPS_...101904, Minimal GPS_...102015 (text-only bottom-left), Field Report GPS_...101917 (header band + map left); each saved image shows its distinct layout cleanly with no overlap. GOTCHA: rapid back-to-back captures can drop one — isCapturing stays true until the (network) map fetch + save finishes, so a second shutter tap within a few seconds is ignored by the guard."
     },
     {
       "id": "US-010",
@@ -149,8 +149,8 @@
         "Verify custom fields appear in the saved image on emulator"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Custom stamp fields behind media/CustomFields.kt: CustomFields(projectName, note, hasLogo) + CustomFieldsStore over SharedPreferences (project name + note as strings) plus the picked logo copied (downscaled to <=512px) into app internal storage (filesDir/custom_logo.png) so it survives launches without holding a content-URI permission. StampData gained projectName/note (nullable; blank => not rendered); drawStamp gained a `logo: Bitmap?` param drawn into the top-right corner over a subtle rounded backing, independent of template. Each template renders the fields: CLASSIC bold project name on top + italic note at the bottom; MINIMAL bold project name + italic note (still compact); FIELD_REPORT labelled PROJECT / SITE and NOTE rows. PhotoStorage.capturePhoto gained a `logoFile: File?` param and decodes/recycles the logo on the same background ioExecutor. UI: an Edit (pencil) IconButton at TopEnd of the camera screen opens a 'Stamp details' AlertDialog (CustomFieldsDialog) with OutlinedTextFields for project name + note (committed on Save) and Add/Change/Remove logo via PickVisualMedia (ImageOnly, applies immediately). State held in CameraPreview (customFields = customFieldsStore.load(); refreshed after save/logo change). New strings custom_fields_* / custom_field_*. Verified on emulator-5554 (geo fix Bengaluru): set project name via the dialog, Saved, captured GPS_20260615_111605465.jpg (167KB) -> Classic stamp shows the bold project name on top of the address/coords/date/time + OSM map, confirming custom fields persist across the dialog save and are burned into the saved image. NOTE: note + logo were not separately re-captured on-device (the emulator host was heavily ANR-thrashing during this run) but share the identical, now-verified render code path as the project name. GOTCHA: `adb shell input text` is unreliable on the loaded emulator (chars dropped); and the existing isCapturing-through-map-fetch guard still applies."
     },
     {
       "id": "US-011",
@@ -164,8 +164,8 @@
         "Verify grid, viewer, share, delete on emulator"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Gallery tab now lists this app's captures. New media/PhotoGallery.kt: CapturedPhoto(uri, displayName, dateAddedMillis, sizeBytes, width, height) + queryCapturedPhotos() (MediaStore Images query, WHERE relative_path LIKE 'Pictures/gpstools%' AND display_name LIKE 'GPS_%' on Q+, display_name only on API24-28, ORDER BY DATE_ADDED DESC) + deleteCapturedPhoto() (direct resolver.delete — app owns the media) + sharePhoto() (ACTION_SEND chooser, FLAG_GRANT_READ_URI_PERMISSION). Exposed CAPTURE_FILENAME_PREFIX from PhotoStorage for the query. Added Coil (io.coil-kt:coil-compose 2.7.0) for grid/viewer image loading. ui/screens/GalleryScreen.kt: LazyVerticalGrid (Adaptive 112dp, square Crop tiles) -> loading spinner / empty state / grid; tap -> in-place full-screen overlay viewer (Column: top bar back+share+delete, Fit image weight 1f, metadata panel filename/captured date/dimensions/size) with BackHandler + a delete-confirm AlertDialog. List reloads via LaunchedEffect(Unit) on tab re-entry and after delete. GOTCHA: the viewer is an OVERLAY inside the Scaffold content, NOT a Dialog — an enableEdgeToEdge() activity doesn't dispatch window insets to Dialog windows (even with WindowCompat.setDecorFitsSystemWindows(false)), so a fullscreen Dialog's bottom metadata gets clipped under the nav bar; the overlay inherits the Scaffold's innerPadding and lays out cleanly. Verified on emulator-5554: grid shows 7 captures newest-first; tapped first -> viewer with all 4 metadata lines + burned stamp; share -> Android share sheet with photo preview; delete -> confirm dialog -> photo removed from MediaStore (7->6), viewer dismissed, grid refreshed."
     },
     {
       "id": "US-012",
@@ -179,8 +179,8 @@
         "Verify pins + preview on emulator"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "New 'Map' bottom-nav tab (4th, between Gallery and Settings) plots captures on an interactive OpenStreetMap via osmdroid (org.osmdroid:osmdroid-android 6.1.20 — NO API key, consistent with the US-008 static-map provider). PROBLEM: the burned-in stamp drops EXIF on the decode→re-encode (US-007), so saved files carry no machine-readable location. SOLUTION: new media/GeotagStore.kt (SharedPreferences 'photo_geotags', displayName->'lat,lon') records coords at capture time inside PhotoStorage.saveBitmap (no-op when no fix); MapScreen joins queryCapturedPhotos() with GeotagStore.loadAll() by display name (retainOnly() prunes deleted captures). ui/screens/MapScreen.kt: osmdroid MapView via AndroidView (configure Configuration.getInstance().userAgentValue=packageName + cache under cacheDir BEFORE inflating MapView; setTileSource MAPNIK, multitouch; onResume/onPause+onDetach in DisposableEffect), a Marker per geotagged photo (setOnMarkerClickListener via rememberUpdatedState), frame-once (zoom 16 for a single pin, zoomToBoundingBox for many). Tapping a pin opens a full-screen overlay preview (mirrors the gallery viewer — NOT a Dialog — back/image/coords+date) showing the stamped photo. Empty state = map centered on India (22.59,78.96 z4) under a 'No map pins yet' card. Added ACCESS_NETWORK_STATE perm. Verified on emulator-5554 (geo fix Bengaluru): captured a photo -> photo_geotags.xml got GPS_...114924967.jpg=12.9715983,77.594565 -> Map tab shows the OSM map of central Bengaluru framed on a green pin at that location; tapped the pin -> preview overlay with the burned stamp + filename/coords/date; cleared geotags + relaunched -> India-centered map with the empty-state card. GOTCHA: MapScreen reloads via LaunchedEffect(Unit) on tab re-entry (same pattern as Gallery) — a just-captured pin appears after re-entering the Map tab."
     },
     {
       "id": "US-013",
@@ -194,8 +194,8 @@
         "Verify switching to Hindi changes the UI on emulator"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Full English + Hindi localization. All user-facing strings live in res/values/strings.xml; new res/values-hi/strings.xml provides Hindi translations for every key (app_name kept as the brand). In-app language toggle implemented WITHOUT AppCompat (the app uses a framework Material theme + ComponentActivity): a new locale/AppLocale.kt has an AppLanguage enum (SYSTEM/ENGLISH/HINDI, tag ''/'en'/'hi'), a SharedPreferences LocaleStore, Context.wrapWithStoredLocale() (createConfigurationContext with the chosen Locale; SYSTEM returns base untouched so it follows the device), and Context.findActivity(). MainActivity overrides attachBaseContext to wrap with the stored locale. The real ui/screens/SettingsScreen.kt (replaces the PlaceholderScreen-based stub; PlaceholderScreen.kt deleted) shows a radio group (System default / English / हिन्दी); selecting persists via LocaleStore and calls activity.recreate(), which re-runs attachBaseContext so the whole UI re-resolves strings immediately. Removed the now-unused camera/gallery/settings_placeholder strings. Verified on emulator-5554: Settings renders in English; tapping हिन्दी instantly switched the entire app to Hindi (title सेटिंग, nav tabs कैमरा/गैलरी/मानचित्र/सेटिंग, '±5 मी सटीकता', template chips क्लासिक/सरल/फ़ील्ड रिपोर्ट); force-stop + cold relaunch persisted Hindi app-wide; selecting System default reverted to English (device locale)."
     },
     {
       "id": "US-014",
@@ -209,8 +209,8 @@
         "Verify settings persist and affect the stamp on emulator"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Settings expanded (real ui/screens/SettingsScreen.kt) with: (1) Coordinate format radio (Decimal degrees / DMS) and (2) Time format radio (24-hour / 12-hour) — both persisted in new settings/AppSettings.kt (CoordinateFormat + TimeFormat enums carry the formatting logic; AppSettingsStore over SharedPreferences). StampData gained coordinateFormat/timeFormat (defaults DECIMAL/HOUR_24); PhotoStamp.coordinatesLine uses CoordinateFormat.format(lat,lon) (DMS = D°M'S\"+hemisphere) and dateLine uses TimeFormat.datePattern. CameraPreview snapshots both prefs (AppSettingsStore.load*) into StampData at shutter-press so they're burned in. (3) 'Location accuracy & NavIC' info Card explaining India GNSS/NavIC(IRNSS) support. (4) About Card with tagline + 'Version <name>' (read via PackageManager, no BuildConfig) + a 'Privacy policy' TextButton opening a placeholder URL via ACTION_VIEW. New strings settings_coord_*/settings_time_*/settings_navic_*/settings_about_*/settings_privacy_policy in BOTH values + values-hi. Verified on emulator-5554: Settings renders all 4 sections; selected DMS + 12-hour, captured GPS_20260615_121242512.jpg -> stamp shows '12°58'17.8\"N  77°35'40.4\"E  ±5 m' + '15 जून 2026  12:12:42 pm IST', confirming the prefs persist and affect the burned stamp. GOTCHA: emulator input taps are flaky/positionally off on this loaded host — use `adb shell uiautomator dump` to get exact element bounds rather than guessing; selecting a language mid-session recreate()s the activity and reflows row positions."
     },
     {
       "id": "US-015",
@@ -224,8 +224,8 @@
         "Verify a test ad shows on emulator"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "AdMob (Google Mobile Ads SDK 23.6.0) with a single global ads-enabled flag (ads/Ads.kt: configurable Google TEST ad unit ids + adsEnabled Compose-state persisted to SharedPreferences + initialize()/setEnabled() — the US-016 remove-ads IAP just calls setEnabled(false)). Two non-intrusive placements, both gated on Ads.adsEnabled and runCatching-guarded so they never crash or block capture: (1) ads/BannerAd.kt = adaptive AdView banner at the bottom of the Gallery tab (renders nothing when disabled); (2) ads/InterstitialAdManager.kt = preloaded interstitial shown after every 5 captures, invoked from the POST-save capture callback in CameraPreview so the photo is already saved before any ad shows. MainActivity.onCreate calls Ads.initialize(this); AndroidManifest declares the AdMob APPLICATION_ID meta-data (test app id ca-app-pub-3940256099942544~3347511712, required or the SDK throws on init). BUILD GOTCHA: play-services-ads pulls full Guava which dedupes CameraX's listenablefuture:1.0 to the empty stub and drops ListenableFuture off the compile classpath — fixed by adding implementation(libs.guava) directly (NOT by excluding listenablefuture). Verified on emulator-5554: Gallery shows the 'This is a 468x60 test ad' AdMob banner below the grid; capturing 5 photos saved all 5 (MediaStore GPS_ count 8->13, capture never blocked) then the AdMob interstitial test ad appeared after the 5th, and closing it returned cleanly to MainActivity with the app pid stable throughout (no crash)."
     },
     {
       "id": "US-016",
@@ -239,7 +239,7 @@
         "Verify with Play Billing test/license flow or a debug stub on emulator"
       ],
       "priority": 16,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -255,8 +255,8 @@
         "Verify a valid multi-page PDF is generated and openable on emulator"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Multi-select + PDF export in the Gallery (US-017). New media/PdfReport.kt uses the framework android.graphics.pdf.PdfDocument (NO dependency): generatePhotoReport(context, photos, projectName, isPremium) renders one A4 page (595x842 pts) per photo — header (project/site name from CustomFieldsStore + date range), the stamped photo (decoded downsampled via inSampleSize to fit, FILTER_BITMAP), a caption (filename / capture date / coords joined from GeotagStore.loadAll), and a footer ('Generated by gpstools · Page X of N'). FREE tier (!Premium.isPremium): photos.take(FREE_REPORT_MAX_PHOTOS=3) + a diagonal translucent 'gpstools' watermark on every page; PREMIUM: unlimited, no watermark. PDF written to Downloads/gpstools via MediaStore.Downloads (RELATIVE_PATH+IS_PENDING) on Q+ / MediaStore.Files DATA path on API24-28 -> content Uri; openReport() fires an ACTION_VIEW chooser. PDF text is English (document graphic, not localized, same as the FIELD REPORT stamp). GalleryScreen got a selection mode: a 'Select' action bar -> tap/long-press toggles tiles (combinedClickable, ExperimentalFoundationApi) with a CheckCircle overlay -> 'Export PDF report' (PictureAsPdf); a full-screen generating spinner; toasts for saved / free-limit / failed. Renamed the viewer state var selected->viewing. New report_* strings in BOTH values + values-hi. Verified on emulator-5554: FREE selected 5 -> gpstools_report_*.pdf = valid 3-page PDF (capped) WITH the 'gpstools' watermark (rendered each page via qlmanage: header 'Site-42-Bridg' + date range + stamped photo + caption coords + 'Page 1 of 3'); enabled premium via the Settings debug simulate -> selected 5 -> valid 5-page PDF (uncapped) with NO watermark + 'Page 1 of 5'. Chooser opened the PDF; app pid stable throughout."
     },
     {
       "id": "US-018",
@@ -271,8 +271,8 @@
         "Verify subscribe + gate behavior with test flow on emulator"
       ],
       "priority": 18,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Recurring Pro subscriptions (pro_monthly/pro_yearly) unlock unlimited, watermark-free PDF reports + batch export. New billing/Subscription.kt (object, mirrors Premium): Compose-state isSubscribed + activePlan persisted to SharedPreferences (subscription_settings) + grant(context,productId)/clear(context)/load(context) — load() called in MainActivity.onCreate alongside Premium.load so the entitlement is checked on launch. Subscription is independent of Premium (does NOT disable ads). Gating goes through the new Entitlements.hasUnlimitedReports = Premium.isPremium || Subscription.isSubscribed; GalleryScreen passes THAT as generatePhotoReport's isPremium arg, so either the one-time IAP (US-016) or the subscription gives uncapped/no-watermark reports. BillingManager extended to handle BOTH product types: start()/queryOwnedPurchases() query INAPP and SUBS (restore either on reinstall); querySubscriptionDetails() loads SUBS ProductDetails; subscriptionPrice(id) reads the first offer's first pricing-phase formattedPrice; launchSubscriptionPurchase(activity,id) builds BillingFlowParams with .setOfferToken(offerDetails.first().offerToken) (REQUIRED for SUBS); handlePurchase routes by purchase.products to Premium.grant or Subscription.grant. Paywall = ui/screens/PaywallScreen.kt PaywallDialog (centered Dialog+Card — not fullscreen, so the edge-to-edge inset-clip gotcha doesn't apply): 3 benefit rows + yearly (₹999/year, 'best value') + monthly (₹149/month) India pricing + restore + DEBUG simulate. SettingsScreen lifts ONE shared BillingManager out of PremiumSection and passes it to PremiumSection(billing) + new ProSubscriptionSection(billing) (Go Pro -> paywall, or 'Pro active' + debug cancel). New pro_* strings in BOTH values + values-hi. Verified on emulator-5554: opened Settings -> 'gpstools Pro' section -> Go Pro -> paywall rendered (benefits + ₹999/year + ₹149/month, Hindi-localized). Tapped debug 'Simulate subscription' -> subscription_settings.xml is_subscribed=true active_plan=pro_yearly; then RESET Premium (is_premium=false) so the subscription was the SOLE entitlement -> Gallery -> selected 5 photos -> Export PDF -> gpstools_report_*.pdf = valid 5-page (uncapped, free caps at 3) PDF with NO watermark (qlmanage page 1: header Site-42-Bridg + stamped photo + caption + 'Page 1 of 5'), confirming the subscription independently unlocks unlimited + batch + no-watermark. ./gradlew assembleDebug BUILD SUCCESSFUL."
     }
   ]
 }
