@@ -39,4 +39,17 @@
     <string name="template_field_report">Field Report</string>
     <string name="template_picker">Stamp style</string>
     <string name="template_selected">%1$s stamp</string>
+
+    <!-- Custom stamp fields (US-010) -->
+    <string name="custom_fields_open">Edit stamp details</string>
+    <string name="custom_fields_title">Stamp details</string>
+    <string name="custom_field_project">Project / site name</string>
+    <string name="custom_field_note">Note</string>
+    <string name="custom_field_logo">Logo</string>
+    <string name="custom_field_add_logo">Add logo</string>
+    <string name="custom_field_change_logo">Change logo</string>
+    <string name="custom_field_remove_logo">Remove logo</string>
+    <string name="custom_field_logo_added">Logo added</string>
+    <string name="custom_fields_save">Save</string>
+    <string name="custom_fields_cancel">Cancel</string>
 </resources>

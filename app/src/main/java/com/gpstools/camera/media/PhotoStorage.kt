@@ -53,6 +53,7 @@ fun capturePhoto(
     imageCapture: ImageCapture,
     stamp: StampData,
     template: StampTemplate = StampTemplate.DEFAULT,
+    logoFile: File? = null,
     mapProvider: StaticMapProvider = OsmStaticMapProvider(),
     onResult: (Uri?) -> Unit,
 ) {
@@ -73,8 +74,14 @@ fun capturePhoto(
                     } else {
                         null
                     }
-                    val stamped = drawStamp(upright, stamp, template, mapThumbnail)
+                    // Decode the user's logo (US-010) on this background thread too;
+                    // a missing/corrupt file just means no logo is drawn.
+                    val logo = logoFile?.takeIf { it.exists() }?.let {
+                        BitmapFactory.decodeFile(it.absolutePath)
+                    }
+                    val stamped = drawStamp(upright, stamp, template, mapThumbnail, logo)
                     mapThumbnail?.recycle()
+                    logo?.recycle()
                     saveBitmap(appContext, stamped, stamp)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to stamp/save capture", e)

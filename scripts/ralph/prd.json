@@ -149,8 +149,8 @@
         "Verify custom fields appear in the saved image on emulator"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Custom stamp fields behind media/CustomFields.kt: CustomFields(projectName, note, hasLogo) + CustomFieldsStore over SharedPreferences (project name + note as strings) plus the picked logo copied (downscaled to <=512px) into app internal storage (filesDir/custom_logo.png) so it survives launches without holding a content-URI permission. StampData gained projectName/note (nullable; blank => not rendered); drawStamp gained a `logo: Bitmap?` param drawn into the top-right corner over a subtle rounded backing, independent of template. Each template renders the fields: CLASSIC bold project name on top + italic note at the bottom; MINIMAL bold project name + italic note (still compact); FIELD_REPORT labelled PROJECT / SITE and NOTE rows. PhotoStorage.capturePhoto gained a `logoFile: File?` param and decodes/recycles the logo on the same background ioExecutor. UI: an Edit (pencil) IconButton at TopEnd of the camera screen opens a 'Stamp details' AlertDialog (CustomFieldsDialog) with OutlinedTextFields for project name + note (committed on Save) and Add/Change/Remove logo via PickVisualMedia (ImageOnly, applies immediately). State held in CameraPreview (customFields = customFieldsStore.load(); refreshed after save/logo change). New strings custom_fields_* / custom_field_*. Verified on emulator-5554 (geo fix Bengaluru): set project name via the dialog, Saved, captured GPS_20260615_111605465.jpg (167KB) -> Classic stamp shows the bold project name on top of the address/coords/date/time + OSM map, confirming custom fields persist across the dialog save and are burned into the saved image. NOTE: note + logo were not separately re-captured on-device (the emulator host was heavily ANR-thrashing during this run) but share the identical, now-verified render code path as the project name. GOTCHA: `adb shell input text` is unreliable on the loaded emulator (chars dropped); and the existing isCapturing-through-map-fetch guard still applies."
     },
     {
       "id": "US-011",

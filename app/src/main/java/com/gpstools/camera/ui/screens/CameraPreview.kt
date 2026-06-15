@@ -2,6 +2,9 @@ package com.gpstools.camera.ui.screens
 
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
@@ -16,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,7 +29,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lens
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -33,7 +39,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +63,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.gpstools.camera.R
 import com.gpstools.camera.location.LocationUiState
+import com.gpstools.camera.media.CustomFields
+import com.gpstools.camera.media.CustomFieldsStore
 import com.gpstools.camera.media.StampData
 import com.gpstools.camera.media.StampTemplate
 import com.gpstools.camera.media.StampTemplateStore
@@ -103,6 +114,21 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     // Selected stamp template (US-009), persisted across captures + launches.
     val templateStore = remember { StampTemplateStore(context) }
     var template by rememberSaveable { mutableStateOf(templateStore.load()) }
+
+    // User's custom stamp fields (US-010): project/site name, note, logo. Persisted
+    // across captures + launches via SharedPreferences + an app-storage logo file.
+    val customFieldsStore = remember { CustomFieldsStore(context) }
+    var customFields by remember { mutableStateOf(customFieldsStore.load()) }
+    var showCustomFieldsDialog by remember { mutableStateOf(false) }
+
+    // Logo picker — copies the chosen image into app storage so it persists.
+    val logoPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        if (uri != null && customFieldsStore.saveLogo(uri)) {
+            customFields = customFieldsStore.load()
+        }
+    }
 
     // (Re)bind whenever the lens facing changes. The camera provider keys its
     // use cases to the lifecycle, so we unbind everything first to avoid
@@ -202,8 +228,11 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                         longitude = available?.fix?.longitude,
                         accuracyMeters = available?.fix?.accuracyMeters,
                         address = available?.address,
+                        projectName = customFields.projectName.ifBlank { null },
+                        note = customFields.note.ifBlank { null },
                     )
-                    capturePhoto(context, imageCapture, stamp, template) { uri ->
+                    val logoFile = customFieldsStore.logoFileOrNull()
+                    capturePhoto(context, imageCapture, stamp, template, logoFile) { uri ->
                         isCapturing = false
                         val msg = if (uri != null) {
                             context.getString(R.string.capture_saved)
@@ -229,6 +258,22 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             }
         }
 
+        // Edit custom stamp fields (US-010) — top-right, clear of the location
+        // overlay and the bottom controls.
+        IconButton(
+            onClick = { showCustomFieldsDialog = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(end = 12.dp, top = 12.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Edit,
+                contentDescription = stringResource(R.string.custom_fields_open),
+                tint = Color.White,
+            )
+        }
+
         // Front/back toggle, sitting to the right of the shutter. Only shown
         // when the device actually has both lenses.
         if (hasFront && hasBack) {
@@ -252,7 +297,109 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 )
             }
         }
+
+        if (showCustomFieldsDialog) {
+            CustomFieldsDialog(
+                fields = customFields,
+                onPickLogo = {
+                    logoPicker.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                    )
+                },
+                onRemoveLogo = {
+                    customFieldsStore.clearLogo()
+                    customFields = customFieldsStore.load()
+                },
+                onSave = { projectName, note ->
+                    customFieldsStore.saveFields(projectName, note)
+                    customFields = customFieldsStore.load()
+                    showCustomFieldsDialog = false
+                },
+                onDismiss = { showCustomFieldsDialog = false },
+            )
+        }
     }
+}
+
+/**
+ * Dialog for editing the custom stamp fields (US-010): project/site name, a
+ * free-text note, and an optional logo picked from the gallery. The project name
+ * and note are committed on Save; logo add/remove apply immediately (so the
+ * "Logo added" state reflects the current [fields]).
+ */
+@Composable
+private fun CustomFieldsDialog(
+    fields: CustomFields,
+    onPickLogo: () -> Unit,
+    onRemoveLogo: () -> Unit,
+    onSave: (projectName: String, note: String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var projectName by rememberSaveable(fields.projectName) { mutableStateOf(fields.projectName) }
+    var note by rememberSaveable(fields.note) { mutableStateOf(fields.note) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.custom_fields_title)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = projectName,
+                    onValueChange = { projectName = it },
+                    label = { Text(stringResource(R.string.custom_field_project)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    label = { Text(stringResource(R.string.custom_field_note)) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.custom_field_logo),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(onClick = onPickLogo) {
+                        Text(
+                            if (fields.hasLogo) {
+                                stringResource(R.string.custom_field_change_logo)
+                            } else {
+                                stringResource(R.string.custom_field_add_logo)
+                            },
+                        )
+                    }
+                    if (fields.hasLogo) {
+                        Spacer(Modifier.width(8.dp))
+                        TextButton(onClick = onRemoveLogo) {
+                            Text(stringResource(R.string.custom_field_remove_logo))
+                        }
+                    }
+                }
+                if (fields.hasLogo) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.custom_field_logo_added),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(projectName, note) }) {
+                Text(stringResource(R.string.custom_fields_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.custom_fields_cancel))
+            }
+        },
+    )
 }
 
 /**

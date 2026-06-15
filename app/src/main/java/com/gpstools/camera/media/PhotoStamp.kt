@@ -14,6 +14,10 @@ import java.util.Locale
  * The information burned onto a captured photo as a location stamp (US-007).
  * [timestamp] is captured at shutter-press time. Location fields are nullable so a
  * photo taken before a fix is available still gets a date/time stamp.
+ *
+ * [projectName] and [note] are the user's custom fields (US-010); blank/empty
+ * values are simply not rendered. The optional logo image is passed separately to
+ * [drawStamp] since it's a bitmap rather than a value.
  */
 data class StampData(
     val timestamp: Date,
@@ -21,6 +25,8 @@ data class StampData(
     val longitude: Double?,
     val accuracyMeters: Float?,
     val address: String?,
+    val projectName: String? = null,
+    val note: String? = null,
 )
 
 /** Reference width the stamp's type sizes are tuned against; everything scales from it. */
@@ -29,6 +35,8 @@ private const val REFERENCE_WIDTH = 1080f
 private const val MAP_SIZE = 200f
 /** Larger map for the Field-Report template (drawn on the left). */
 private const val FIELD_MAP_SIZE = 240f
+/** Square box the logo is fitted into, in REFERENCE_WIDTH units (top-right corner). */
+private const val LOGO_SIZE = 150f
 private const val STAMP_DATE_PATTERN = "dd MMM yyyy  HH:mm:ss z"
 /** Accent colour used for the Field-Report header band + row labels. */
 private val FIELD_ACCENT = Color.rgb(255, 193, 7)
@@ -43,12 +51,16 @@ private val FIELD_ACCENT = Color.rgb(255, 193, 7)
  * [mapThumbnail] is composited by templates whose [StampTemplate.usesMap] is true;
  * when it's null (offline / no fix) those layouts fall back to text spanning the
  * full width.
+ *
+ * [logo] (US-010), when present, is drawn into the top-right corner over a subtle
+ * backing so it stays visible on any background, independent of the template.
  */
 fun drawStamp(
     source: Bitmap,
     stamp: StampData,
     template: StampTemplate = StampTemplate.DEFAULT,
     mapThumbnail: Bitmap? = null,
+    logo: Bitmap? = null,
 ): Bitmap {
     val result = if (source.isMutable && source.config == Bitmap.Config.ARGB_8888) {
         source
@@ -61,6 +73,7 @@ fun drawStamp(
         StampTemplate.MINIMAL -> drawMinimal(canvas, result, stamp)
         StampTemplate.FIELD_REPORT -> drawFieldReport(canvas, result, stamp, mapThumbnail)
     }
+    if (logo != null) drawLogo(canvas, result, logo)
     return result
 }
 
@@ -83,17 +96,24 @@ private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThu
     val titlePaint = paint(34f * scale, Typeface.SANS_SERIF, Typeface.BOLD, shadow)
     val bodyPaint = paint(28f * scale, Typeface.SANS_SERIF, Typeface.NORMAL, shadow)
     val monoPaint = paint(28f * scale, Typeface.MONOSPACE, Typeface.NORMAL, shadow)
+    val notePaint = paint(26f * scale, Typeface.SANS_SERIF, Typeface.ITALIC, shadow)
 
     val mapSize = if (mapThumbnail != null) MAP_SIZE * scale else 0f
     val mapGap = if (mapThumbnail != null) pad else 0f
     val maxTextWidth = width - 2 * pad - mapSize - mapGap
 
     val lines = mutableListOf<Pair<String, Paint>>()
+    stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
+        wrapText(name, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
+    }
     stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
-        wrapText(addr, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
+        wrapText(addr, bodyPaint, maxTextWidth).forEach { lines += it to bodyPaint }
     }
     coordinatesLine(stamp)?.let { lines += it to monoPaint }
     lines += dateLine(stamp) to bodyPaint
+    stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
+        wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
+    }
 
     val textHeight = measureLines(lines, lineSpacing)
     val contentHeight = maxOf(textHeight, mapSize)
@@ -126,10 +146,20 @@ private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData) {
 
     val monoPaint = paint(26f * scale, Typeface.MONOSPACE, Typeface.NORMAL, shadow)
     val bodyPaint = paint(24f * scale, Typeface.SANS_SERIF, Typeface.NORMAL, shadow)
+    val titlePaint = paint(26f * scale, Typeface.SANS_SERIF, Typeface.BOLD, shadow)
+    val notePaint = paint(24f * scale, Typeface.SANS_SERIF, Typeface.ITALIC, shadow)
 
+    // Minimal stays compact, but still honours the user's custom fields when set.
+    val maxTextWidth = width - 2 * pad
     val lines = mutableListOf<Pair<String, Paint>>()
+    stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
+        wrapText(name, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
+    }
     coordinatesLine(stamp)?.let { lines += it to monoPaint }
     lines += dateLine(stamp) to bodyPaint
+    stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
+        wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
+    }
 
     val textHeight = measureLines(lines, lineSpacing)
     val textWidth = lines.maxOf { (text, paint) -> paint.measureText(text) }
@@ -176,6 +206,10 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
 
     // Each row is an optional accent label followed by one or more value lines.
     val rows = mutableListOf<Pair<String, Paint>>()
+    stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
+        rows += "PROJECT / SITE" to labelPaint
+        wrapText(name, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
+    }
     stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
         rows += "ADDRESS" to labelPaint
         wrapText(addr, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
@@ -186,6 +220,10 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
     }
     rows += "DATE / TIME" to labelPaint
     rows += dateLine(stamp) to valuePaint
+    stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
+        rows += "NOTE" to labelPaint
+        wrapText(note, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
+    }
 
     val rowsHeight = measureLines(rows, lineSpacing)
     val bodyHeight = maxOf(rowsHeight, mapSize)
@@ -245,6 +283,36 @@ private fun drawMap(canvas: Canvas, map: Bitmap, dst: RectF, scale: Float) {
         color = Color.WHITE
     }
     canvas.drawRect(dst, borderPaint)
+}
+
+/**
+ * Draws the user's [logo] (US-010) into the top-right corner, fitted into a
+ * LOGO_SIZE square (preserving aspect ratio) over a subtle rounded backing so it
+ * stays visible regardless of the underlying photo. Independent of the template.
+ */
+private fun drawLogo(canvas: Canvas, result: Bitmap, logo: Bitmap) {
+    val width = result.width
+    val scale = width / REFERENCE_WIDTH
+    val pad = 22f * scale
+    val box = LOGO_SIZE * scale
+
+    // Fit within the square box, preserving aspect ratio.
+    val aspect = logo.width.toFloat() / logo.height.toFloat()
+    val drawW = if (aspect >= 1f) box else box * aspect
+    val drawH = if (aspect >= 1f) box / aspect else box
+
+    val right = width - pad
+    val left = right - drawW
+    val top = pad
+    val dst = RectF(left, top, left + drawW, top + drawH)
+
+    val bgPad = 8f * scale
+    val radius = 10f * scale
+    canvas.drawRoundRect(
+        RectF(dst.left - bgPad, dst.top - bgPad, dst.right + bgPad, dst.bottom + bgPad),
+        radius, radius, panelFill(120),
+    )
+    canvas.drawBitmap(logo, null, dst, Paint(Paint.FILTER_BITMAP_FLAG))
 }
 
 private fun coordinatesLine(stamp: StampData): String? {
