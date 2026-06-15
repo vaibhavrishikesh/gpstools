@@ -1,0 +1,29 @@
+# Ralph runtime artifacts
+scripts/ralph/progress.txt
+scripts/ralph/.last-branch
+scripts/ralph/archive/
+
+# Android / Gradle
+*.iml
+.gradle/
+local.properties
+.idea/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Kotlin
+.kotlin/
+
+# macOS
+.DS_Store
+
+# Logs / tmp
+*.log
+tmp/

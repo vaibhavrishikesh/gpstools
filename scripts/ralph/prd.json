@@ -1,0 +1,278 @@
+{
+  "project": "gpstools",
+  "branchName": "ralph/gpstools-mvp",
+  "description": "gpstools — native Android (Kotlin + Jetpack Compose) geotag GPS camera. Capture photos with a clean, customizable location stamp (lat/long, address, date/time, map thumbnail, custom fields). Hybrid monetization (ads + one-time IAP + subscription). India-first. Premium hook = PDF photo-proof report.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Project scaffold",
+      "description": "As a developer, I need a buildable Android Compose project so all later work has a base.",
+      "acceptanceCriteria": [
+        "Android Studio project: Kotlin, Jetpack Compose, single-activity, Material 3",
+        "Package id com.gpstools.camera, app name 'gpstools', minSdk 24, targetSdk current",
+        "App launches to a placeholder Home screen",
+        "./gradlew assembleDebug succeeds (build passes)",
+        "Verify app launches on Android emulator"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Navigation skeleton",
+      "description": "As a user, I want to move between the main screens of the app.",
+      "acceptanceCriteria": [
+        "Bottom navigation with three tabs: Camera, Gallery, Settings",
+        "Each tab shows a distinct placeholder screen",
+        "Camera is the default/start destination",
+        "./gradlew assembleDebug succeeds",
+        "Verify navigation between tabs on Android emulator"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Runtime permissions flow",
+      "description": "As a user, I must grant camera + location so the core feature works.",
+      "acceptanceCriteria": [
+        "Request CAMERA and ACCESS_FINE_LOCATION when entering the Camera tab",
+        "Show rationale UI if denied; deep-link to app settings if permanently denied",
+        "No crash when permissions denied; show a helpful empty state",
+        "./gradlew assembleDebug succeeds",
+        "Verify grant and deny paths on Android emulator"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Camera preview",
+      "description": "As a user, I want a live camera preview so I can frame my shot.",
+      "acceptanceCriteria": [
+        "CameraX preview fills the Camera screen",
+        "Shutter button visible; front/back camera toggle works",
+        "Handles lifecycle (pause/resume) without crashing",
+        "./gradlew assembleDebug succeeds",
+        "Verify preview renders on emulator or device"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Acquire location + reverse-geocoded address",
+      "description": "As a user, I want my current coordinates and address detected automatically.",
+      "acceptanceCriteria": [
+        "Use FusedLocationProvider to get lat/long (high accuracy) with timeout + fallback",
+        "Reverse-geocode to a human address via Geocoder; show 'locating…' then result",
+        "Show accuracy in meters; graceful message if location unavailable",
+        "./gradlew assembleDebug succeeds",
+        "Verify a real lat/long + address render on screen on emulator"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Capture photo to storage",
+      "description": "As a user, I want to take a photo and have it saved.",
+      "acceptanceCriteria": [
+        "Shutter captures a full-resolution image via CameraX ImageCapture",
+        "Saved to app-scoped storage and registered with MediaStore on capture-complete",
+        "Capture works without a stamp yet (stamp added in US-007)",
+        "./gradlew assembleDebug succeeds",
+        "Verify a captured file exists and is viewable on emulator"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Render a basic location stamp onto the photo",
+      "description": "As a user, I want location/time info burned onto my photo so it's proof-ready.",
+      "acceptanceCriteria": [
+        "After capture, composite an overlay onto the bitmap: address, lat/long, date/time",
+        "Overlay is legible (semi-transparent panel, readable type) and saved into the final image",
+        "Stamp renders correctly in both portrait and landscape captures",
+        "./gradlew assembleDebug succeeds",
+        "Verify the saved image visibly contains the stamp on emulator"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Map thumbnail on the stamp",
+      "description": "As a user, I want a small map showing where the photo was taken.",
+      "acceptanceCriteria": [
+        "Fetch a static map thumbnail for the coordinates behind a provider interface",
+        "Thumbnail composited into the stamp area; falls back gracefully if offline",
+        "./gradlew assembleDebug succeeds",
+        "Verify the map thumbnail appears in the saved image on emulator"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Multiple stamp templates",
+      "description": "As a user, I want to choose how my stamp looks.",
+      "acceptanceCriteria": [
+        "At least 3 visually distinct templates (Classic, Minimal, Field-Report)",
+        "Template picker on the Camera screen; selection persists",
+        "Each template lays out address/coords/time/map cleanly without overlap",
+        "./gradlew assembleDebug succeeds",
+        "Verify switching templates changes the saved stamp on emulator"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Custom fields on the stamp",
+      "description": "As a field user, I want to add a note, project/site name, and my logo.",
+      "acceptanceCriteria": [
+        "Editable fields: free-text note and project/site name that persist between captures",
+        "Optional logo image picked from gallery and shown on the stamp",
+        "Fields render in the stamp and are saved into the image",
+        "./gradlew assembleDebug succeeds",
+        "Verify custom fields appear in the saved image on emulator"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "In-app gallery of captured photos",
+      "description": "As a user, I want to browse the geotagged photos I've taken.",
+      "acceptanceCriteria": [
+        "Gallery tab shows a grid of captured images (newest first)",
+        "Tap opens a full-screen viewer with the captured metadata",
+        "Share and delete actions per photo",
+        "./gradlew assembleDebug succeeds",
+        "Verify grid, viewer, share, delete on emulator"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Map view of captured photos",
+      "description": "As a user, I want to see my photos plotted on a map by where I took them.",
+      "acceptanceCriteria": [
+        "A map shows pins for captured photos with coordinates",
+        "Tapping a pin previews that photo",
+        "Handles the empty state (no geotagged photos yet)",
+        "./gradlew assembleDebug succeeds",
+        "Verify pins + preview on emulator"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Localization scaffold (Hindi + English)",
+      "description": "As an Indian user, I want the app in Hindi or English.",
+      "acceptanceCriteria": [
+        "All user-facing strings in resources; English + Hindi translations provided",
+        "In-app language toggle in Settings that applies immediately and follows device by default",
+        "No hardcoded strings in new UI",
+        "./gradlew assembleDebug succeeds",
+        "Verify switching to Hindi changes the UI on emulator"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Settings (units, NavIC info, about)",
+      "description": "As a user, I want to control formats and learn about accuracy.",
+      "acceptanceCriteria": [
+        "Coordinate format toggle (decimal / DMS); date-time format option",
+        "'Location accuracy / NavIC' info section explaining India GNSS support",
+        "About + version; link to privacy policy placeholder",
+        "./gradlew assembleDebug succeeds",
+        "Verify settings persist and affect the stamp on emulator"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Ads on the free tier",
+      "description": "As the business, I need ad revenue from free users.",
+      "acceptanceCriteria": [
+        "Integrate AdMob using test ad unit ids (configurable)",
+        "Non-intrusive placement (banner in Gallery / interstitial after N captures)",
+        "Ads never block capture or crash; respect a global adsEnabled flag",
+        "./gradlew assembleDebug succeeds",
+        "Verify a test ad shows on emulator"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "One-time IAP — remove ads + premium templates",
+      "description": "As a user, I want to pay once to remove ads and unlock premium templates.",
+      "acceptanceCriteria": [
+        "Google Play Billing one-time product remove_ads_premium",
+        "On purchase: ads disabled app-wide and premium templates unlocked",
+        "Purchase state restored on reinstall (query owned purchases on launch)",
+        "./gradlew assembleDebug succeeds",
+        "Verify with Play Billing test/license flow or a debug stub on emulator"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "PDF photo-proof report export (premium hook)",
+      "description": "As a field user, I want to export selected photos as a single PDF proof document.",
+      "acceptanceCriteria": [
+        "Multi-select photos in Gallery then 'Export PDF report'",
+        "PDF includes each photo with its stamp plus a header (project/site, date range)",
+        "Free users get watermarked / limited (<=3 photos) export; premium = unlimited",
+        "Uses Android PdfDocument (no external dependency)",
+        "./gradlew assembleDebug succeeds",
+        "Verify a valid multi-page PDF is generated and openable on emulator"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Subscription gating for premium reports/batch",
+      "description": "As the business, I need recurring revenue from heavy field users.",
+      "acceptanceCriteria": [
+        "Google Play Billing subscriptions pro_monthly and pro_yearly",
+        "Subscriber unlocks unlimited PDF reports, batch export, no watermark",
+        "Clear paywall screen describing benefits + India pricing",
+        "Entitlement checked on launch and gated correctly",
+        "./gradlew assembleDebug succeeds",
+        "Verify subscribe + gate behavior with test flow on emulator"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
