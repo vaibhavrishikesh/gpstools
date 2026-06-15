@@ -66,6 +66,23 @@ which makes Gradle dedupe CameraX's `listenablefuture:1.0` down to the empty stu
 dropping `ListenableFuture` off the COMPILE classpath (CameraX won't compile). Fix
 = declare `implementation(libs.guava)` directly so the real class stays on compile.
 
+## PDF photo-proof report (US-017)
+Export lives in `media/PdfReport.kt` using the FRAMEWORK `android.graphics.pdf.PdfDocument`
+(NO dependency). `generatePhotoReport(context, photos, projectName, isPremium)` renders
+one A4 page (595×842 pts) per photo — header (project/site from `CustomFieldsStore` +
+date range), the already-stamped photo decoded downsampled (`inSampleSize`) to fit, a
+caption (filename / capture date / coords joined from `GeotagStore.loadAll`), and a
+footer. FREE tier (`!Premium.isPremium`) = `take(FREE_REPORT_MAX_PHOTOS=3)` + a diagonal
+translucent "gpstools" watermark per page; PREMIUM = unlimited, no watermark. Saved to
+Downloads/gpstools via `MediaStore.Downloads` (RELATIVE_PATH+IS_PENDING) on Q+ /
+`MediaStore.Files` DATA path on API24-28 → content Uri; `openReport()` fires an
+ACTION_VIEW chooser. PDF text is English (a document graphic, intentionally NOT
+localized — same rationale as the FIELD REPORT stamp). Run it OFF the main thread (it
+touches the resolver + decodes bitmaps). Gallery selection mode uses `combinedClickable`
+(`@OptIn(ExperimentalFoundationApi)`); the viewer state var is `viewing`, the selection
+set is `selectedUris`. Verify a PDF with `qlmanage -t -s 1000 -o /tmp x.pdf` +
+`file x.pdf` (reports page count) after `adb pull` from /sdcard/Download/gpstools.
+
 ## Premium / one-time IAP (US-016)
 Google Play Billing (`libs.billing.ktx`, billing-ktx 7.1.1). `billing/Premium.kt`
 (object, mirrors `Ads`) is the single source of truth: global Compose-state

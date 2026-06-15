@@ -103,4 +103,17 @@
     <string name="premium_locked">Premium template — tap to unlock</string>
     <string name="premium_debug_simulate">(debug) Simulate purchase</string>
     <string name="premium_debug_reset">(debug) Reset purchase</string>
+
+    <!-- PDF photo-proof report (US-017) -->
+    <string name="report_select">Select</string>
+    <string name="report_cancel">Cancel selection</string>
+    <string name="report_export">Export PDF report</string>
+    <string name="report_selected_count">%1$d selected</string>
+    <string name="report_none_selected">Select photos to export</string>
+    <string name="report_generating">Generating PDF report…</string>
+    <string name="report_saved">Report saved to Downloads/gpstools</string>
+    <string name="report_failed">Couldn\'t create the report</string>
+    <string name="report_open_chooser">Open report</string>
+    <string name="report_no_viewer">No PDF viewer installed</string>
+    <string name="report_free_limit">Free reports include up to %1$d photos with a watermark. Upgrade to Premium for unlimited, watermark-free reports.</string>
 </resources>

@@ -104,4 +104,17 @@
     <string name="premium_locked">प्रीमियम टेम्पलेट — अनलॉक करने के लिए टैप करें</string>
     <string name="premium_debug_simulate">(डीबग) खरीद का अनुकरण करें</string>
     <string name="premium_debug_reset">(डीबग) खरीद रीसेट करें</string>
+
+    <!-- PDF photo-proof report (US-017) -->
+    <string name="report_select">चुनें</string>
+    <string name="report_cancel">चयन रद्द करें</string>
+    <string name="report_export">PDF रिपोर्ट निर्यात करें</string>
+    <string name="report_selected_count">%1$d चयनित</string>
+    <string name="report_none_selected">निर्यात के लिए फ़ोटो चुनें</string>
+    <string name="report_generating">PDF रिपोर्ट बनाई जा रही है…</string>
+    <string name="report_saved">रिपोर्ट Downloads/gpstools में सहेजी गई</string>
+    <string name="report_failed">रिपोर्ट नहीं बनाई जा सकी</string>
+    <string name="report_open_chooser">रिपोर्ट खोलें</string>
+    <string name="report_no_viewer">कोई PDF व्यूअर इंस्टॉल नहीं है</string>
+    <string name="report_free_limit">मुफ़्त रिपोर्ट में वॉटरमार्क के साथ अधिकतम %1$d फ़ोटो शामिल होती हैं। असीमित, वॉटरमार्क-रहित रिपोर्ट के लिए प्रीमियम में अपग्रेड करें।</string>
 </resources>
