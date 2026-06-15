@@ -1,7 +1,9 @@
 package com.gpstools.camera.ui.screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -44,6 +46,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.gpstools.camera.R
+import com.gpstools.camera.media.capturePhoto
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -74,6 +77,16 @@ fun CameraPreview(modifier: Modifier = Modifier) {
         }
     }
 
+    // Full-resolution still-capture use case (US-006), bound alongside the preview.
+    // Prioritise quality over latency since these are proof photos.
+    val imageCapture = remember {
+        ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            .build()
+    }
+    // Prevents firing a second capture before the first one finishes.
+    var isCapturing by remember { mutableStateOf(false) }
+
     // (Re)bind whenever the lens facing changes. The camera provider keys its
     // use cases to the lifecycle, so we unbind everything first to avoid
     // "use case already bound" errors when toggling.
@@ -102,7 +115,7 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 .requireLensFacing(effectiveLens)
                 .build()
             cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(lifecycleOwner, selector, preview)
+            cameraProvider.bindToLifecycle(lifecycleOwner, selector, preview, imageCapture)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to bind camera preview", e)
         }
@@ -148,9 +161,22 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Shutter button — capture is wired up in US-006.
+            // Shutter button — captures a full-res photo to MediaStore (US-006).
             FilledIconButton(
-                onClick = { /* capture lands in US-006 */ },
+                onClick = {
+                    if (isCapturing) return@FilledIconButton
+                    isCapturing = true
+                    capturePhoto(context, imageCapture) { uri ->
+                        isCapturing = false
+                        val msg = if (uri != null) {
+                            context.getString(R.string.capture_saved)
+                        } else {
+                            context.getString(R.string.capture_failed)
+                        }
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    }
+                },
+                enabled = !isCapturing,
                 modifier = Modifier.size(72.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(

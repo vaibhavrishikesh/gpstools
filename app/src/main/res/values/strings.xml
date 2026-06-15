@@ -23,6 +23,10 @@
     <string name="camera_flip">Switch camera</string>
     <string name="camera_unavailable">Camera unavailable on this device</string>
 
+    <!-- Photo capture (US-006) -->
+    <string name="capture_saved">Photo saved</string>
+    <string name="capture_failed">Couldn\'t save photo</string>
+
     <!-- Location read (US-005) -->
     <string name="location_locating">Locating…</string>
     <string name="location_geocoding">Finding address…</string>

@@ -90,8 +90,8 @@
         "Verify a captured file exists and is viewable on emulator"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Shutter wired to a CameraX ImageCapture use case (CAPTURE_MODE_MAXIMIZE_QUALITY) bound alongside Preview in CameraPreview.kt's bindToLifecycle. capture/storage logic in media/PhotoStorage.kt: capturePhoto() -> takePicture(OutputFileOptions, mainExecutor, OnImageSavedCallback). OutputFileOptions writes JPEG into MediaStore Images EXTERNAL_CONTENT_URI with DISPLAY_NAME GPS_<yyyyMMdd_HHmmssSSS>.jpg + RELATIVE_PATH Pictures/gpstools on API 29+ (scoped storage, no perm); manifest declares WRITE_EXTERNAL_STORAGE maxSdkVersion=28 for API<=28. isCapturing guard disables the shutter mid-capture; Toast on saved/failed. Verified on emulator-5554: tapped shutter -> GPS_20260615_095909725.jpg registered in MediaStore (Pictures/gpstools/, 60KB), pulled file is a valid 1856x1392 baseline JPEG with Exif (no stamp yet -> US-007). No crash."
     },
     {
       "id": "US-007",
