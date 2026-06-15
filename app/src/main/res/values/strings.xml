@@ -17,4 +17,9 @@
     <string name="permission_denied_body">Camera and location are turned off. Open Settings to grant them, then come back to start capturing geotagged photos.</string>
     <string name="permission_grant">Grant permissions</string>
     <string name="permission_open_settings">Open settings</string>
+
+    <!-- Camera preview (US-004) -->
+    <string name="camera_shutter">Take photo</string>
+    <string name="camera_flip">Switch camera</string>
+    <string name="camera_unavailable">Camera unavailable on this device</string>
 </resources>

@@ -75,14 +75,9 @@ fun CameraScreen(modifier: Modifier = Modifier) {
     }
 }
 
-/** Placeholder for the camera preview that lands in US-004. */
+/** Live CameraX preview with shutter + lens toggle (US-004). */
 @Composable
-private fun CameraReadyContent(modifier: Modifier = Modifier) = PlaceholderScreen(
-    icon = Destination.Camera.icon,
-    title = stringResource(Destination.Camera.labelRes),
-    body = stringResource(R.string.camera_placeholder),
-    modifier = modifier,
-)
+private fun CameraReadyContent(modifier: Modifier = Modifier) = CameraPreview(modifier)
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

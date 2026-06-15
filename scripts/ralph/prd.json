@@ -60,8 +60,8 @@
         "Verify preview renders on emulator or device"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "CameraX (1.4.0: core/camera2/lifecycle/view) live Preview fills the Camera screen via AndroidView(PreviewView, FILL_CENTER). Shutter button (capture deferred to US-006) + front/back lens toggle shown only when both lenses exist; lensFacing in rememberSaveable. LaunchedEffect(lensFacing) rebinds (unbindAll first) and falls back to the available lens if the requested one is missing; DisposableEffect unbinds on leave for lifecycle safety. awaitCameraProvider() bridges the ListenableFuture via suspendCoroutine (no guava-coroutines dep). Verified on emulator-5554: live virtual-scene preview renders, lens flip switches front/back without crash (pid stable)."
     },
     {
       "id": "US-005",
