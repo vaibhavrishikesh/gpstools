@@ -10,6 +10,8 @@ To run the autonomous build, see [RALPH.md](RALPH.md) — needs `claude` CLI ins
 1. [01-competitive-research.md](01-competitive-research.md) — the app we checked + competitor stats
 2. [02-market-landscape.md](02-market-landscape.md) — market size, segments, monetization
 3. [03-scope-draft.md](03-scope-draft.md) — proposed scope / MVP for gpstools
+4. [04-phase2-improvements.md](04-phase2-improvements.md) — Phase-2 planning + prioritized improvement insights
+5. [tasks/prd-gpstools-mvp.md](tasks/prd-gpstools-mvp.md) — the MVP PRD (18 stories, all built)
 
 ## TL;DR
 - **Huge market, low satisfaction.** Category leader *GPS Map Camera* has **130M downloads but only 3.34★**. The app we checked (*GPS Photo* by gonext) has 21M downloads @ 4.10★.
