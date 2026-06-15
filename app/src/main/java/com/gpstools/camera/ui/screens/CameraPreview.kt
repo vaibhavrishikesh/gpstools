@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
@@ -120,10 +121,22 @@ fun CameraPreview(modifier: Modifier = Modifier) {
         }
     }
 
+    // Acquire location + reverse-geocoded address (US-005); shown as an overlay
+    // and later burned into the captured photo's stamp (US-007).
+    val locationState by rememberCurrentLocation()
+
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
             factory = { previewView },
             modifier = Modifier.fillMaxSize(),
+        )
+
+        LocationInfoOverlay(
+            state = locationState,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         )
 
         Row(

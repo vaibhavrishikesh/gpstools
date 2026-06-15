@@ -22,4 +22,10 @@
     <string name="camera_shutter">Take photo</string>
     <string name="camera_flip">Switch camera</string>
     <string name="camera_unavailable">Camera unavailable on this device</string>
+
+    <!-- Location read (US-005) -->
+    <string name="location_locating">Locating…</string>
+    <string name="location_geocoding">Finding address…</string>
+    <string name="location_unavailable">Location unavailable</string>
+    <string name="location_accuracy">±%1$d m accuracy</string>
 </resources>
