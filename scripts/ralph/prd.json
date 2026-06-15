@@ -119,8 +119,8 @@
         "Verify the map thumbnail appears in the saved image on emulator"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Static map thumbnail composited into the bottom-right of the stamp panel behind a provider interface (PRD's no-per-call-cost OSM option). New media/StaticMapProvider.kt: interface StaticMapProvider.fetchMapThumbnail(lat,lon,sizePx): Bitmap? + OsmStaticMapProvider that fetches the 256px web-mercator tiles (zoom 15) covering a centered window from https://tile.openstreetmap.org/{z}/{x}/{y}.png via HttpURLConnection (NO new dep, NO API key), stitches them, and draws a red center marker. OSM tile policy needs a User-Agent (set). Any failed tile / offline -> returns null -> stamp falls back to text spanning full width. PhotoStorage.capturePhoto gained a mapProvider param (default OsmStaticMapProvider) and fetches the map on the existing ioExecutor background thread between toUprightBitmap and drawStamp (only when lat/lon present). PhotoStamp.drawStamp(source, stamp, mapThumbnail?=null) reserves a MAP_SIZE(200@ref)*scale square on the right, wraps text in width minus the map, sizes the panel to max(textHeight, mapSize), and draws the map scaled (FILTER_BITMAP) with a white border. Added INTERNET permission to manifest. Verified on emulator-5554: capture -> GPS_20260615_101258993.jpg (173KB vs 126KB text-only) shows a real OSM map of central Bengaluru with the red marker + white border next to the wrapped address/coords/time."
     },
     {
       "id": "US-009",

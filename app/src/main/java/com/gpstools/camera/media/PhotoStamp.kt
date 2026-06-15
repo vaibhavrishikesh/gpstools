@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -24,6 +25,8 @@ data class StampData(
 
 /** Reference width the stamp's type sizes are tuned against; everything scales from it. */
 private const val REFERENCE_WIDTH = 1080f
+/** Side length of the square map thumbnail, in REFERENCE_WIDTH units (scaled at draw). */
+private const val MAP_SIZE = 200f
 private const val STAMP_DATE_PATTERN = "dd MMM yyyy  HH:mm:ss z"
 
 /**
@@ -32,8 +35,12 @@ private const val STAMP_DATE_PATTERN = "dd MMM yyyy  HH:mm:ss z"
  * stamp stays readable at any resolution, and the panel spans the full width so it
  * renders correctly for both portrait and landscape captures. [source] is assumed
  * to already be rotated upright (see PhotoStorage.toUprightBitmap).
+ *
+ * When [mapThumbnail] is non-null (US-008) a square map tile is composited on the
+ * right of the panel and the text wraps in the remaining width; when it's null
+ * (offline / no fix) the layout falls back to text spanning the full width.
  */
-fun drawStamp(source: Bitmap, stamp: StampData): Bitmap {
+fun drawStamp(source: Bitmap, stamp: StampData, mapThumbnail: Bitmap? = null): Bitmap {
     val result = if (source.isMutable && source.config == Bitmap.Config.ARGB_8888) {
         source
     } else {
@@ -64,7 +71,10 @@ fun drawStamp(source: Bitmap, stamp: StampData): Bitmap {
         typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
     }
 
-    val maxTextWidth = width - 2 * pad
+    // Reserve a square on the right for the map thumbnail when present.
+    val mapSize = if (mapThumbnail != null) MAP_SIZE * scale else 0f
+    val mapGap = if (mapThumbnail != null) pad else 0f
+    val maxTextWidth = width - 2 * pad - mapSize - mapGap
 
     // Build the ordered list of (text, paint) lines: address (wrapped), then the
     // coordinates line (when a fix exists), then the date/time line (always).
@@ -81,7 +91,9 @@ fun drawStamp(source: Bitmap, stamp: StampData): Bitmap {
         textHeight += paint.descent() - paint.ascent()
         if (index < lines.size - 1) textHeight += lineSpacing
     }
-    val panelTop = height - (textHeight + 2 * pad)
+    // The panel must be tall enough for whichever is bigger: the text or the map.
+    val contentHeight = maxOf(textHeight, mapSize)
+    val panelTop = height - (contentHeight + 2 * pad)
 
     val panelPaint = Paint().apply { color = Color.argb(150, 0, 0, 0) }
     canvas.drawRect(0f, panelTop, width.toFloat(), height.toFloat(), panelPaint)
@@ -90,6 +102,20 @@ fun drawStamp(source: Bitmap, stamp: StampData): Bitmap {
     lines.forEach { (text, paint) ->
         canvas.drawText(text, pad, top - paint.ascent(), paint)
         top += (paint.descent() - paint.ascent()) + lineSpacing
+    }
+
+    if (mapThumbnail != null) {
+        val mapLeft = width - pad - mapSize
+        val mapTop = panelTop + (contentHeight + 2 * pad - mapSize) / 2f // centered vertically
+        val dst = RectF(mapLeft, mapTop, mapLeft + mapSize, mapTop + mapSize)
+        val mapPaint = Paint(Paint.FILTER_BITMAP_FLAG)
+        canvas.drawBitmap(mapThumbnail, null, dst, mapPaint)
+        val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 2f * scale
+            color = Color.WHITE
+        }
+        canvas.drawRect(dst, borderPaint)
     }
     return result
 }
