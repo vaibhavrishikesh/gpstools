@@ -52,6 +52,7 @@ fun capturePhoto(
     context: Context,
     imageCapture: ImageCapture,
     stamp: StampData,
+    template: StampTemplate = StampTemplate.DEFAULT,
     mapProvider: StaticMapProvider = OsmStaticMapProvider(),
     onResult: (Uri?) -> Unit,
 ) {
@@ -62,14 +63,17 @@ fun capturePhoto(
             override fun onCaptureSuccess(image: ImageProxy) {
                 val uri = try {
                     val upright = image.toUprightBitmap()
-                    // Fetch the map thumbnail on this background thread; null (offline /
-                    // no fix) just means the stamp falls back to text-only (US-008).
-                    val mapThumbnail = if (stamp.latitude != null && stamp.longitude != null) {
+                    // Fetch the map thumbnail on this background thread, but only for
+                    // templates that render one; null (offline / no fix) just means the
+                    // stamp falls back to text-only (US-008).
+                    val mapThumbnail = if (template.usesMap &&
+                        stamp.latitude != null && stamp.longitude != null
+                    ) {
                         mapProvider.fetchMapThumbnail(stamp.latitude, stamp.longitude)
                     } else {
                         null
                     }
-                    val stamped = drawStamp(upright, stamp, mapThumbnail)
+                    val stamped = drawStamp(upright, stamp, template, mapThumbnail)
                     mapThumbnail?.recycle()
                     saveBitmap(appContext, stamped, stamp)
                 } catch (e: Exception) {

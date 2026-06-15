@@ -32,4 +32,11 @@
     <string name="location_geocoding">Finding address…</string>
     <string name="location_unavailable">Location unavailable</string>
     <string name="location_accuracy">±%1$d m accuracy</string>
+
+    <!-- Stamp templates (US-009) -->
+    <string name="template_classic">Classic</string>
+    <string name="template_minimal">Minimal</string>
+    <string name="template_field_report">Field Report</string>
+    <string name="template_picker">Stamp style</string>
+    <string name="template_selected">%1$s stamp</string>
 </resources>

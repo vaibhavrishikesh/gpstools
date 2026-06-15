@@ -134,8 +134,8 @@
         "Verify switching templates changes the saved stamp on emulator"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Three visually distinct templates via a StampTemplate enum (media/StampTemplate.kt): CLASSIC (full-width bottom panel: bold wrapped address + mono coords + date, OSM map bottom-right), MINIMAL (compact translucent strip bottom-left, coords + date/time only, no address/map — usesMap=false so the network map fetch is skipped), FIELD_REPORT (yellow accent 'FIELD REPORT' header band + labelled ADDRESS/COORDINATES/DATE-TIME rows with a larger map on the LEFT). PhotoStamp.drawStamp(source, stamp, template, mapThumbnail?) dispatches via when(template) to per-template draw fns sharing helpers (paint/panelFill/measureLines/drawLines/drawMap/wrapText). PhotoStorage.capturePhoto gained a template param and only fetches the map when template.usesMap. Picker = horizontally-scrollable FilterChip row (TemplatePickerRow) above the shutter in CameraPreview.kt; selection persisted via SharedPreferences (StampTemplateStore) + rememberSaveable so it survives captures/launches. Verified on emulator-5554: captured one photo per template — Classic GPS_...101904, Minimal GPS_...102015 (text-only bottom-left), Field Report GPS_...101917 (header band + map left); each saved image shows its distinct layout cleanly with no overlap. GOTCHA: rapid back-to-back captures can drop one — isCapturing stays true until the (network) map fetch + save finishes, so a second shutter tap within a few seconds is ignored by the guard."
     },
     {
       "id": "US-010",

@@ -7,9 +7,12 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,11 +20,15 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Lens
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -48,7 +55,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.gpstools.camera.R
 import com.gpstools.camera.location.LocationUiState
 import com.gpstools.camera.media.StampData
+import com.gpstools.camera.media.StampTemplate
+import com.gpstools.camera.media.StampTemplateStore
 import com.gpstools.camera.media.capturePhoto
+import com.gpstools.camera.media.label
 import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -89,6 +99,10 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     }
     // Prevents firing a second capture before the first one finishes.
     var isCapturing by remember { mutableStateOf(false) }
+
+    // Selected stamp template (US-009), persisted across captures + launches.
+    val templateStore = remember { StampTemplateStore(context) }
+    var template by rememberSaveable { mutableStateOf(templateStore.load()) }
 
     // (Re)bind whenever the lens facing changes. The camera provider keys its
     // use cases to the lifecycle, so we unbind everything first to avoid
@@ -155,15 +169,24 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         )
 
-        Row(
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .padding(bottom = 32.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // Template picker (US-009) — selection persists across captures.
+            TemplatePickerRow(
+                selected = template,
+                onSelect = {
+                    template = it
+                    templateStore.save(it)
+                },
+                modifier = Modifier.padding(bottom = 20.dp),
+            )
+
             // Shutter button — captures a full-res photo to MediaStore (US-006).
             FilledIconButton(
                 onClick = {
@@ -180,7 +203,7 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                         accuracyMeters = available?.fix?.accuracyMeters,
                         address = available?.address,
                     )
-                    capturePhoto(context, imageCapture, stamp) { uri ->
+                    capturePhoto(context, imageCapture, stamp, template) { uri ->
                         isCapturing = false
                         val msg = if (uri != null) {
                             context.getString(R.string.capture_saved)
@@ -228,6 +251,41 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                     tint = Color.White,
                 )
             }
+        }
+    }
+}
+
+/**
+ * Horizontally-scrollable row of FilterChips for choosing the stamp template
+ * (US-009). The current [selected] template is highlighted; tapping a chip calls
+ * [onSelect] so the caller can apply + persist it.
+ */
+@Composable
+private fun TemplatePickerRow(
+    selected: StampTemplate,
+    onSelect: (StampTemplate) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    Row(
+        modifier = modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        StampTemplate.entries.forEachIndexed { index, t ->
+            if (index > 0) Spacer(Modifier.width(8.dp))
+            FilterChip(
+                selected = t == selected,
+                onClick = { onSelect(t) },
+                label = { Text(t.label(context)) },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color.Black.copy(alpha = 0.45f),
+                    labelColor = Color.White,
+                    selectedContainerColor = Color.White,
+                    selectedLabelColor = Color.Black,
+                ),
+            )
         }
     }
 }
