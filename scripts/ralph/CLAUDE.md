@@ -1,19 +1,26 @@
 # Ralph Agent Instructions
 
-You are an autonomous coding agent working on a software project.
+You are an autonomous coding agent building **gpstools**, a native Android app
+(Kotlin + Jetpack Compose). Your working directory is the repo root
+`/Users/vaibhav/workspace/gpstools`. Create the Android project and all app code
+**here in the repo root** (NOT inside scripts/). The Android SDK is at
+`~/Library/Android/sdk` and `ANDROID_HOME` is exported in your environment.
+
+Read `tasks/prd-gpstools-mvp.md` for full product context (what/why/how, design,
+tech considerations) before implementing.
 
 ## Your Task
 
-1. Read the PRD at `prd.json` (in the same directory as this file)
-2. Read the progress log at `progress.txt` (check Codebase Patterns section first)
-3. Check you're on the correct branch from PRD `branchName`. If not, check it out or create from main.
+1. Read the PRD at `scripts/ralph/prd.json`
+2. Read the progress log at `scripts/ralph/progress.txt` (check Codebase Patterns section first)
+3. Check you're on the correct branch from PRD `branchName` (ralph/gpstools-mvp). If not, check it out or create from main.
 4. Pick the **highest priority** user story where `passes: false`
 5. Implement that single user story
-6. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
+6. Run quality checks: the project quality gate is `./gradlew assembleDebug` (the build must pass). For US-001 you must create the Gradle wrapper + project so this command works.
 7. Update CLAUDE.md files if you discover reusable patterns (see below)
 8. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
-9. Update the PRD to set `passes: true` for the completed story
-10. Append your progress to `progress.txt`
+9. Update the PRD at `scripts/ralph/prd.json` to set `passes: true` for the completed story
+10. Append your progress to `scripts/ralph/progress.txt`
 
 ## Progress Report Format
 

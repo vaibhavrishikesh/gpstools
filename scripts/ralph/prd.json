@@ -15,8 +15,8 @@
         "Verify app launches on Android emulator"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Scaffolded with Gradle 8.9 wrapper, AGP 8.5.2, Kotlin 2.0.21, Compose BOM 2024.10.01, compile/targetSdk 35, minSdk 24. Builds + launches placeholder Home on emulator."
     },
     {
       "id": "US-002",
