@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">gpstools</string>
+
+    <!-- Bottom navigation -->
+    <string name="tab_camera">Camera</string>
+    <string name="tab_gallery">Gallery</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Placeholder screens -->
+    <string name="camera_placeholder">Camera preview coming soon</string>
+    <string name="gallery_placeholder">Your geotagged photos will appear here</string>
+    <string name="settings_placeholder">Settings coming soon</string>
 </resources>

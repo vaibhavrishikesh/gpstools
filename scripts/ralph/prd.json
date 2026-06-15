@@ -30,8 +30,8 @@
         "Verify navigation between tabs on Android emulator"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Bottom NavigationBar (Material 3) with Camera/Gallery/Settings tabs wired via Navigation Compose NavHost. Camera is start destination. Each tab shows a distinct PlaceholderScreen. Verified tab switching on emulator-5554."
     },
     {
       "id": "US-003",
