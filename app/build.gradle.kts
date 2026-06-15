@@ -39,6 +39,10 @@ android {
     }
     buildFeatures {
         compose = true
+        // Enabled so the billing flow (US-016) can expose a DEBUG-only
+        // "simulate purchase" affordance for emulator verification without a
+        // configured Play Console product. Off by default in AGP 8.
+        buildConfig = true
     }
 }
 
@@ -67,5 +71,7 @@ dependencies {
     // off the COMPILE classpath. Declaring Guava directly keeps the real class on
     // the compile classpath so CameraX's ProcessCameraProvider API resolves.
     implementation(libs.guava)
+    // Google Play Billing (US-016) — one-time IAP to remove ads + unlock premium.
+    implementation(libs.billing.ktx)
     debugImplementation(libs.androidx.ui.tooling)
 }

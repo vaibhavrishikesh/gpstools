@@ -6,6 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.gpstools.camera.ads.Ads
+import com.gpstools.camera.billing.BillingManager
+import com.gpstools.camera.billing.Premium
 import com.gpstools.camera.locale.wrapWithStoredLocale
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -34,6 +36,11 @@ import com.gpstools.camera.ui.screens.SettingsScreen
 import com.gpstools.camera.ui.theme.GpstoolsTheme
 
 class MainActivity : ComponentActivity() {
+    // Connects to Play Billing on launch to RESTORE the one-time entitlement
+    // (US-016) — queryOwnedPurchases runs as soon as the connection is ready, so
+    // a reinstalled app re-grants premium without any user action.
+    private var billingManager: BillingManager? = null
+
     override fun attachBaseContext(newBase: Context) {
         // Apply the in-app language (US-013) before the activity inflates so all
         // resources resolve in the chosen locale; recreate() re-runs this.
@@ -45,12 +52,22 @@ class MainActivity : ComponentActivity() {
         // Initialise AdMob + load the persisted ads-enabled flag (US-015). Guarded
         // internally so it can never crash the app.
         Ads.initialize(this)
+        // Load the persisted premium entitlement (US-016) and kick off the Play
+        // Billing restore so reinstalls re-grant ownership automatically.
+        Premium.load(this)
+        billingManager = BillingManager(this).also { it.start() }
         enableEdgeToEdge()
         setContent {
             GpstoolsTheme {
                 GpsToolsApp()
             }
         }
+    }
+
+    override fun onDestroy() {
+        billingManager?.release()
+        billingManager = null
+        super.onDestroy()
     }
 }
 

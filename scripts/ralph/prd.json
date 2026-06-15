@@ -239,7 +239,7 @@
         "Verify with Play Billing test/license flow or a debug stub on emulator"
       ],
       "priority": 16,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

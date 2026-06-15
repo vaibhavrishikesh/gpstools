@@ -92,4 +92,16 @@
     <string name="map_empty_body">स्थान फ़िक्स के साथ ली गई फ़ोटो यहाँ दिखेंगी, जहाँ आपने उन्हें लिया वहाँ पिन की हुई।</string>
     <string name="map_preview_close">बंद करें</string>
     <string name="map_meta_coords">%1$.6f, %2$.6f</string>
+
+    <!-- Premium / one-time IAP (US-016) -->
+    <string name="premium_title">प्रीमियम</string>
+    <string name="premium_summary">एक बार की खरीद: विज्ञापन हटाएँ और प्रीमियम स्टैम्प टेम्पलेट अनलॉक करें।</string>
+    <string name="premium_buy">विज्ञापन हटाएँ और प्रीमियम अनलॉक करें</string>
+    <string name="premium_restore">खरीद पुनर्स्थापित करें</string>
+    <string name="premium_restoring">पिछली खरीद जाँची जा रही है…</string>
+    <string name="premium_unlocked">प्रीमियम अनलॉक हो गया — धन्यवाद!</string>
+    <string name="premium_unavailable">अभी खरीद उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।</string>
+    <string name="premium_locked">प्रीमियम टेम्पलेट — अनलॉक करने के लिए टैप करें</string>
+    <string name="premium_debug_simulate">(डीबग) खरीद का अनुकरण करें</string>
+    <string name="premium_debug_reset">(डीबग) खरीद रीसेट करें</string>
 </resources>

@@ -11,10 +11,14 @@ import com.gpstools.camera.R
  *
  * [usesMap] lets the capture pipeline skip the (network) map fetch entirely for
  * templates that don't render one.
+ *
+ * [premium] templates are locked behind the one-time IAP (US-016) — gated in the
+ * picker on [com.gpstools.camera.billing.Premium.isPremium].
  */
 enum class StampTemplate(
     @StringRes val labelRes: Int,
     val usesMap: Boolean,
+    val premium: Boolean = false,
 ) {
     /** Full-width panel: bold wrapped address, coords, date/time + map on the right. */
     CLASSIC(R.string.template_classic, usesMap = true),
@@ -23,7 +27,7 @@ enum class StampTemplate(
     MINIMAL(R.string.template_minimal, usesMap = false),
 
     /** Documentation layout: header band + labelled rows and a larger map on the left. */
-    FIELD_REPORT(R.string.template_field_report, usesMap = true);
+    FIELD_REPORT(R.string.template_field_report, usesMap = true, premium = true);
 
     companion object {
         /** The template applied when the user hasn't picked one yet. */

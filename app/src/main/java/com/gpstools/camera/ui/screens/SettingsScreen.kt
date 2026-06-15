@@ -13,16 +13,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import android.widget.Toast
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +34,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import com.gpstools.camera.BuildConfig
 import com.gpstools.camera.R
+import com.gpstools.camera.billing.BillingManager
+import com.gpstools.camera.billing.Premium
 import com.gpstools.camera.locale.AppLanguage
 import com.gpstools.camera.locale.LocaleStore
 import com.gpstools.camera.locale.findActivity
@@ -67,6 +74,9 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             text = stringResource(Destination.Settings.labelRes),
             style = MaterialTheme.typography.headlineSmall,
         )
+
+        // --- Premium / remove ads (US-016) ---
+        PremiumSection()
 
         // --- Language (US-013) ---
         SectionHeader(
@@ -162,6 +172,89 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
                 ) {
                     Text(stringResource(R.string.settings_privacy_policy))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Premium upsell / status (US-016). When the entitlement is owned it shows an
+ * "unlocked" card; otherwise a buy button (launches the Play Billing flow) plus a
+ * "Restore purchases" button. A DEBUG-only toggle simulates a purchase so the flow
+ * is verifiable on an emulator without a configured Play Console product.
+ */
+@Composable
+private fun PremiumSection() {
+    val context = LocalContext.current
+
+    // One billing connection scoped to this screen for the buy/restore actions.
+    val billing = remember { BillingManager(context) }
+    DisposableEffect(Unit) {
+        billing.start()
+        onDispose { billing.release() }
+    }
+
+    SectionHeader(
+        title = stringResource(R.string.premium_title),
+        summary = stringResource(R.string.premium_summary),
+    )
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            if (Premium.isPremium) {
+                Text(
+                    text = stringResource(R.string.premium_unlocked),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            } else {
+                Button(
+                    onClick = {
+                        val activity = context.findActivity()
+                        val launched = activity != null && billing.launchPurchase(activity)
+                        if (!launched) {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.premium_unavailable),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.premium_buy))
+                }
+                TextButton(
+                    onClick = {
+                        billing.queryOwnedPurchases()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.premium_restoring),
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    },
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                ) {
+                    Text(stringResource(R.string.premium_restore))
+                }
+            }
+
+            // DEBUG-only: simulate the purchase / reset so the unlock can be
+            // verified on an emulator where the Play product isn't configured.
+            if (BuildConfig.DEBUG) {
+                OutlinedButton(
+                    onClick = {
+                        if (Premium.isPremium) Premium.revokeForDebug(context)
+                        else Premium.grant(context)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                ) {
+                    Text(
+                        if (Premium.isPremium) stringResource(R.string.premium_debug_reset)
+                        else stringResource(R.string.premium_debug_simulate),
+                    )
                 }
             }
         }

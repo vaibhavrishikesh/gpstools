@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lens
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
@@ -63,6 +64,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.gpstools.camera.R
 import com.gpstools.camera.ads.InterstitialAdManager
+import com.gpstools.camera.billing.BillingManager
+import com.gpstools.camera.billing.Premium
 import com.gpstools.camera.locale.findActivity
 import com.gpstools.camera.location.LocationUiState
 import com.gpstools.camera.media.CustomFields
@@ -122,6 +125,14 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     // Selected stamp template (US-009), persisted across captures + launches.
     val templateStore = remember { StampTemplateStore(context) }
     var template by rememberSaveable { mutableStateOf(templateStore.load()) }
+
+    // Billing connection (US-016) so tapping a locked premium template can launch
+    // the one-time purchase flow right from the picker.
+    val billing = remember { BillingManager(context) }
+    DisposableEffect(Unit) {
+        billing.start()
+        onDispose { billing.release() }
+    }
 
     // User's custom stamp fields (US-010): project/site name, note, logo. Persisted
     // across captures + launches via SharedPreferences + an app-storage logo file.
@@ -212,11 +223,25 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Template picker (US-009) — selection persists across captures.
+            // Premium templates (US-016) are locked until the IAP is owned; tapping
+            // a locked one launches the purchase flow instead of selecting it.
             TemplatePickerRow(
                 selected = template,
+                isPremium = Premium.isPremium,
                 onSelect = {
                     template = it
                     templateStore.save(it)
+                },
+                onLocked = {
+                    val activity = context.findActivity()
+                    val launched = activity != null && billing.launchPurchase(activity)
+                    if (!launched) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.premium_unavailable),
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
                 },
                 modifier = Modifier.padding(bottom = 20.dp),
             )
@@ -244,7 +269,12 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                         timeFormat = AppSettingsStore.loadTimeFormat(context),
                     )
                     val logoFile = customFieldsStore.logoFileOrNull()
-                    capturePhoto(context, imageCapture, stamp, template, logoFile) { uri ->
+                    // Never burn a premium template (US-016) without the entitlement
+                    // — e.g. it was selected before the IAP existed or after a refund.
+                    val effectiveTemplate =
+                        if (template.premium && !Premium.isPremium) StampTemplate.DEFAULT
+                        else template
+                    capturePhoto(context, imageCapture, stamp, effectiveTemplate, logoFile) { uri ->
                         isCapturing = false
                         val msg = if (uri != null) {
                             context.getString(R.string.capture_saved)
@@ -423,11 +453,16 @@ private fun CustomFieldsDialog(
  * Horizontally-scrollable row of FilterChips for choosing the stamp template
  * (US-009). The current [selected] template is highlighted; tapping a chip calls
  * [onSelect] so the caller can apply + persist it.
+ *
+ * Premium templates (US-016) show a lock icon while [isPremium] is false and route
+ * taps to [onLocked] (which launches the purchase flow) instead of selecting them.
  */
 @Composable
 private fun TemplatePickerRow(
     selected: StampTemplate,
+    isPremium: Boolean,
     onSelect: (StampTemplate) -> Unit,
+    onLocked: (StampTemplate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -439,13 +474,26 @@ private fun TemplatePickerRow(
     ) {
         StampTemplate.entries.forEachIndexed { index, t ->
             if (index > 0) Spacer(Modifier.width(8.dp))
+            val locked = t.premium && !isPremium
             FilterChip(
-                selected = t == selected,
-                onClick = { onSelect(t) },
+                selected = t == selected && !locked,
+                onClick = { if (locked) onLocked(t) else onSelect(t) },
                 label = { Text(t.label(context)) },
+                leadingIcon = if (locked) {
+                    {
+                        Icon(
+                            imageVector = Icons.Filled.Lock,
+                            contentDescription = stringResource(R.string.premium_locked),
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                } else {
+                    null
+                },
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = Color.Black.copy(alpha = 0.45f),
                     labelColor = Color.White,
+                    iconColor = Color.White,
                     selectedContainerColor = Color.White,
                     selectedLabelColor = Color.Black,
                 ),

@@ -91,4 +91,16 @@
     <string name="map_empty_body">Photos you capture with a location fix appear here, pinned to where you took them.</string>
     <string name="map_preview_close">Close</string>
     <string name="map_meta_coords">%1$.6f, %2$.6f</string>
+
+    <!-- Premium / one-time IAP (US-016) -->
+    <string name="premium_title">Premium</string>
+    <string name="premium_summary">One-time purchase: remove ads and unlock premium stamp templates.</string>
+    <string name="premium_buy">Remove ads &amp; unlock premium</string>
+    <string name="premium_restore">Restore purchase</string>
+    <string name="premium_restoring">Checking for previous purchases…</string>
+    <string name="premium_unlocked">Premium unlocked — thank you!</string>
+    <string name="premium_unavailable">Purchases are unavailable right now. Please try again later.</string>
+    <string name="premium_locked">Premium template — tap to unlock</string>
+    <string name="premium_debug_simulate">(debug) Simulate purchase</string>
+    <string name="premium_debug_reset">(debug) Reset purchase</string>
 </resources>

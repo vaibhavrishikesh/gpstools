@@ -65,3 +65,28 @@ GOTCHA — guava/ListenableFuture conflict: `play-services-ads` pulls full Guava
 which makes Gradle dedupe CameraX's `listenablefuture:1.0` down to the empty stub,
 dropping `ListenableFuture` off the COMPILE classpath (CameraX won't compile). Fix
 = declare `implementation(libs.guava)` directly so the real class stays on compile.
+
+## Premium / one-time IAP (US-016)
+Google Play Billing (`libs.billing.ktx`, billing-ktx 7.1.1). `billing/Premium.kt`
+(object, mirrors `Ads`) is the single source of truth: global Compose-state
+`isPremium` flag persisted to SharedPreferences + `grant(context)` (the sink for
+every purchase/restore — sets the flag AND calls `Ads.setEnabled(false)` so the
+remove-ads side is automatic) + `load(context)` (call once in `MainActivity.onCreate`).
+`billing/BillingManager.kt` wraps `BillingClient` (one instance per use site; each
+holds its own connection): `start()` connects then auto-restores via
+`queryOwnedPurchases()` (handles reinstall) + loads `ProductDetails`;
+`launchPurchase(activity)` returns false when not connected / details not loaded
+(caller toasts "unavailable"); the `PurchasesUpdatedListener` + restore both funnel
+PURCHASED purchases into `Premium.grant` + acknowledge. ALL SDK calls runCatching-
+guarded. `MainActivity` creates a `BillingManager` in onCreate (restore) and
+`release()`s in onDestroy. Premium templates: `StampTemplate.premium` flag
+(FIELD_REPORT = true); the picker in `CameraPreview` shows a `Icons.Filled.Lock`
+leadingIcon + routes taps to a purchase-launch callback while `!Premium.isPremium`,
+and capture falls back to `StampTemplate.DEFAULT` if a premium template is selected
+without the entitlement. Settings has a `PremiumSection` (buy/restore, or "unlocked"
+status). DEBUG verify: `buildConfig = true` is enabled so a `BuildConfig.DEBUG`-only
+"simulate/reset purchase" `OutlinedButton` (calls `Premium.grant`/`revokeForDebug`)
+unlocks on an emulator with no configured Play product. The BILLING manifest
+permission is merged in by the billing library. NOTE: the `PurchasesUpdatedListener`
+must be created via the `PurchasesUpdatedListener { .. }` SAM ctor, NOT a bare
+`{ r, p -> }` lambda — the latter infers a non-Unit return and fails to compile.
