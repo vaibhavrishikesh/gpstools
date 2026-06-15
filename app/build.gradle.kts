@@ -61,5 +61,11 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.coil.compose)
     implementation(libs.osmdroid.android)
+    implementation(libs.play.services.ads)
+    // play-services-ads (US-015) pulls in full Guava, which makes Gradle dedupe
+    // CameraX's `listenablefuture:1.0` to the empty stub — leaving ListenableFuture
+    // off the COMPILE classpath. Declaring Guava directly keeps the real class on
+    // the compile classpath so CameraX's ProcessCameraProvider API resolves.
+    implementation(libs.guava)
     debugImplementation(libs.androidx.ui.tooling)
 }

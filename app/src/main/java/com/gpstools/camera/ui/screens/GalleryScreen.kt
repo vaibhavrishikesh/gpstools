@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.gpstools.camera.R
+import com.gpstools.camera.ads.BannerAd
 import com.gpstools.camera.media.CapturedPhoto
 import com.gpstools.camera.media.deleteCapturedPhoto
 import com.gpstools.camera.media.queryCapturedPhotos
@@ -83,11 +84,18 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) { refresh() }
 
     Box(modifier = modifier.fillMaxSize()) {
-        val current = photos
-        when {
-            current == null -> LoadingState()
-            current.isEmpty() -> EmptyGalleryState()
-            else -> PhotoGrid(photos = current, onClick = { selected = it })
+        Column(Modifier.fillMaxSize()) {
+            val current = photos
+            Box(Modifier.weight(1f)) {
+                when {
+                    current == null -> LoadingState()
+                    current.isEmpty() -> EmptyGalleryState()
+                    else -> PhotoGrid(photos = current, onClick = { selected = it })
+                }
+            }
+            // Non-intrusive banner ad on the free tier (US-015); hides itself when
+            // ads are disabled. Sits below the grid so it never overlaps photos.
+            BannerAd()
         }
 
         selected?.let { photo ->

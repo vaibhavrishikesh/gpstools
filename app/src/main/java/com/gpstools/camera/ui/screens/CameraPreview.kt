@@ -62,6 +62,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.gpstools.camera.R
+import com.gpstools.camera.ads.InterstitialAdManager
+import com.gpstools.camera.locale.findActivity
 import com.gpstools.camera.location.LocationUiState
 import com.gpstools.camera.media.CustomFields
 import com.gpstools.camera.media.CustomFieldsStore
@@ -111,6 +113,11 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     }
     // Prevents firing a second capture before the first one finishes.
     var isCapturing by remember { mutableStateOf(false) }
+
+    // Free-tier interstitial ad shown after every Nth capture (US-015). Preloaded
+    // up front; never blocks the capture itself.
+    val interstitialAds = remember { InterstitialAdManager(context) }
+    LaunchedEffect(Unit) { interstitialAds.preload() }
 
     // Selected stamp template (US-009), persisted across captures + launches.
     val templateStore = remember { StampTemplateStore(context) }
@@ -245,6 +252,11 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                             context.getString(R.string.capture_failed)
                         }
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        // Photo is already saved — only now (post-save) maybe show an
+                        // interstitial, so an ad can never block or delay a capture.
+                        if (uri != null) {
+                            interstitialAds.onCaptureCompleted(context.findActivity())
+                        }
                     }
                 },
                 enabled = !isCapturing,

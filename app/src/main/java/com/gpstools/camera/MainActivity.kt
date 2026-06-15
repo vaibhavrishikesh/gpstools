@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.gpstools.camera.ads.Ads
 import com.gpstools.camera.locale.wrapWithStoredLocale
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -41,6 +42,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Initialise AdMob + load the persisted ads-enabled flag (US-015). Guarded
+        // internally so it can never crash the app.
+        Ads.initialize(this)
         enableEdgeToEdge()
         setContent {
             GpstoolsTheme {

@@ -49,3 +49,19 @@ Stamp-affecting format prefs (US-014) live in `settings/AppSettings.kt`
 (`CoordinateFormat` decimal/DMS, `TimeFormat` 24/12h, `AppSettingsStore`); they
 work because `StampData` CARRIES the format (defaulted), snapshotted from the store
 at shutter-press in `CameraPreview` — so a setting change affects the next capture.
+
+## Ads (US-015)
+AdMob lives in `ads/`: `Ads` (object) holds the configurable test ad unit ids +
+the SINGLE global `adsEnabled` Compose-state flag (persisted to SharedPreferences;
+the US-016 remove-ads IAP just calls `Ads.setEnabled`). Every placement gates on
+`Ads.adsEnabled`. `BannerAd()` (adaptive `AdView` via AndroidView) renders nothing
+when disabled — placed at the bottom of the Gallery. `InterstitialAdManager`
+(remembered in `CameraPreview`, preloaded once) shows an interstitial after every
+`CAPTURES_PER_INTERSTITIAL` (5) captures, called from the POST-save callback so an
+ad can never block/delay a capture; all SDK calls are `runCatching`-guarded.
+`MainActivity.onCreate` calls `Ads.initialize(this)`. Manifest needs the AdMob
+`APPLICATION_ID` meta-data (Google's test app id committed).
+GOTCHA — guava/ListenableFuture conflict: `play-services-ads` pulls full Guava,
+which makes Gradle dedupe CameraX's `listenablefuture:1.0` down to the empty stub,
+dropping `ListenableFuture` off the COMPILE classpath (CameraX won't compile). Fix
+= declare `implementation(libs.guava)` directly so the real class stays on compile.

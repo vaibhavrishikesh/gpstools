@@ -224,8 +224,8 @@
         "Verify a test ad shows on emulator"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "AdMob (Google Mobile Ads SDK 23.6.0) with a single global ads-enabled flag (ads/Ads.kt: configurable Google TEST ad unit ids + adsEnabled Compose-state persisted to SharedPreferences + initialize()/setEnabled() — the US-016 remove-ads IAP just calls setEnabled(false)). Two non-intrusive placements, both gated on Ads.adsEnabled and runCatching-guarded so they never crash or block capture: (1) ads/BannerAd.kt = adaptive AdView banner at the bottom of the Gallery tab (renders nothing when disabled); (2) ads/InterstitialAdManager.kt = preloaded interstitial shown after every 5 captures, invoked from the POST-save capture callback in CameraPreview so the photo is already saved before any ad shows. MainActivity.onCreate calls Ads.initialize(this); AndroidManifest declares the AdMob APPLICATION_ID meta-data (test app id ca-app-pub-3940256099942544~3347511712, required or the SDK throws on init). BUILD GOTCHA: play-services-ads pulls full Guava which dedupes CameraX's listenablefuture:1.0 to the empty stub and drops ListenableFuture off the compile classpath — fixed by adding implementation(libs.guava) directly (NOT by excluding listenablefuture). Verified on emulator-5554: Gallery shows the 'This is a 468x60 test ad' AdMob banner below the grid; capturing 5 photos saved all 5 (MediaStore GPS_ count 8->13, capture never blocked) then the AdMob interstitial test ad appeared after the 5th, and closing it returned cleanly to MainActivity with the app pid stable throughout (no crash)."
     },
     {
       "id": "US-016",
