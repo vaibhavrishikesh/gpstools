@@ -38,6 +38,7 @@ import com.gpstools.camera.BuildConfig
 import com.gpstools.camera.R
 import com.gpstools.camera.billing.BillingManager
 import com.gpstools.camera.billing.Premium
+import com.gpstools.camera.billing.Subscription
 import com.gpstools.camera.locale.AppLanguage
 import com.gpstools.camera.locale.LocaleStore
 import com.gpstools.camera.locale.findActivity
@@ -63,6 +64,15 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     var coordinateFormat by remember { mutableStateOf(AppSettingsStore.loadCoordinateFormat(context)) }
     var timeFormat by remember { mutableStateOf(AppSettingsStore.loadTimeFormat(context)) }
 
+    // One billing connection scoped to the whole screen, shared by the one-time
+    // Premium section (US-016) and the Pro subscription section (US-018) so the
+    // app doesn't open two parallel Play Billing connections.
+    val billing = remember { BillingManager(context) }
+    DisposableEffect(Unit) {
+        billing.start()
+        onDispose { billing.release() }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -76,7 +86,10 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         )
 
         // --- Premium / remove ads (US-016) ---
-        PremiumSection()
+        PremiumSection(billing)
+
+        // --- Pro subscription (US-018) ---
+        ProSubscriptionSection(billing)
 
         // --- Language (US-013) ---
         SectionHeader(
@@ -185,15 +198,8 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
  * is verifiable on an emulator without a configured Play Console product.
  */
 @Composable
-private fun PremiumSection() {
+private fun PremiumSection(billing: BillingManager) {
     val context = LocalContext.current
-
-    // One billing connection scoped to this screen for the buy/restore actions.
-    val billing = remember { BillingManager(context) }
-    DisposableEffect(Unit) {
-        billing.start()
-        onDispose { billing.release() }
-    }
 
     SectionHeader(
         title = stringResource(R.string.premium_title),
@@ -258,6 +264,85 @@ private fun PremiumSection() {
                 }
             }
         }
+    }
+}
+
+/**
+ * Pro subscription upsell / status (US-018). When subscribed it shows an "active"
+ * card; otherwise a "Go Pro" button that opens the [PaywallDialog] describing the
+ * benefits + India pricing, with monthly/yearly subscribe + restore. A DEBUG-only
+ * simulate button unlocks the entitlement on an emulator without a Play product.
+ */
+@Composable
+private fun ProSubscriptionSection(billing: BillingManager) {
+    val context = LocalContext.current
+    var showPaywall by remember { mutableStateOf(false) }
+
+    SectionHeader(
+        title = stringResource(R.string.pro_title),
+        summary = stringResource(R.string.pro_settings_summary),
+    )
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            if (Subscription.isSubscribed) {
+                Text(
+                    text = stringResource(R.string.pro_active),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                if (BuildConfig.DEBUG) {
+                    OutlinedButton(
+                        onClick = { Subscription.clear(context) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                    ) {
+                        Text(stringResource(R.string.pro_debug_reset))
+                    }
+                }
+            } else {
+                Button(
+                    onClick = { showPaywall = true },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.pro_go_pro))
+                }
+            }
+        }
+    }
+
+    if (showPaywall) {
+        PaywallDialog(
+            monthlyPrice = billing.subscriptionPrice(Subscription.MONTHLY_PRODUCT_ID)
+                ?: stringResource(R.string.pro_price_monthly),
+            yearlyPrice = billing.subscriptionPrice(Subscription.YEARLY_PRODUCT_ID)
+                ?: stringResource(R.string.pro_price_yearly),
+            onSubscribe = { productId ->
+                val activity = context.findActivity()
+                val launched = activity != null && billing.launchSubscriptionPurchase(activity, productId)
+                if (!launched) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.premium_unavailable),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
+            },
+            onRestore = {
+                billing.queryOwnedPurchases()
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.premium_restoring),
+                    Toast.LENGTH_SHORT,
+                ).show()
+            },
+            onDismiss = { showPaywall = false },
+            showDebug = BuildConfig.DEBUG,
+            onDebugSimulate = {
+                Subscription.grant(context, Subscription.YEARLY_PRODUCT_ID)
+                showPaywall = false
+            },
+        )
     }
 }
 

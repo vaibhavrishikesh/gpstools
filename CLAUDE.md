@@ -107,3 +107,33 @@ unlocks on an emulator with no configured Play product. The BILLING manifest
 permission is merged in by the billing library. NOTE: the `PurchasesUpdatedListener`
 must be created via the `PurchasesUpdatedListener { .. }` SAM ctor, NOT a bare
 `{ r, p -> }` lambda — the latter infers a non-Unit return and fails to compile.
+
+## Pro subscription (US-018)
+Recurring "Pro" subscriptions (`pro_monthly`, `pro_yearly`) unlock unlimited /
+watermark-free PDF reports + batch export. `billing/Subscription.kt` (object,
+mirrors `Premium`) is the entitlement: Compose-state `isSubscribed` + `activePlan`
+persisted to SharedPreferences (`subscription_settings`) + `grant(context, productId)`
++ `clear(context)` + `load(context)` (called once in `MainActivity.onCreate`, like
+`Premium.load`). `Subscription` is INDEPENDENT of `Premium` — it does NOT touch ads.
+The combined gate is `Entitlements.hasUnlimitedReports = Premium.isPremium ||
+Subscription.isSubscribed` (same file); `GalleryScreen` passes THAT (not
+`Premium.isPremium`) as the `isPremium` arg of `generatePhotoReport` — so EITHER the
+one-time IAP or the subscription gives uncapped, watermark-free reports. The SAME
+`BillingManager` now handles BOTH product types: `start()`/`queryOwnedPurchases()`
+query INAPP **and** SUBS (so reinstall restores either); `querySubscriptionDetails()`
+loads the SUBS `ProductDetails`; `subscriptionPrice(productId)` reads the first
+offer's first pricing-phase `formattedPrice`; `launchSubscriptionPurchase(activity,
+productId)` builds `BillingFlowParams` with `.setOfferToken(offerDetails.first().offerToken)`
+(REQUIRED for SUBS — without an offer token it returns false); `handlePurchase`
+routes by `purchase.products` → `Premium.grant` (INAPP) or `Subscription.grant` (SUBS).
+Like Premium, restore NEVER auto-revokes (avoids yanking access on a transient
+offline launch). Paywall = `ui/screens/PaywallScreen.kt` `PaywallDialog` — a centered
+`Dialog`+`Card` (NOT fullscreen, so the edge-to-edge inset-clipping gotcha doesn't
+apply) listing the 3 benefits + monthly/yearly India pricing (live price when loaded,
+else static `pro_price_*` strings) + subscribe/restore + a `BuildConfig.DEBUG`
+simulate button. `SettingsScreen` now creates ONE shared `BillingManager` (lifted out
+of `PremiumSection`) passed to both `PremiumSection(billing)` and a new
+`ProSubscriptionSection(billing)` (Go-Pro→paywall, or "Pro active" + debug cancel).
+DEBUG verify without a Play product: the paywall's "(debug) Simulate subscription"
+calls `Subscription.grant(.., YEARLY_PRODUCT_ID)`. New `pro_*` strings in BOTH
+values + values-hi.

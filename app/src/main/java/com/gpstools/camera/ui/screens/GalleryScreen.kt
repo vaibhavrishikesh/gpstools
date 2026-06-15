@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.gpstools.camera.R
 import com.gpstools.camera.ads.BannerAd
-import com.gpstools.camera.billing.Premium
+import com.gpstools.camera.billing.Entitlements
 import com.gpstools.camera.media.CapturedPhoto
 import com.gpstools.camera.media.CustomFieldsStore
 import com.gpstools.camera.media.FREE_REPORT_MAX_PHOTOS
@@ -129,7 +129,10 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
                 CustomFieldsStore(context).load().projectName
             }
             val result = withContext(Dispatchers.IO) {
-                generatePhotoReport(context, chosen, projectName, Premium.isPremium)
+                // Unlimited / watermark-free reports + batch export are unlocked by
+                // EITHER the one-time Premium IAP (US-016) or the Pro subscription
+                // (US-018) — see Entitlements.hasUnlimitedReports.
+                generatePhotoReport(context, chosen, projectName, Entitlements.hasUnlimitedReports)
             }
             generating = false
             if (result == null) {

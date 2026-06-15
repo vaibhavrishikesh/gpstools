@@ -115,5 +115,23 @@
     <string name="report_failed">Couldn\'t create the report</string>
     <string name="report_open_chooser">Open report</string>
     <string name="report_no_viewer">No PDF viewer installed</string>
-    <string name="report_free_limit">Free reports include up to %1$d photos with a watermark. Upgrade to Premium for unlimited, watermark-free reports.</string>
+    <string name="report_free_limit">Free reports include up to %1$d photos with a watermark. Go Pro for unlimited, watermark-free reports.</string>
+
+    <!-- Pro subscription (US-018) -->
+    <string name="pro_title">gpstools Pro</string>
+    <string name="pro_summary">Subscribe for unlimited, watermark-free PDF reports and batch export.</string>
+    <string name="pro_settings_summary">Unlimited PDF reports, batch export, no watermark.</string>
+    <string name="pro_go_pro">Go Pro</string>
+    <string name="pro_active">Pro active — unlimited reports unlocked. Thank you!</string>
+    <string name="pro_benefit_unlimited">Unlimited photos per PDF report</string>
+    <string name="pro_benefit_batch">Batch export of large photo sets</string>
+    <string name="pro_benefit_watermark">No watermark on your reports</string>
+    <string name="pro_subscribe_yearly">Subscribe yearly — %1$s</string>
+    <string name="pro_subscribe_monthly">Subscribe monthly — %1$s</string>
+    <string name="pro_yearly_note">Best value — save vs paying monthly</string>
+    <string name="pro_not_now">Not now</string>
+    <string name="pro_price_monthly">₹149 / month</string>
+    <string name="pro_price_yearly">₹999 / year</string>
+    <string name="pro_debug_simulate">(debug) Simulate subscription</string>
+    <string name="pro_debug_reset">(debug) Cancel subscription</string>
 </resources>

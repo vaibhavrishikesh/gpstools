@@ -19,15 +19,16 @@ private const val TAG = "BillingManager"
 
 /**
  * Thin Google Play Billing wrapper for the one-time "remove ads + premium
- * templates" product (US-016).
+ * templates" product (US-016) AND the recurring "Pro" subscriptions (US-018).
  *
  * Responsibilities:
- *  - connect to Play Billing and (on connect) query the user's owned purchases so
- *    the entitlement is RESTORED automatically after a reinstall;
- *  - fetch [Premium.PRODUCT_ID]'s [ProductDetails] so the buy button can launch a
- *    real flow;
+ *  - connect to Play Billing and (on connect) query the user's owned purchases —
+ *    both one-time (INAPP) and subscriptions (SUBS) — so entitlements are RESTORED
+ *    automatically after a reinstall;
+ *  - fetch [Premium.PRODUCT_ID] + [Subscription.PRODUCT_IDS] [ProductDetails] so the
+ *    buy/subscribe buttons can launch a real flow and show live prices;
  *  - handle the purchase callback: acknowledge the purchase and funnel it into
- *    [Premium.grant].
+ *    [Premium.grant] (INAPP) or [Subscription.grant] (SUBS).
  *
  * Every Play SDK call is wrapped in `runCatching`/guarded so a missing or blocked
  * Play Store can never crash the app — the buy button just reports unavailable.
@@ -40,8 +41,12 @@ class BillingManager(context: Context) {
 
     private val appContext = context.applicationContext
 
-    /** Latest product details, populated after a successful query (null until then). */
+    /** Latest one-time product details, populated after a successful query (null until then). */
     var productDetails: ProductDetails? = null
+        private set
+
+    /** Latest subscription product details keyed by product id (empty until queried). */
+    var subscriptionDetails: Map<String, ProductDetails> = emptyMap()
         private set
 
     private val purchasesListener = PurchasesUpdatedListener { result, purchases ->
@@ -70,6 +75,7 @@ class BillingManager(context: Context) {
                     if (connected) {
                         queryOwnedPurchases()
                         queryProductDetails()
+                        querySubscriptionDetails()
                     } else {
                         Log.d(TAG, "Billing setup failed: ${result.responseCode}")
                     }
@@ -105,22 +111,50 @@ class BillingManager(context: Context) {
         }.onFailure { Log.w(TAG, "queryProductDetails failed", it) }
     }
 
+    /** Query the Pro subscriptions so prices/offer tokens are ready before subscribe. */
+    private fun querySubscriptionDetails() {
+        runCatching {
+            val params = QueryProductDetailsParams.newBuilder()
+                .setProductList(
+                    Subscription.PRODUCT_IDS.map { id ->
+                        QueryProductDetailsParams.Product.newBuilder()
+                            .setProductId(id)
+                            .setProductType(BillingClient.ProductType.SUBS)
+                            .build()
+                    },
+                )
+                .build()
+            billingClient.queryProductDetailsAsync(params) { result, details ->
+                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                    subscriptionDetails = details.associateBy { it.productId }
+                } else {
+                    Log.d(TAG, "querySubscriptionDetails: ${result.responseCode}")
+                }
+            }
+        }.onFailure { Log.w(TAG, "querySubscriptionDetails failed", it) }
+    }
+
     /**
-     * RESTORE: query purchases the account already owns and grant the entitlement
-     * for any that include our product. Called automatically on connect and from
-     * the manual "Restore purchases" button.
+     * RESTORE: query purchases the account already owns (both one-time and
+     * subscriptions) and grant the matching entitlement. Called automatically on
+     * connect and from the manual "Restore purchases" button.
      */
     fun queryOwnedPurchases() {
+        queryOwned(BillingClient.ProductType.INAPP)
+        queryOwned(BillingClient.ProductType.SUBS)
+    }
+
+    private fun queryOwned(productType: String) {
         runCatching {
             val params = QueryPurchasesParams.newBuilder()
-                .setProductType(BillingClient.ProductType.INAPP)
+                .setProductType(productType)
                 .build()
             billingClient.queryPurchasesAsync(params) { result, purchases ->
                 if (result.responseCode == BillingClient.BillingResponseCode.OK) {
                     purchases.forEach { handlePurchase(it) }
                 }
             }
-        }.onFailure { Log.w(TAG, "queryOwnedPurchases failed", it) }
+        }.onFailure { Log.w(TAG, "queryOwnedPurchases($productType) failed", it) }
     }
 
     /**
@@ -152,12 +186,62 @@ class BillingManager(context: Context) {
         }
     }
 
-    /** Grant + acknowledge a PURCHASED, matching purchase. Idempotent. */
+    /**
+     * The formatted, locale-aware price of a Pro subscription (e.g. "₹149.00") once
+     * its details have loaded; null until then. Reads the first pricing phase of the
+     * first offer.
+     */
+    fun subscriptionPrice(productId: String): String? = runCatching {
+        subscriptionDetails[productId]
+            ?.subscriptionOfferDetails
+            ?.firstOrNull()
+            ?.pricingPhases
+            ?.pricingPhaseList
+            ?.firstOrNull()
+            ?.formattedPrice
+    }.getOrNull()
+
+    /**
+     * Launch the subscribe flow for a Pro subscription [productId]. Returns false
+     * (and does nothing) if billing isn't connected, the details/offer aren't loaded
+     * yet — the caller should surface an "unavailable, try later" message.
+     */
+    fun launchSubscriptionPurchase(activity: Activity, productId: String): Boolean {
+        val details = subscriptionDetails[productId]
+        val offerToken = details?.subscriptionOfferDetails?.firstOrNull()?.offerToken
+        if (!connected || details == null || offerToken == null) {
+            Log.d(TAG, "launchSubscription unavailable (connected=$connected, details=${details != null})")
+            return false
+        }
+        return runCatching {
+            val params = BillingFlowParams.newBuilder()
+                .setProductDetailsParamsList(
+                    listOf(
+                        BillingFlowParams.ProductDetailsParams.newBuilder()
+                            .setProductDetails(details)
+                            .setOfferToken(offerToken)
+                            .build(),
+                    ),
+                )
+                .build()
+            val result = billingClient.launchBillingFlow(activity, params)
+            result.responseCode == BillingClient.BillingResponseCode.OK
+        }.getOrElse {
+            Log.w(TAG, "launchSubscription failed", it)
+            false
+        }
+    }
+
+    /** Grant + acknowledge a PURCHASED, matching purchase (one-time or subscription). Idempotent. */
     private fun handlePurchase(purchase: Purchase) {
         if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return
-        if (Premium.PRODUCT_ID !in purchase.products) return
 
-        Premium.grant(appContext)
+        val subProduct = Subscription.PRODUCT_IDS.firstOrNull { it in purchase.products }
+        when {
+            Premium.PRODUCT_ID in purchase.products -> Premium.grant(appContext)
+            subProduct != null -> Subscription.grant(appContext, subProduct)
+            else -> return
+        }
 
         if (!purchase.isAcknowledged) {
             runCatching {

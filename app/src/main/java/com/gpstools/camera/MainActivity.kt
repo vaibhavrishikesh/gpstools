@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import com.gpstools.camera.ads.Ads
 import com.gpstools.camera.billing.BillingManager
 import com.gpstools.camera.billing.Premium
+import com.gpstools.camera.billing.Subscription
 import com.gpstools.camera.locale.wrapWithStoredLocale
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -52,9 +53,11 @@ class MainActivity : ComponentActivity() {
         // Initialise AdMob + load the persisted ads-enabled flag (US-015). Guarded
         // internally so it can never crash the app.
         Ads.initialize(this)
-        // Load the persisted premium entitlement (US-016) and kick off the Play
-        // Billing restore so reinstalls re-grant ownership automatically.
+        // Load the persisted entitlements — the one-time premium IAP (US-016) and
+        // the Pro subscription (US-018) — then kick off the Play Billing restore so
+        // reinstalls re-grant ownership of both automatically.
         Premium.load(this)
+        Subscription.load(this)
         billingManager = BillingManager(this).also { it.start() }
         enableEdgeToEdge()
         setContent {

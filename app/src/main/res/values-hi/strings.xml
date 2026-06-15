@@ -116,5 +116,23 @@
     <string name="report_failed">रिपोर्ट नहीं बनाई जा सकी</string>
     <string name="report_open_chooser">रिपोर्ट खोलें</string>
     <string name="report_no_viewer">कोई PDF व्यूअर इंस्टॉल नहीं है</string>
-    <string name="report_free_limit">मुफ़्त रिपोर्ट में वॉटरमार्क के साथ अधिकतम %1$d फ़ोटो शामिल होती हैं। असीमित, वॉटरमार्क-रहित रिपोर्ट के लिए प्रीमियम में अपग्रेड करें।</string>
+    <string name="report_free_limit">मुफ़्त रिपोर्ट में वॉटरमार्क के साथ अधिकतम %1$d फ़ोटो शामिल होती हैं। असीमित, वॉटरमार्क-रहित रिपोर्ट के लिए Pro लें।</string>
+
+    <!-- Pro subscription (US-018) -->
+    <string name="pro_title">gpstools Pro</string>
+    <string name="pro_summary">असीमित, वॉटरमार्क-रहित PDF रिपोर्ट और बैच निर्यात के लिए सदस्यता लें।</string>
+    <string name="pro_settings_summary">असीमित PDF रिपोर्ट, बैच निर्यात, कोई वॉटरमार्क नहीं।</string>
+    <string name="pro_go_pro">Pro लें</string>
+    <string name="pro_active">Pro सक्रिय — असीमित रिपोर्ट अनलॉक। धन्यवाद!</string>
+    <string name="pro_benefit_unlimited">प्रति PDF रिपोर्ट असीमित फ़ोटो</string>
+    <string name="pro_benefit_batch">बड़े फ़ोटो सेट का बैच निर्यात</string>
+    <string name="pro_benefit_watermark">आपकी रिपोर्ट पर कोई वॉटरमार्क नहीं</string>
+    <string name="pro_subscribe_yearly">वार्षिक सदस्यता — %1$s</string>
+    <string name="pro_subscribe_monthly">मासिक सदस्यता — %1$s</string>
+    <string name="pro_yearly_note">सर्वोत्तम मूल्य — मासिक की तुलना में बचत</string>
+    <string name="pro_not_now">अभी नहीं</string>
+    <string name="pro_price_monthly">₹149 / माह</string>
+    <string name="pro_price_yearly">₹999 / वर्ष</string>
+    <string name="pro_debug_simulate">(डीबग) सदस्यता का अनुकरण करें</string>
+    <string name="pro_debug_reset">(डीबग) सदस्यता रद्द करें</string>
 </resources>
