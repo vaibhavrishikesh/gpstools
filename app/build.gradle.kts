@@ -60,5 +60,6 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.play.services.location)
     implementation(libs.coil.compose)
+    implementation(libs.osmdroid.android)
     debugImplementation(libs.androidx.ui.tooling)
 }

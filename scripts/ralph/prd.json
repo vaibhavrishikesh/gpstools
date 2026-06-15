@@ -179,8 +179,8 @@
         "Verify pins + preview on emulator"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "New 'Map' bottom-nav tab (4th, between Gallery and Settings) plots captures on an interactive OpenStreetMap via osmdroid (org.osmdroid:osmdroid-android 6.1.20 — NO API key, consistent with the US-008 static-map provider). PROBLEM: the burned-in stamp drops EXIF on the decode→re-encode (US-007), so saved files carry no machine-readable location. SOLUTION: new media/GeotagStore.kt (SharedPreferences 'photo_geotags', displayName->'lat,lon') records coords at capture time inside PhotoStorage.saveBitmap (no-op when no fix); MapScreen joins queryCapturedPhotos() with GeotagStore.loadAll() by display name (retainOnly() prunes deleted captures). ui/screens/MapScreen.kt: osmdroid MapView via AndroidView (configure Configuration.getInstance().userAgentValue=packageName + cache under cacheDir BEFORE inflating MapView; setTileSource MAPNIK, multitouch; onResume/onPause+onDetach in DisposableEffect), a Marker per geotagged photo (setOnMarkerClickListener via rememberUpdatedState), frame-once (zoom 16 for a single pin, zoomToBoundingBox for many). Tapping a pin opens a full-screen overlay preview (mirrors the gallery viewer — NOT a Dialog — back/image/coords+date) showing the stamped photo. Empty state = map centered on India (22.59,78.96 z4) under a 'No map pins yet' card. Added ACCESS_NETWORK_STATE perm. Verified on emulator-5554 (geo fix Bengaluru): captured a photo -> photo_geotags.xml got GPS_...114924967.jpg=12.9715983,77.594565 -> Map tab shows the OSM map of central Bengaluru framed on a green pin at that location; tapped the pin -> preview overlay with the burned stamp + filename/coords/date; cleared geotags + relaunched -> India-centered map with the empty-state card. GOTCHA: MapScreen reloads via LaunchedEffect(Unit) on tab re-entry (same pattern as Gallery) — a just-captured pin appears after re-entering the Map tab."
     },
     {
       "id": "US-013",

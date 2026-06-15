@@ -26,6 +26,7 @@ import com.gpstools.camera.ui.navigation.Destination
 import com.gpstools.camera.ui.navigation.START_DESTINATION
 import com.gpstools.camera.ui.screens.CameraScreen
 import com.gpstools.camera.ui.screens.GalleryScreen
+import com.gpstools.camera.ui.screens.MapScreen
 import com.gpstools.camera.ui.screens.SettingsScreen
 import com.gpstools.camera.ui.theme.GpstoolsTheme
 
@@ -55,6 +56,7 @@ fun GpsToolsApp() {
         ) {
             composable(Destination.Camera.route) { CameraScreen() }
             composable(Destination.Gallery.route) { GalleryScreen() }
+            composable(Destination.Map.route) { MapScreen() }
             composable(Destination.Settings.route) { SettingsScreen() }
         }
     }

@@ -160,6 +160,9 @@ private fun saveBitmap(context: Context, bitmap: Bitmap, stamp: StampData): Uri?
             values.put(MediaStore.MediaColumns.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
         }
+        // Record coordinates so the map view (US-012) can plot a pin — the burned-in
+        // stamp isn't machine-readable. No-op when there was no location fix.
+        GeotagStore.record(context, name, stamp.latitude, stamp.longitude)
         Log.d(TAG, "Stamped capture saved to $uri")
         uri
     } catch (e: Exception) {

@@ -4,6 +4,7 @@
     <!-- Bottom navigation -->
     <string name="tab_camera">Camera</string>
     <string name="tab_gallery">Gallery</string>
+    <string name="tab_map">Map</string>
     <string name="tab_settings">Settings</string>
 
     <!-- Placeholder screens -->
@@ -66,4 +67,10 @@
     <string name="gallery_meta_date">Captured %1$s</string>
     <string name="gallery_meta_dimensions">%1$d × %2$d px</string>
     <string name="gallery_meta_size">%1$s</string>
+
+    <!-- Map view (US-012) -->
+    <string name="map_empty_title">No map pins yet</string>
+    <string name="map_empty_body">Photos you capture with a location fix appear here, pinned to where you took them.</string>
+    <string name="map_preview_close">Close</string>
+    <string name="map_meta_coords">%1$.6f, %2$.6f</string>
 </resources>

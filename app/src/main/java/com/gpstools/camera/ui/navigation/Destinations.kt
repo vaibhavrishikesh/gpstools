@@ -2,6 +2,7 @@ package com.gpstools.camera.ui.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Settings
@@ -19,6 +20,7 @@ enum class Destination(
 ) {
     Camera("camera", R.string.tab_camera, Icons.Filled.PhotoCamera),
     Gallery("gallery", R.string.tab_gallery, Icons.Filled.PhotoLibrary),
+    Map("map", R.string.tab_map, Icons.Filled.Map),
     Settings("settings", R.string.tab_settings, Icons.Filled.Settings),
 }
 
