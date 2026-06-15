@@ -105,8 +105,8 @@
         "Verify the saved image visibly contains the stamp on emulator"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Capture switched from direct-to-file (OutputFileOptions) to in-memory (ImageCapture.OnImageCapturedCallback) so the stamp can be composited before encoding. PhotoStorage.kt: takePicture on a background ioExecutor -> decode JPEG -> rotate upright via imageInfo.rotationDegrees (so portrait AND landscape stamp correctly) -> drawStamp -> save to MediaStore (RELATIVE_PATH+IS_PENDING on Q+, absolute DATA path under public Pictures on API24-28); result posted to main thread. New media/PhotoStamp.kt: StampData(timestamp, lat?, lon?, accuracy?, address?) + drawStamp() renders a semi-transparent black panel (alpha 150) across the FULL width at the BOTTOM with white shadowed text — bold wrapped address, monospace 'lat, lon  ±N m', then 'dd MMM yyyy HH:mm:ss z'. Type sizes scale from REFERENCE_WIDTH=1080 so it's legible at any resolution; greedy wrapText() never loops on long words. CameraPreview snapshots locationState (LocationUiState.Available) into StampData at shutter-press (date/time always stamped; coords null until a fix). Tradeoff: decode->re-encode drops original EXIF (proof data is burned into pixels; JPEG_QUALITY=95). Verified on emulator-5554: tapped shutter -> GPS_20260615_100612617.jpg (126KB, valid 1392x1856 upright JPEG) shows the full Bengaluru address + 12.971598, 77.594565  ±5 m + '15 Jun 2026 10:06:12 GMT+05:30' burned into the bottom panel."
     },
     {
       "id": "US-008",

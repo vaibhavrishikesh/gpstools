@@ -46,7 +46,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.gpstools.camera.R
+import com.gpstools.camera.location.LocationUiState
+import com.gpstools.camera.media.StampData
 import com.gpstools.camera.media.capturePhoto
+import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -166,7 +169,18 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 onClick = {
                     if (isCapturing) return@FilledIconButton
                     isCapturing = true
-                    capturePhoto(context, imageCapture) { uri ->
+                    // Snapshot the current location read at shutter-press time so it
+                    // gets burned into the photo's stamp (US-007). Location fields are
+                    // null until a fix arrives; the date/time is always stamped.
+                    val available = locationState as? LocationUiState.Available
+                    val stamp = StampData(
+                        timestamp = Date(),
+                        latitude = available?.fix?.latitude,
+                        longitude = available?.fix?.longitude,
+                        accuracyMeters = available?.fix?.accuracyMeters,
+                        address = available?.address,
+                    )
+                    capturePhoto(context, imageCapture, stamp) { uri ->
                         isCapturing = false
                         val msg = if (uri != null) {
                             context.getString(R.string.capture_saved)
