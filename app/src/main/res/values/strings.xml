@@ -52,4 +52,18 @@
     <string name="custom_field_logo_added">Logo added</string>
     <string name="custom_fields_save">Save</string>
     <string name="custom_fields_cancel">Cancel</string>
+
+    <!-- Gallery (US-011) -->
+    <string name="gallery_empty_title">No photos yet</string>
+    <string name="gallery_empty_body">Photos you capture will show up here, newest first.</string>
+    <string name="gallery_back">Back</string>
+    <string name="gallery_share">Share</string>
+    <string name="gallery_delete">Delete</string>
+    <string name="gallery_delete_cancel">Cancel</string>
+    <string name="gallery_share_chooser">Share photo</string>
+    <string name="gallery_delete_confirm_title">Delete photo?</string>
+    <string name="gallery_delete_confirm_body">This permanently removes the photo from your device.</string>
+    <string name="gallery_meta_date">Captured %1$s</string>
+    <string name="gallery_meta_dimensions">%1$d × %2$d px</string>
+    <string name="gallery_meta_size">%1$s</string>
 </resources>

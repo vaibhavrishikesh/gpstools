@@ -164,8 +164,8 @@
         "Verify grid, viewer, share, delete on emulator"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Gallery tab now lists this app's captures. New media/PhotoGallery.kt: CapturedPhoto(uri, displayName, dateAddedMillis, sizeBytes, width, height) + queryCapturedPhotos() (MediaStore Images query, WHERE relative_path LIKE 'Pictures/gpstools%' AND display_name LIKE 'GPS_%' on Q+, display_name only on API24-28, ORDER BY DATE_ADDED DESC) + deleteCapturedPhoto() (direct resolver.delete — app owns the media) + sharePhoto() (ACTION_SEND chooser, FLAG_GRANT_READ_URI_PERMISSION). Exposed CAPTURE_FILENAME_PREFIX from PhotoStorage for the query. Added Coil (io.coil-kt:coil-compose 2.7.0) for grid/viewer image loading. ui/screens/GalleryScreen.kt: LazyVerticalGrid (Adaptive 112dp, square Crop tiles) -> loading spinner / empty state / grid; tap -> in-place full-screen overlay viewer (Column: top bar back+share+delete, Fit image weight 1f, metadata panel filename/captured date/dimensions/size) with BackHandler + a delete-confirm AlertDialog. List reloads via LaunchedEffect(Unit) on tab re-entry and after delete. GOTCHA: the viewer is an OVERLAY inside the Scaffold content, NOT a Dialog — an enableEdgeToEdge() activity doesn't dispatch window insets to Dialog windows (even with WindowCompat.setDecorFitsSystemWindows(false)), so a fullscreen Dialog's bottom metadata gets clipped under the nav bar; the overlay inherits the Scaffold's innerPadding and lays out cleanly. Verified on emulator-5554: grid shows 7 captures newest-first; tapped first -> viewer with all 4 metadata lines + burned stamp; share -> Android share sheet with photo preview; delete -> confirm dialog -> photo removed from MediaStore (7->6), viewer dismissed, grid refreshed."
     },
     {
       "id": "US-012",

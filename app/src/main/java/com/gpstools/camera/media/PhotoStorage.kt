@@ -25,7 +25,8 @@ private const val TAG = "PhotoStorage"
 const val CAPTURE_RELATIVE_PATH = "Pictures/gpstools"
 
 /** Filename prefix + pattern for captured photos, e.g. GPS_20260615_103045123.jpg. */
-private const val FILENAME_PREFIX = "GPS_"
+const val CAPTURE_FILENAME_PREFIX = "GPS_"
+private const val FILENAME_PREFIX = CAPTURE_FILENAME_PREFIX
 private const val FILENAME_DATE_PATTERN = "yyyyMMdd_HHmmssSSS"
 private const val JPEG_QUALITY = 95
 

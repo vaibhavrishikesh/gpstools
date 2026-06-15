@@ -56,14 +56,6 @@ fun PlaceholderScreen(
 }
 
 @Composable
-fun GalleryScreen(modifier: Modifier = Modifier) = PlaceholderScreen(
-    icon = Destination.Gallery.icon,
-    title = stringResource(Destination.Gallery.labelRes),
-    body = stringResource(R.string.gallery_placeholder),
-    modifier = modifier,
-)
-
-@Composable
 fun SettingsScreen(modifier: Modifier = Modifier) = PlaceholderScreen(
     icon = Destination.Settings.icon,
     title = stringResource(Destination.Settings.labelRes),
