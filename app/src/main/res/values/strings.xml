@@ -7,10 +7,12 @@
     <string name="tab_map">Map</string>
     <string name="tab_settings">Settings</string>
 
-    <!-- Placeholder screens -->
-    <string name="camera_placeholder">Camera preview coming soon</string>
-    <string name="gallery_placeholder">Your geotagged photos will appear here</string>
-    <string name="settings_placeholder">Settings coming soon</string>
+    <!-- Settings — language (US-013) -->
+    <string name="settings_language">Language</string>
+    <string name="settings_language_summary">Choose the app language. \"System default\" follows your device setting.</string>
+    <string name="settings_language_system">System default</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_hindi">हिन्दी</string>
 
     <!-- Camera/location permissions (US-003) -->
     <string name="permission_title">Camera &amp; location needed</string>

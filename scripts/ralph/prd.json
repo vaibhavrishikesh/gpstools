@@ -194,8 +194,8 @@
         "Verify switching to Hindi changes the UI on emulator"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Full English + Hindi localization. All user-facing strings live in res/values/strings.xml; new res/values-hi/strings.xml provides Hindi translations for every key (app_name kept as the brand). In-app language toggle implemented WITHOUT AppCompat (the app uses a framework Material theme + ComponentActivity): a new locale/AppLocale.kt has an AppLanguage enum (SYSTEM/ENGLISH/HINDI, tag ''/'en'/'hi'), a SharedPreferences LocaleStore, Context.wrapWithStoredLocale() (createConfigurationContext with the chosen Locale; SYSTEM returns base untouched so it follows the device), and Context.findActivity(). MainActivity overrides attachBaseContext to wrap with the stored locale. The real ui/screens/SettingsScreen.kt (replaces the PlaceholderScreen-based stub; PlaceholderScreen.kt deleted) shows a radio group (System default / English / हिन्दी); selecting persists via LocaleStore and calls activity.recreate(), which re-runs attachBaseContext so the whole UI re-resolves strings immediately. Removed the now-unused camera/gallery/settings_placeholder strings. Verified on emulator-5554: Settings renders in English; tapping हिन्दी instantly switched the entire app to Hindi (title सेटिंग, nav tabs कैमरा/गैलरी/मानचित्र/सेटिंग, '±5 मी सटीकता', template chips क्लासिक/सरल/फ़ील्ड रिपोर्ट); force-stop + cold relaunch persisted Hindi app-wide; selecting System default reverted to English (device locale)."
     },
     {
       "id": "US-014",

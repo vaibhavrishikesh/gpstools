@@ -1,9 +1,11 @@
 package com.gpstools.camera
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.gpstools.camera.locale.wrapWithStoredLocale
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -31,6 +33,12 @@ import com.gpstools.camera.ui.screens.SettingsScreen
 import com.gpstools.camera.ui.theme.GpstoolsTheme
 
 class MainActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        // Apply the in-app language (US-013) before the activity inflates so all
+        // resources resolve in the chosen locale; recreate() re-runs this.
+        super.attachBaseContext(newBase.wrapWithStoredLocale())
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
