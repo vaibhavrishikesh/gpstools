@@ -70,6 +70,7 @@ import com.gpstools.camera.media.StampTemplate
 import com.gpstools.camera.media.StampTemplateStore
 import com.gpstools.camera.media.capturePhoto
 import com.gpstools.camera.media.label
+import com.gpstools.camera.settings.AppSettingsStore
 import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -230,6 +231,10 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                         address = available?.address,
                         projectName = customFields.projectName.ifBlank { null },
                         note = customFields.note.ifBlank { null },
+                        // Snapshot the user's formatting prefs (US-014) so they're
+                        // burned into this capture's stamp.
+                        coordinateFormat = AppSettingsStore.loadCoordinateFormat(context),
+                        timeFormat = AppSettingsStore.loadTimeFormat(context),
                     )
                     val logoFile = customFieldsStore.logoFileOrNull()
                     capturePhoto(context, imageCapture, stamp, template, logoFile) { uri ->

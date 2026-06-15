@@ -15,6 +15,22 @@
     <string name="settings_language_english">English</string>
     <string name="settings_language_hindi">हिन्दी</string>
 
+    <!-- Settings — formats / NavIC / about (US-014) -->
+    <string name="settings_coord_format">निर्देशांक प्रारूप</string>
+    <string name="settings_coord_format_summary">स्टैम्प पर अक्षांश और देशांतर कैसे लिखे जाते हैं।</string>
+    <string name="settings_coord_decimal">दशमलव डिग्री (12.971599, 77.594566)</string>
+    <string name="settings_coord_dms">डिग्री, मिनट, सेकंड (12°58\'17.8\"N)</string>
+    <string name="settings_time_format">समय प्रारूप</string>
+    <string name="settings_time_format_summary">स्टैम्प पर दिनांक/समय के लिए उपयोग की जाने वाली घड़ी।</string>
+    <string name="settings_time_24">24-घंटे (14:30:00)</string>
+    <string name="settings_time_12">12-घंटे (02:30:00 PM)</string>
+    <string name="settings_navic_title">स्थान सटीकता और NavIC</string>
+    <string name="settings_navic_body">gpstools उच्च-सटीक स्थिति के लिए आपके डिवाइस के GNSS हार्डवेयर का उपयोग करता है। भारत में बिकने वाले अधिकांश फ़ोन GPS, GLONASS, Galileo और BeiDou के साथ-साथ भारत की अपनी उपग्रह नेविगेशन प्रणाली NavIC (IRNSS) का समर्थन करते हैं। अधिक तारामंडलों का उपयोग करने से तेज़ और अधिक विश्वसनीय फ़िक्स मिलता है — विशेषकर भारत भर में। स्टैम्प पर दिखाई गई सटीकता (±N मी) डिवाइस का अपना अनुमान है; NavIC समर्थन और वास्तविक सटीकता आपके फ़ोन और परिवेश पर निर्भर करती है (खुला आसमान सबसे अच्छा है)।</string>
+    <string name="settings_about_title">के बारे में</string>
+    <string name="settings_about_version">संस्करण %1$s</string>
+    <string name="settings_about_tagline">gpstools — प्रमाण-तैयार स्थान स्टैम्प के साथ जियोटैग GPS कैमरा।</string>
+    <string name="settings_privacy_policy">गोपनीयता नीति</string>
+
     <!-- Camera/location permissions (US-003) -->
     <string name="permission_title">कैमरा और स्थान आवश्यक</string>
     <string name="permission_rationale">gpstools हर फ़ोटो पर यह अंकित करता है कि वह कहाँ और कब ली गई। इसके लिए उसे आपके कैमरा और स्थान तक पहुँच चाहिए।</string>

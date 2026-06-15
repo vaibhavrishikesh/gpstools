@@ -14,6 +14,22 @@
     <string name="settings_language_english">English</string>
     <string name="settings_language_hindi">हिन्दी</string>
 
+    <!-- Settings — formats / NavIC / about (US-014) -->
+    <string name="settings_coord_format">Coordinate format</string>
+    <string name="settings_coord_format_summary">How latitude and longitude are written on the stamp.</string>
+    <string name="settings_coord_decimal">Decimal degrees (12.971599, 77.594566)</string>
+    <string name="settings_coord_dms">Degrees, minutes, seconds (12°58\'17.8\"N)</string>
+    <string name="settings_time_format">Time format</string>
+    <string name="settings_time_format_summary">Clock used for the date/time on the stamp.</string>
+    <string name="settings_time_24">24-hour (14:30:00)</string>
+    <string name="settings_time_12">12-hour (02:30:00 PM)</string>
+    <string name="settings_navic_title">Location accuracy &amp; NavIC</string>
+    <string name="settings_navic_body">gpstools uses your device\'s GNSS hardware for high-accuracy positioning. Most phones sold in India support NavIC (IRNSS), India\'s own satellite navigation system, alongside GPS, GLONASS, Galileo and BeiDou. Using more constellations means a faster, more reliable fix — especially across India. The accuracy shown on the stamp (±N m) is the device\'s own estimate; NavIC support and real-world accuracy depend on your phone and surroundings (open sky is best).</string>
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_version">Version %1$s</string>
+    <string name="settings_about_tagline">gpstools — geotag GPS camera with proof-ready location stamps.</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
+
     <!-- Camera/location permissions (US-003) -->
     <string name="permission_title">Camera &amp; location needed</string>
     <string name="permission_rationale">gpstools stamps each photo with where and when it was taken. To do that, it needs access to your camera and location.</string>

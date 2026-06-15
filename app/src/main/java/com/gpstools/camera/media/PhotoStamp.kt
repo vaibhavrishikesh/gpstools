@@ -6,6 +6,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
+import com.gpstools.camera.settings.CoordinateFormat
+import com.gpstools.camera.settings.TimeFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -18,6 +20,10 @@ import java.util.Locale
  * [projectName] and [note] are the user's custom fields (US-010); blank/empty
  * values are simply not rendered. The optional logo image is passed separately to
  * [drawStamp] since it's a bitmap rather than a value.
+ *
+ * [coordinateFormat] and [timeFormat] (US-014) are snapshot from the user's
+ * Settings at capture time so the stamp honours their preferred lat/long notation
+ * and clock.
  */
 data class StampData(
     val timestamp: Date,
@@ -27,6 +33,8 @@ data class StampData(
     val address: String?,
     val projectName: String? = null,
     val note: String? = null,
+    val coordinateFormat: CoordinateFormat = CoordinateFormat.DEFAULT,
+    val timeFormat: TimeFormat = TimeFormat.DEFAULT,
 )
 
 /** Reference width the stamp's type sizes are tuned against; everything scales from it. */
@@ -37,7 +45,6 @@ private const val MAP_SIZE = 200f
 private const val FIELD_MAP_SIZE = 240f
 /** Square box the logo is fitted into, in REFERENCE_WIDTH units (top-right corner). */
 private const val LOGO_SIZE = 150f
-private const val STAMP_DATE_PATTERN = "dd MMM yyyy  HH:mm:ss z"
 /** Accent colour used for the Field-Report header band + row labels. */
 private val FIELD_ACCENT = Color.rgb(255, 193, 7)
 
@@ -318,13 +325,13 @@ private fun drawLogo(canvas: Canvas, result: Bitmap, logo: Bitmap) {
 private fun coordinatesLine(stamp: StampData): String? {
     val lat = stamp.latitude ?: return null
     val lon = stamp.longitude ?: return null
-    val base = String.format(Locale.US, "%.6f, %.6f", lat, lon)
+    val base = stamp.coordinateFormat.format(lat, lon)
     val accuracy = stamp.accuracyMeters?.let { String.format(Locale.US, "  ±%d m", it.toInt()) } ?: ""
     return base + accuracy
 }
 
 private fun dateLine(stamp: StampData): String =
-    SimpleDateFormat(STAMP_DATE_PATTERN, Locale.getDefault()).format(stamp.timestamp)
+    SimpleDateFormat(stamp.timeFormat.datePattern, Locale.getDefault()).format(stamp.timestamp)
 
 /** Greedily wraps [text] to fit [maxWidth] under [paint]; never loops on long words. */
 private fun wrapText(text: String, paint: Paint, maxWidth: Float): List<String> {

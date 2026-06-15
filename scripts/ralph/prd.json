@@ -209,8 +209,8 @@
         "Verify settings persist and affect the stamp on emulator"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Settings expanded (real ui/screens/SettingsScreen.kt) with: (1) Coordinate format radio (Decimal degrees / DMS) and (2) Time format radio (24-hour / 12-hour) — both persisted in new settings/AppSettings.kt (CoordinateFormat + TimeFormat enums carry the formatting logic; AppSettingsStore over SharedPreferences). StampData gained coordinateFormat/timeFormat (defaults DECIMAL/HOUR_24); PhotoStamp.coordinatesLine uses CoordinateFormat.format(lat,lon) (DMS = D°M'S\"+hemisphere) and dateLine uses TimeFormat.datePattern. CameraPreview snapshots both prefs (AppSettingsStore.load*) into StampData at shutter-press so they're burned in. (3) 'Location accuracy & NavIC' info Card explaining India GNSS/NavIC(IRNSS) support. (4) About Card with tagline + 'Version <name>' (read via PackageManager, no BuildConfig) + a 'Privacy policy' TextButton opening a placeholder URL via ACTION_VIEW. New strings settings_coord_*/settings_time_*/settings_navic_*/settings_about_*/settings_privacy_policy in BOTH values + values-hi. Verified on emulator-5554: Settings renders all 4 sections; selected DMS + 12-hour, captured GPS_20260615_121242512.jpg -> stamp shows '12°58'17.8\"N  77°35'40.4\"E  ±5 m' + '15 जून 2026  12:12:42 pm IST', confirming the prefs persist and affect the burned stamp. GOTCHA: emulator input taps are flaky/positionally off on this loaded host — use `adb shell uiautomator dump` to get exact element bounds rather than guessing; selecting a language mid-session recreate()s the activity and reflows row positions."
     },
     {
       "id": "US-015",
