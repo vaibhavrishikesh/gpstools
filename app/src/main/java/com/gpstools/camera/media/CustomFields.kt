@@ -21,12 +21,19 @@ private const val LOGO_MAX_DIMENSION = 512
 data class CustomFields(
     val projectName: String = "",
     val note: String = "",
+    /**
+     * Custom watermark text (e.g. a company name) burned bottom-right of the stamp
+     * (P2-US-017). Blank = no watermark. Persisted between captures like the other
+     * fields.
+     */
+    val watermark: String = "",
     val hasLogo: Boolean = false,
 )
 
 private const val PREFS_NAME = "custom_fields_prefs"
 private const val KEY_PROJECT = "project_name"
 private const val KEY_NOTE = "note"
+private const val KEY_WATERMARK = "watermark"
 private const val LOGO_FILENAME = "custom_logo.png"
 
 /**
@@ -43,13 +50,15 @@ class CustomFieldsStore(context: Context) {
     fun load(): CustomFields = CustomFields(
         projectName = prefs.getString(KEY_PROJECT, "").orEmpty(),
         note = prefs.getString(KEY_NOTE, "").orEmpty(),
+        watermark = prefs.getString(KEY_WATERMARK, "").orEmpty(),
         hasLogo = logoFile.exists(),
     )
 
-    fun saveFields(projectName: String, note: String) {
+    fun saveFields(projectName: String, note: String, watermark: String) {
         prefs.edit()
             .putString(KEY_PROJECT, projectName.trim())
             .putString(KEY_NOTE, note.trim())
+            .putString(KEY_WATERMARK, watermark.trim())
             .apply()
     }
 

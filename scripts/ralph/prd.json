@@ -14,7 +14,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify new theme on emulator"
       ],
-      "priority": 1, "passes": false, "notes": ""
+      "priority": 1, "passes": true, "notes": "Done: Color.kt navy+gold + accuracy tokens (accuracyColor helper), Theme.kt light(navy primary)/dark(gold primary) schemes, dynamicColor off. No hardcoded brand colors elsewhere; screens consume colorScheme. Verified navy nav pill on emulator."
     },
     {
       "id": "P2-US-002",
@@ -27,7 +27,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify no forced dialog on capture on emulator"
       ],
-      "priority": 2, "passes": false, "notes": ""
+      "priority": 2, "passes": true, "notes": "Shutter in CameraPreview already fires capturePhoto directly — no Stamp-details modal ever blocks the shutter (the CustomFieldsDialog opens only via the Edit affordance). Stamp auto-fills address/coords/date-time from locationState snapshot; last-used project/site name + note now re-read from CustomFieldsStore.load() AT shutter time (cheap SharedPreferences read, consistent with AppSettingsStore inline reads) so they always apply silently. Weather is US-009. Verified on emulator: tapping shutter saved GPS_20260616_105606130.jpg with no dialog."
     },
     {
       "id": "P2-US-003",
@@ -39,7 +39,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify bottom sheet open/save/persist on emulator"
       ],
-      "priority": 3, "passes": false, "notes": ""
+      "priority": 3, "passes": true, "notes": "Edit affordance (pencil icon + 'Edit'/संपादित करें text) now lives ON the GPS card (LocationInfoOverlay gained an optional onEditClick param + EditAffordance composable); removed the old free-floating top-right IconButton. CustomFieldsDialog (AlertDialog) converted to CustomFieldsSheet (ModalBottomSheet, @OptIn ExperimentalMaterial3Api) — slides up, dismissible, never blocks capture; project/note committed on Save (gold Button), logo add/remove immediate. Persists via existing CustomFieldsStore. Verified on emulator: tapped Edit on card → sheet opened pre-filled with persisted 'Site-42-Bridg' → Save dismissed back to live camera."
     },
     {
       "id": "P2-US-004",
@@ -53,7 +53,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify card + chip + single clean stamp on emulator"
       ],
-      "priority": 4, "passes": false, "notes": ""
+      "priority": 4, "passes": true, "notes": "GPS card redesigned in LocationInfoOverlay.kt: 3-tier hierarchy (address bold 16sp white / plus code 14sp 90% white / coords 12sp grey #9AA0A6). Plus code computed locally via new encodePlusCode() in LocationProvider.kt (standard 10-digit OLC, no dep, always shows even when reverse-geocode is down on emulator). New AccuracyChip composable: colour-coded pill (accuracyColor token) Good<10m green / Avg 10-20m amber / Poor>20m red, label '±Nm · Good'. Card bg black 0.9, 16dp corners, 12dp padding. Removed redundant dimensions line from GalleryScreen PhotoMetadata. New strings accuracy_chip/good/avg/poor in both values + values-hi. Verified on emulator: card shows MP89X26F+2G + green '±5मी · अच्छा' chip at geo 30.132034,78.321448."
     },
     {
       "id": "P2-US-005",
@@ -66,7 +66,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify selected state + PRO badge on emulator"
       ],
-      "priority": 5, "passes": false, "notes": ""
+      "priority": 5, "passes": true, "notes": "TemplatePickerRow in CameraPreview.kt redesigned: centered (fillMaxWidth + Arrangement.spacedBy(8dp, CenterHorizontally), dropped horizontalScroll) icon FilterChips — Classic=PhotoCamera, Minimal=CenterFocusStrong, Field Report=Description (StampTemplate.icon() helper). Selected = BrandNavy fill + white label/icon; unselected = transparent + grey TextSecondary #9AA0A6, border=null. Lock replaced by gold ProBadge (BrandGold bg, navy 'PRO' text, RoundedCornerShape) shown when premium && !isPremium. Field Report now SELECTABLE/usable: dropped onLocked/billing purchase routing + the capture premium-downgrade fallback (uses selected template as-is). New pro_badge string (both values+values-hi). Verified on emulator: tapping Field Report moves navy selection to it (no purchase dialog), PRO badge stays."
     },
     {
       "id": "P2-US-006",
@@ -78,7 +78,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify shutter + flash + flip on emulator"
       ],
-      "priority": 6, "passes": false, "notes": ""
+      "priority": 6, "passes": true, "notes": "Camera controls rebuilt as a single bottom Row (flash | shutter | flip) in CameraPreview.kt. Shutter = Material3 Surface(onClick) 72dp, white fill, 4dp LightGray ring border, 8dp shadowElevation, CircleShape (replaced FilledIconButton+Lens icon); contentDescription via Modifier.semantics (pre-resolved string, since Surface content lambda isn't @Composable for stringResource). New SideControlButton composable = 48dp FilledIconButton, white@0.2 (grey 20%) container, white icon — used for both flash and flip. Flash toggle cycles off→on→auto via nextFlashMode(); flashIcon() maps to FlashOff/FlashOn/FlashAuto; applied to the shared ImageCapture via LaunchedEffect(flashMode){imageCapture.flashMode=...} + rememberSaveable flashMode. Flip kept (Cameraswitch); shown only when both lenses exist, else a 48dp Spacer keeps the shutter centered (Arrangement.SpaceBetween). Removed the old free-floating BottomEnd flip IconButton + Lens/IconButton imports. New strings camera_flash/_off/_on/_auto (both values+values-hi). Verified on emulator: row renders flash(left)/white-ring shutter(center)/flip(right); tapping flash flipped the icon FlashOff→FlashOn (cycle works)."
     },
     {
       "id": "P2-US-007",
@@ -90,7 +90,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify nav styling + badge on emulator"
       ],
-      "priority": 7, "passes": false, "notes": ""
+      "priority": 7, "passes": true, "notes": "BottomNavBar in MainActivity.kt: NavigationBar height 64dp; labels 11sp, FontWeight.Bold when selected; selected icon/text = colorScheme.primary (navy on light / gold on dark) via NavigationBarItemDefaults.colors + primaryContainer indicator. Map tab wraps its icon in BadgedBox+Badge showing GeotagStore.loadAll(context).size (re-read on each backStackEntry change, hidden when 0). Verified on emulator: Camera selected = gold accent + bold; Map tab shows red '7' badge (7 location-tagged photos)."
     },
     {
       "id": "P2-US-008",
@@ -102,7 +102,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify padding + low-accuracy hint on emulator"
       ],
-      "priority": 8, "passes": false, "notes": ""
+      "priority": 8, "passes": true, "notes": "statusBarsPadding was already applied to the GPS-card overlay in CameraPreview (TopCenter) — verified the card renders below the clock/battery. Added low-GPS guidance in LocationInfoOverlay: when fix accuracy > 20m the card background turns the accuracyColor (red Poor at >20m) instead of black, and a 4th line shows a Warning icon + 'Move to open sky for better GPS' hint (string gps_low_accuracy_hint in both values + values-hi). Verified on emulator: at the real ±5m the card stays black with no hint; with a temporarily-lowered threshold the card tinted to accuracyColor + the Hindi hint 'बेहतर GPS के लिए खुले आसमान में जाएँ' rendered (then reverted to >20f)."
     },
     {
       "id": "P2-US-009",
@@ -114,7 +114,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify weather in overlay + saved image on emulator"
       ],
-      "priority": 9, "passes": false, "notes": ""
+      "priority": 9, "passes": true, "notes": "New location/WeatherProvider.kt: Weather(temperatureC, weatherCode) + fetchWeather(lat,lng) hits Open-Meteo current_weather (no API key) via HttpURLConnection on Dispatchers.IO with an 8s timeout, parses with org.json, returns null on any failure (offline/HTTP/parse) — same graceful contract as OsmStaticMapProvider. WMO weathercode mapped to coarse condition strings (clear/cloudy/fog/drizzle/rain/snow/showers/thunderstorm/unknown). Weather.describe(context)='28°C · Clear' via weather_stamp string. LocationUiState.Available gained weather:Weather?=null; rememberCurrentLocation fetches weather after geocode and folds it in. Overlay shows a WbSunny icon + describe() line (between plus code and coords). StampData gained weather:String? (pre-formatted, snapshotted at shutter via available.weather.describe(context)); all 3 templates render it (Classic/Minimal after coords, Field Report as a WEATHER labelled row). New weather_* strings in both values + values-hi. INTERNET perm already present. Verified on emulator: overlay shows '☀ 34°C · साफ़'; captured Field Report stamp burns 'WEATHER 34°C · साफ़'."
     },
     {
       "id": "P2-US-010",
@@ -126,7 +126,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify switching presets changes the saved stamp on emulator"
       ],
-      "priority": 10, "passes": false, "notes": ""
+      "priority": 10, "passes": true, "notes": "New LayoutPreset enum in settings/AppSettings.kt: 6 presets (MAP_ADDRESS_WEATHER default / MAP_LATLNG_WEATHER / MAP_ADDRESS / ADDRESS_WEATHER / ADDRESS / LATLNG), each a combo of boolean showMap/showAddress/showCoords/showWeather flags + labelRes. Persisted via AppSettingsStore.load/saveLayoutPreset (same SharedPreferences pattern as Coordinate/Time format). Snapshotted into StampData.layoutPreset at shutter in CameraPreview. PhotoStamp: drawStamp computes effectiveMap = if(showMap) mapThumbnail else null; each template (Classic/Minimal/Field Report) gates its address/coords/weather lines on the flags; project/site/note/logo + date-time always render. PhotoStorage also gates the (network) map fetch on showMap (composes with template.usesMap). Settings gained a 'Stamp layout' radio section (OptionRow per preset). New preset_* + settings_layout_preset(_summary) strings in both values + values-hi. Verified on emulator: picked Lat/Lng preset → Field Report capture burned ONLY PROJECT/SITE + COORDINATES (DMS ±5m) + DATE/TIME rows — no map, no ADDRESS, no WEATHER."
     },
     {
       "id": "P2-US-011",
@@ -138,7 +138,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify preview matches saved photo position on emulator"
       ],
-      "priority": 11, "passes": false, "notes": ""
+      "priority": 11, "passes": true, "notes": "New StampPosition enum (BOTTOM default / TOP) in settings/AppSettings.kt + AppSettingsStore.load/saveStampPosition (same SharedPreferences pattern as the other format prefs). StampData.stampPosition snapshotted at shutter in CameraPreview. PhotoStamp: drawClassic/drawMinimal/drawFieldReport now compute panelHeight then panelTop = if(top) 0f else height-panelHeight (header band/map/lines are panelTop-relative so both edges work). WYSIWYG: CameraPreview reads the position once (remember at tab entry; NavHost re-composes the camera tab on return so a Settings change applies) and places the live LocationInfoOverlay GPS card at the SAME edge — TopCenter when TOP, or as the first child of the bottom controls Column (above the mode chips) when BOTTOM — so the on-screen preview matches the burned photo. Settings gained a 'Stamp position' radio section. New settings_stamp_position(_summary) + position_top/position_bottom strings in both values + values-hi. Verified on emulator: BOTTOM → on-screen card sits above the mode chips + Field Report stamp burns at the BOTTOM; switched to TOP → card moves to the top + the same stamp burns at the TOP (±5m), preview==photo at both edges."
     },
     {
       "id": "P2-US-012",
@@ -150,7 +150,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify overlays + grid toggle on emulator"
       ],
-      "priority": 12, "passes": false, "notes": ""
+      "priority": 12, "passes": true, "notes": "Viewfinder overlays + grid. GpsFix gained altitudeMeters (nullable, from Location.hasAltitude()/.altitude in rememberCurrentLocation). New AppSettingsStore.load/saveShowGrid (plain boolean, viewfinder-only, NOT a StampData field). CameraPreview: RuleOfThirdsGrid (Canvas, 2 vertical + 2 horizontal lines at thirds, white@0.3, gated on showGrid read once via remember at tab entry) over the preview; ViewfinderInfoOverlay = bottom-left HUD (first left-aligned child of the bottom controls Column so it never overlaps controls) with a live-ticking date/time line (LaunchedEffect + delay(1000), TimeFormat.datePattern) + an Altitude: Nm line when the fix reports altitude — 12sp white with a black Shadow. Settings: new 'Framing grid' section with a ToggleRow (label + Material3 Switch) inside an OptionCard. New strings settings_grid(_summary/_toggle) + viewfinder_altitude in both values + values-hi. Verified on emulator: enabled grid in Settings → Camera shows the 3x3 grid lines + bottom-left HUD '16 जून 2026 12:48:56 pm IST' / 'ऊँचाई: 342मी' (geo fix altitude 342)."
     },
     {
       "id": "P2-US-013",
@@ -162,7 +162,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify altitude + direction render on emulator"
       ],
-      "priority": 13, "passes": false, "notes": ""
+      "priority": 13, "passes": true, "notes": "New location/CompassProvider.kt: rememberCompassBearing() subscribes to TYPE_ROTATION_VECTOR (SensorManager.getRotationMatrixFromVector + getOrientation, azimuth radians→0..360 degrees) via DisposableEffect, emits Float? (null when no sensor — graceful-null contract, no permission). bearingToCardinalRes(deg) maps to 8 cardinal string res (compass_n..nw). formatAltitudeFacing(context, altitude, bearing) builds 'Altitude 342m · Facing NE' from whichever pieces exist (null if neither). Altitude already on GpsFix (US-012). StampData.altitudeFacing (pre-formatted, snapshotted at shutter); rendered in all 3 templates (Classic/Minimal after weather, Field Report as ALTITUDE / FACING labelled row) — always shown when present, NOT gated by layout preset. ViewfinderInfoOverlay HUD now shows the same combined line (replaced the altitude-only line). New compass_facing + stamp_altitude + compass_n/ne/e/se/s/sw/w/nw strings (both values + values-hi; Hindi cardinal abbrevs उ/उपू/पू/दपू/द/दप/प/उप, 'Facing %s'→'%s की ओर'). Verified on emulator: HUD shows 'ऊँचाई 342मी · उ की ओर'; Field Report capture burned an ALTITUDE / FACING row 'ऊँचाई 342मी · उ की ओर' between COORDINATES and DATE/TIME (altitude 342 from geo fix, compass N)."
     },
     {
       "id": "P2-US-014",
@@ -174,7 +174,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify EXIF GPS on a captured file on emulator"
       ],
-      "priority": 14, "passes": false, "notes": ""
+      "priority": 14, "passes": true, "notes": "Added androidx.exifinterface:exifinterface 1.3.7 (catalog + build.gradle). StampData gained raw altitudeMeters:Double? (snapshotted at shutter from available.fix.altitudeMeters, separate from the pre-formatted altitudeFacing line). PhotoStorage.writeGpsExif(context, uri, stamp): after compressing the stamped JPEG (and before clearing IS_PENDING on Q+), opens the MediaStore uri with a 'rw' file descriptor and writes EXIF via androidx ExifInterface — setLatLong + setAltitude, TAG_GPS_DATESTAMP/TIMESTAMP (UTC, rational h/1,m/1,s/1) when a fix exists, plus TAG_DATETIME/_ORIGINAL/_DIGITIZED always. Wrapped in runCatching so an EXIF failure never discards the photo (stamp is still burned in). Verified on emulator: captured GPS_20260616_130644592.jpg, PIL read GPSLatitude 30°7'55.3\"N (30.13203), GPSLongitude 78°19'17.2\"E (78.32144), GPSAltitude 342.0 (ref above-sea-level), GPSDateStamp 2026:06:16, DateTimeOriginal 2026:06:16 13:06:44."
     },
     {
       "id": "P2-US-015",
@@ -186,7 +186,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify home tiles + navigation on emulator"
       ],
-      "priority": 15, "passes": false, "notes": ""
+      "priority": 15, "passes": true, "notes": "New Home dashboard as the launch destination. Added Destination.Home (Icons.Home, route 'home') as the FIRST entry in the Destination enum + START_DESTINATION=Home (Destinations.kt). New ui/screens/HomeScreen.kt: navy vertical-gradient (BrandNavy→BrandNavyDeep) landing — gold app_name title + Hindi-localized home_subtitle + a 2x2 grid of HomeTileCard (Material3 Card(onClick), aspectRatio 1, BrandNavySurface bg, gold icon in a BrandNavyLight circle + white label). Tiles: Camera(PhotoCamera)/Gallery(PhotoLibrary)/Map(Map)/Reports(PictureAsPdf); Reports routes to Gallery.route (PDF report export lives there, US-017). HomeScreen takes onTileClick:(route)->Unit (no NavController dep). MainActivity: NavHost gains the Home composable; extracted NavHostController.navigateTopLevel (popUpTo start saveState + launchSingleTop + restoreState) reused by BOTH the Home tiles AND the bottom-nav onClick. New strings tab_home/tab_reports/home_subtitle in both values+values-hi. Verified on emulator: Home is the launch screen (gold 'Gps Camera Location' + 4 navy tiles with gold icons), bottom nav shows होम selected (gold home icon); tapping the रिपोर्ट tile navigated to Gallery (गैलरी gold-selected in nav)."
     },
     {
       "id": "P2-US-016",
@@ -198,7 +198,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify grid creation + export on emulator"
       ],
-      "priority": 16, "passes": false, "notes": ""
+      "priority": 16, "passes": true, "notes": "New media/PhotoCollage.kt: createPhotoCollage(context, photos) combines 2-4 (COLLAGE_MIN/MAX_PHOTOS) selected photos into ONE 1200px-wide grid image. Layout = 2 columns, rows=ceil(n/2): 2 photos sit side-by-side, 4 form a 2x2, 3 = 2+1. Each photo is fit-inside (contain, never cropped) its square cell on a white bg so EVERY photo's burned-in stamp is preserved (verified: 3-photo collage kept all 3 full FIELD REPORT stamps). decodeScaledToMax downsamples each to ~2x cell. Saved as GPS_collage_<ts>.jpg into Pictures/gpstools via the same scoped-storage saveBitmap pattern (keeps the GPS_ prefix so it shows in the in-app gallery). shareImage(context,uri,title) fires a generic ACTION_SEND image share. GalleryScreen: GalleryActionBar gained a 'ग्रिड बनाएँ'/Make grid TextButton (GridView icon) next to Export PDF; createCollageSelected() validates 2-4 selection (else toast collage_invalid_count), shows the generating overlay (generatingLabel state, reused by both PDF+collage), creates off-main-thread, toasts collage_saved, refreshes the grid, and fires the share sheet. New collage_* strings in both values + values-hi. Verified on emulator-5554: selected 3 photos → Make grid → 'Creating grid…' overlay → share sheet 'Sharing image' with the 2x2 preview; pulled GPS_collage_20260616_132843.jpg (1200x1200 JPEG), all 3 FIELD REPORT stamps intact, 4th cell white."
     },
     {
       "id": "P2-US-017",
@@ -210,7 +210,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify toggle + watermark on saved image on emulator"
       ],
-      "priority": 17, "passes": false, "notes": ""
+      "priority": 17, "passes": true, "notes": "Date/time stamp toggle + custom watermark. AppSettingsStore.load/saveShowDateTime (KEY_SHOW_DATETIME, default true) snapshotted into StampData.showDateTime; drawClassic/drawMinimal/drawFieldReport gate the dateLine on it (Classic/Minimal early-return if their line list ends empty so an empty panel/maxOf crash can't happen). Settings gained a 'Date & time stamp' ToggleRow (Switch) before the Framing grid section. Custom watermark = a new 'watermark' text field on CustomFields (persisted via CustomFieldsStore.saveFields, edited in the CustomFieldsSheet between Note and Logo) → StampData.watermark, snapshotted at shutter; new drawWatermark() in PhotoStamp draws it bottom-right over a rounded backing (ellipsized to fit), independent of the template (mirrors top-right drawLogo). New strings settings_datetime(_summary/_toggle) + custom_field_watermark in BOTH values + values-hi. Verified on emulator-5554 (Field Report, TOP, LATLNG): with date/time ON the stamp burned a DATE/TIME row + 'ACME Surveys Pvt Ltd' watermark bottom-right; toggling date/time OFF (via show_datetime=false) re-captured the SAME stamp with NO DATE/TIME row, watermark still bottom-right."
     },
     {
       "id": "P2-US-018",
@@ -222,7 +222,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify both gestures on emulator"
       ],
-      "priority": 18, "passes": false, "notes": ""
+      "priority": 18, "passes": true, "notes": "Pro gestures. Shutter capture body extracted into a local captureNow() fun in CameraPreview (shared by tap + timer). Shutter is now a NON-clickable Surface (container overload — keeps ring/elevation/border) with Modifier.pointerInput{detectTapGestures(onTap=captureNow, onLongPress=startSelfTimer)}: a TAP captures immediately (one-tap US-002 preserved), a LONG-PRESS starts a 3-sec self-timer. startSelfTimer = scope.launch loop (countdown=3..1, delay(1000)) then captureNow(); countdown (nullable Int state) renders a large centered 96sp white number over the preview while ticking. Both captureNow/startSelfTimer early-return if isCapturing||countdown!=null. Swipe-left: the AndroidView preview has pointerInput{detectHorizontalDragGestures} accumulating drag → on onDragEnd past ~-80px calls openLastPhoto(context) (new fn in PhotoGallery.kt: queries newest-first off Dispatchers.IO, fires ACTION_VIEW image chooser; false→toast camera_no_photos when none). New camera_timer_countdown/camera_no_photos strings (both values+values-hi). Verified on emulator-5554: long-press shutter showed the centered '2' countdown then captured (GPS_20260616_141516537.jpg); swipe-left opened the last FIELD REPORT capture in the Google Photos full-screen viewer; single-tap still captures (GPS_20260616_141617680.jpg)."
     }
   ]
 }

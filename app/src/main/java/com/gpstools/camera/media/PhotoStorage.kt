@@ -14,9 +14,11 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.core.content.ContextCompat
+import androidx.exifinterface.media.ExifInterface
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.Executors
 
 private const val TAG = "PhotoStorage"
@@ -69,6 +71,7 @@ fun capturePhoto(
                     // templates that render one; null (offline / no fix) just means the
                     // stamp falls back to text-only (US-008).
                     val mapThumbnail = if (template.usesMap &&
+                        stamp.layoutPreset.showMap &&
                         stamp.latitude != null && stamp.longitude != null
                     ) {
                         mapProvider.fetchMapThumbnail(stamp.latitude, stamp.longitude)
@@ -155,6 +158,11 @@ private fun saveBitmap(context: Context, bitmap: Bitmap, stamp: StampData): Uri?
                 "JPEG compression failed"
             }
         } ?: error("openOutputStream returned null for $uri")
+        // Write machine-readable EXIF GPS into the freshly-encoded JPEG (US-014). Done
+        // while the entry is still writable (before clearing IS_PENDING on Q+). A
+        // failure here must NOT discard the photo — the stamp is still burned in.
+        runCatching { writeGpsExif(context, uri, stamp) }
+            .onFailure { Log.w(TAG, "Failed to write EXIF GPS (photo kept)", it) }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             values.clear()
             values.put(MediaStore.MediaColumns.IS_PENDING, 0)
@@ -169,5 +177,47 @@ private fun saveBitmap(context: Context, bitmap: Bitmap, stamp: StampData): Uri?
         Log.e(TAG, "Failed to write stamped capture; rolling back", e)
         runCatching { resolver.delete(uri, null, null) }
         null
+    }
+}
+
+/**
+ * Writes EXIF GPS metadata (latitude/longitude, altitude, and the capture timestamp)
+ * into the JPEG at [uri] so the file is machine-readable by any EXIF reader (US-014).
+ * Opens the MediaStore entry with a read-write file descriptor; on Q+ this works while
+ * the entry is still IS_PENDING. Skips the GPS tags entirely when there was no location
+ * fix (lat/lng null), but always records the capture date/time.
+ */
+private fun writeGpsExif(context: Context, uri: Uri, stamp: StampData) {
+    context.contentResolver.openFileDescriptor(uri, "rw")?.use { pfd ->
+        val exif = ExifInterface(pfd.fileDescriptor)
+
+        // Image timestamp in local time, "yyyy:MM:dd HH:mm:ss" (EXIF DateTime format).
+        val localFormat = SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.US)
+        val dateTime = localFormat.format(stamp.timestamp)
+        exif.setAttribute(ExifInterface.TAG_DATETIME, dateTime)
+        exif.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, dateTime)
+        exif.setAttribute(ExifInterface.TAG_DATETIME_DIGITIZED, dateTime)
+
+        if (stamp.latitude != null && stamp.longitude != null) {
+            exif.setLatLong(stamp.latitude, stamp.longitude)
+            stamp.altitudeMeters?.let { exif.setAltitude(it) }
+
+            // GPS timestamp is stored in UTC: a "yyyy:MM:dd" datestamp plus an
+            // "h/1,m/1,s/1" rational time-of-day.
+            val utc = TimeZone.getTimeZone("UTC")
+            val dateStamp = SimpleDateFormat("yyyy:MM:dd", Locale.US)
+                .apply { timeZone = utc }
+                .format(stamp.timestamp)
+            val time = SimpleDateFormat("HH:mm:ss", Locale.US)
+                .apply { timeZone = utc }
+                .format(stamp.timestamp)
+                .split(":")
+            exif.setAttribute(ExifInterface.TAG_GPS_DATESTAMP, dateStamp)
+            exif.setAttribute(
+                ExifInterface.TAG_GPS_TIMESTAMP,
+                "${time[0]}/1,${time[1]}/1,${time[2]}/1",
+            )
+        }
+        exif.saveAttributes()
     }
 }

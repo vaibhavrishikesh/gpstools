@@ -2,10 +2,15 @@
     <string name="app_name">Gps Camera Location</string>
 
     <!-- Bottom navigation -->
+    <string name="tab_home">Home</string>
     <string name="tab_camera">Camera</string>
     <string name="tab_gallery">Gallery</string>
     <string name="tab_map">Map</string>
+    <string name="tab_reports">Reports</string>
     <string name="tab_settings">Settings</string>
+
+    <!-- Home dashboard (P2-US-015) -->
+    <string name="home_subtitle">Field photo proof, geotagged</string>
 
     <!-- Settings — language (US-013) -->
     <string name="settings_language">Language</string>
@@ -19,6 +24,36 @@
     <string name="settings_coord_format_summary">How latitude and longitude are written on the stamp.</string>
     <string name="settings_coord_decimal">Decimal degrees (12.971599, 77.594566)</string>
     <string name="settings_coord_dms">Degrees, minutes, seconds (12°58\'17.8\"N)</string>
+    <!-- Stamp layout presets (P2-US-010) -->
+    <string name="settings_layout_preset">Stamp layout</string>
+    <string name="settings_layout_preset_summary">Which location fields appear on the stamp.</string>
+    <string name="preset_map_address_weather">Map + Address + Weather</string>
+    <string name="preset_map_latlng_weather">Map + Lat/Lng + Weather</string>
+    <string name="preset_map_address">Map + Address</string>
+    <string name="preset_address_weather">Address + Weather</string>
+    <string name="preset_address">Address</string>
+    <string name="preset_latlng">Lat/Lng</string>
+    <string name="settings_stamp_position">Stamp position</string>
+    <string name="settings_stamp_position_summary">Where the stamp appears on the photo (and the on-screen preview).</string>
+    <string name="position_bottom">Bottom</string>
+    <string name="position_top">Top</string>
+    <string name="settings_grid">Framing grid</string>
+    <string name="settings_grid_summary">Show a 3×3 rule-of-thirds grid on the viewfinder.</string>
+    <string name="settings_grid_toggle">Show grid</string>
+    <string name="settings_datetime">Date &amp; time stamp</string>
+    <string name="settings_datetime_summary">Burn the capture date and time onto the photo.</string>
+    <string name="settings_datetime_toggle">Show date &amp; time</string>
+    <string name="viewfinder_altitude">Altitude: %1$dm</string>
+    <string name="stamp_altitude">Altitude %1$dm</string>
+    <string name="compass_facing">Facing %1$s</string>
+    <string name="compass_n">N</string>
+    <string name="compass_ne">NE</string>
+    <string name="compass_e">E</string>
+    <string name="compass_se">SE</string>
+    <string name="compass_s">S</string>
+    <string name="compass_sw">SW</string>
+    <string name="compass_w">W</string>
+    <string name="compass_nw">NW</string>
     <string name="settings_time_format">Time format</string>
     <string name="settings_time_format_summary">Clock used for the date/time on the stamp.</string>
     <string name="settings_time_24">24-hour (14:30:00)</string>
@@ -40,7 +75,14 @@
     <!-- Camera preview (US-004) -->
     <string name="camera_shutter">Take photo</string>
     <string name="camera_flip">Switch camera</string>
+    <string name="camera_flash">Flash: %1$s</string>
+    <string name="camera_flash_off">Off</string>
+    <string name="camera_flash_on">On</string>
+    <string name="camera_flash_auto">Auto</string>
     <string name="camera_unavailable">Camera unavailable on this device</string>
+    <!-- Pro gestures (P2-US-018): long-press self-timer + swipe-left to last photo -->
+    <string name="camera_timer_countdown">Self-timer: %1$d</string>
+    <string name="camera_no_photos">No photos yet</string>
 
     <!-- Photo capture (US-006) -->
     <string name="capture_saved">Photo saved</string>
@@ -51,6 +93,24 @@
     <string name="location_geocoding">Finding address…</string>
     <string name="location_unavailable">Location unavailable</string>
     <string name="location_accuracy">±%1$d m accuracy</string>
+    <!-- Accuracy chip (US-004): colour-coded quality badge on the GPS card. -->
+    <string name="accuracy_chip">±%1$dm · %2$s</string>
+    <string name="accuracy_good">Good</string>
+    <string name="accuracy_avg">Avg</string>
+    <string name="accuracy_poor">Poor</string>
+    <string name="gps_low_accuracy_hint">Move to open sky for better GPS</string>
+
+    <!-- Weather on the stamp (US-009): current temp + condition via Open-Meteo. -->
+    <string name="weather_stamp">%1$d°C · %2$s</string>
+    <string name="weather_clear">Clear</string>
+    <string name="weather_cloudy">Cloudy</string>
+    <string name="weather_fog">Fog</string>
+    <string name="weather_drizzle">Drizzle</string>
+    <string name="weather_rain">Rain</string>
+    <string name="weather_snow">Snow</string>
+    <string name="weather_showers">Showers</string>
+    <string name="weather_thunderstorm">Thunderstorm</string>
+    <string name="weather_unknown">Weather</string>
 
     <!-- Stamp templates (US-009) -->
     <string name="template_classic">Classic</string>
@@ -58,12 +118,16 @@
     <string name="template_field_report">Field Report</string>
     <string name="template_picker">Stamp style</string>
     <string name="template_selected">%1$s stamp</string>
+    <!-- Gold PRO badge on premium mode chips (P2-US-005) -->
+    <string name="pro_badge">PRO</string>
 
     <!-- Custom stamp fields (US-010) -->
     <string name="custom_fields_open">Edit stamp details</string>
+    <string name="custom_fields_edit">Edit</string>
     <string name="custom_fields_title">Stamp details</string>
     <string name="custom_field_project">Project / site name</string>
     <string name="custom_field_note">Note</string>
+    <string name="custom_field_watermark">Watermark (company name)</string>
     <string name="custom_field_logo">Logo</string>
     <string name="custom_field_add_logo">Add logo</string>
     <string name="custom_field_change_logo">Change logo</string>
@@ -116,6 +180,14 @@
     <string name="report_open_chooser">Open report</string>
     <string name="report_no_viewer">No PDF viewer installed</string>
     <string name="report_free_limit">Free reports include up to %1$d photos with a watermark. Go Pro for unlimited, watermark-free reports.</string>
+
+    <!-- Photo grid / collage (US-016) -->
+    <string name="collage_create">Make grid</string>
+    <string name="collage_generating">Creating grid…</string>
+    <string name="collage_invalid_count">Select 2–4 photos for a grid</string>
+    <string name="collage_saved">Grid saved to gallery</string>
+    <string name="collage_failed">Couldn\'t create the grid</string>
+    <string name="collage_share_chooser">Share grid</string>
 
     <!-- Pro subscription (US-018) -->
     <string name="pro_title">gpstools Pro</string>

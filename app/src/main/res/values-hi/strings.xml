@@ -3,10 +3,15 @@
     <string name="app_name">Gps Camera Location</string>
 
     <!-- Bottom navigation -->
+    <string name="tab_home">होम</string>
     <string name="tab_camera">कैमरा</string>
     <string name="tab_gallery">गैलरी</string>
     <string name="tab_map">मानचित्र</string>
+    <string name="tab_reports">रिपोर्ट</string>
     <string name="tab_settings">सेटिंग</string>
+
+    <!-- Home dashboard (P2-US-015) -->
+    <string name="home_subtitle">जियोटैग के साथ फ़ील्ड फ़ोटो प्रमाण</string>
 
     <!-- Settings — language (US-013) -->
     <string name="settings_language">भाषा</string>
@@ -20,6 +25,36 @@
     <string name="settings_coord_format_summary">स्टैम्प पर अक्षांश और देशांतर कैसे लिखे जाते हैं।</string>
     <string name="settings_coord_decimal">दशमलव डिग्री (12.971599, 77.594566)</string>
     <string name="settings_coord_dms">डिग्री, मिनट, सेकंड (12°58\'17.8\"N)</string>
+    <!-- Stamp layout presets (P2-US-010) -->
+    <string name="settings_layout_preset">स्टैम्प लेआउट</string>
+    <string name="settings_layout_preset_summary">स्टैम्प पर कौन से स्थान फ़ील्ड दिखें।</string>
+    <string name="preset_map_address_weather">मानचित्र + पता + मौसम</string>
+    <string name="preset_map_latlng_weather">मानचित्र + अक्षां/देशां + मौसम</string>
+    <string name="preset_map_address">मानचित्र + पता</string>
+    <string name="preset_address_weather">पता + मौसम</string>
+    <string name="preset_address">पता</string>
+    <string name="preset_latlng">अक्षांश/देशांतर</string>
+    <string name="settings_stamp_position">स्टैम्प स्थिति</string>
+    <string name="settings_stamp_position_summary">फ़ोटो (और स्क्रीन पूर्वावलोकन) पर स्टैम्प कहाँ दिखे।</string>
+    <string name="position_bottom">नीचे</string>
+    <string name="position_top">ऊपर</string>
+    <string name="settings_grid">फ़्रेमिंग ग्रिड</string>
+    <string name="settings_grid_summary">व्यूफ़ाइंडर पर 3×3 ग्रिड दिखाएँ।</string>
+    <string name="settings_grid_toggle">ग्रिड दिखाएँ</string>
+    <string name="settings_datetime">दिनांक और समय स्टैम्प</string>
+    <string name="settings_datetime_summary">फ़ोटो पर कैप्चर की तारीख और समय अंकित करें।</string>
+    <string name="settings_datetime_toggle">दिनांक और समय दिखाएँ</string>
+    <string name="viewfinder_altitude">ऊँचाई: %1$dमी</string>
+    <string name="stamp_altitude">ऊँचाई %1$dमी</string>
+    <string name="compass_facing">%1$s की ओर</string>
+    <string name="compass_n">उ</string>
+    <string name="compass_ne">उपू</string>
+    <string name="compass_e">पू</string>
+    <string name="compass_se">दपू</string>
+    <string name="compass_s">द</string>
+    <string name="compass_sw">दप</string>
+    <string name="compass_w">प</string>
+    <string name="compass_nw">उप</string>
     <string name="settings_time_format">समय प्रारूप</string>
     <string name="settings_time_format_summary">स्टैम्प पर दिनांक/समय के लिए उपयोग की जाने वाली घड़ी।</string>
     <string name="settings_time_24">24-घंटे (14:30:00)</string>
@@ -41,7 +76,14 @@
     <!-- Camera preview (US-004) -->
     <string name="camera_shutter">फ़ोटो लें</string>
     <string name="camera_flip">कैमरा बदलें</string>
+    <string name="camera_flash">फ़्लैश: %1$s</string>
+    <string name="camera_flash_off">बंद</string>
+    <string name="camera_flash_on">चालू</string>
+    <string name="camera_flash_auto">स्वतः</string>
     <string name="camera_unavailable">इस डिवाइस पर कैमरा उपलब्ध नहीं है</string>
+    <!-- Pro gestures (P2-US-018): long-press self-timer + swipe-left to last photo -->
+    <string name="camera_timer_countdown">सेल्फ़-टाइमर: %1$d</string>
+    <string name="camera_no_photos">अभी कोई फ़ोटो नहीं</string>
 
     <!-- Photo capture (US-006) -->
     <string name="capture_saved">फ़ोटो सहेजी गई</string>
@@ -52,6 +94,24 @@
     <string name="location_geocoding">पता खोजा जा रहा है…</string>
     <string name="location_unavailable">स्थान उपलब्ध नहीं है</string>
     <string name="location_accuracy">±%1$d मी सटीकता</string>
+    <!-- Accuracy chip (US-004): colour-coded quality badge on the GPS card. -->
+    <string name="accuracy_chip">±%1$dमी · %2$s</string>
+    <string name="accuracy_good">अच्छा</string>
+    <string name="accuracy_avg">औसत</string>
+    <string name="accuracy_poor">कमज़ोर</string>
+    <string name="gps_low_accuracy_hint">बेहतर GPS के लिए खुले आसमान में जाएँ</string>
+
+    <!-- Weather on the stamp (US-009): current temp + condition via Open-Meteo. -->
+    <string name="weather_stamp">%1$d°C · %2$s</string>
+    <string name="weather_clear">साफ़</string>
+    <string name="weather_cloudy">बादल</string>
+    <string name="weather_fog">कोहरा</string>
+    <string name="weather_drizzle">बूँदाबाँदी</string>
+    <string name="weather_rain">बारिश</string>
+    <string name="weather_snow">बर्फ़</string>
+    <string name="weather_showers">वर्षा</string>
+    <string name="weather_thunderstorm">आँधी-तूफ़ान</string>
+    <string name="weather_unknown">मौसम</string>
 
     <!-- Stamp templates (US-009) -->
     <string name="template_classic">क्लासिक</string>
@@ -59,12 +119,15 @@
     <string name="template_field_report">फ़ील्ड रिपोर्ट</string>
     <string name="template_picker">स्टैम्प शैली</string>
     <string name="template_selected">%1$s स्टैम्प</string>
+    <string name="pro_badge">PRO</string>
 
     <!-- Custom stamp fields (US-010) -->
     <string name="custom_fields_open">स्टैम्प विवरण संपादित करें</string>
+    <string name="custom_fields_edit">संपादित करें</string>
     <string name="custom_fields_title">स्टैम्प विवरण</string>
     <string name="custom_field_project">प्रोजेक्ट / साइट नाम</string>
     <string name="custom_field_note">टिप्पणी</string>
+    <string name="custom_field_watermark">वॉटरमार्क (कंपनी का नाम)</string>
     <string name="custom_field_logo">लोगो</string>
     <string name="custom_field_add_logo">लोगो जोड़ें</string>
     <string name="custom_field_change_logo">लोगो बदलें</string>
@@ -117,6 +180,14 @@
     <string name="report_open_chooser">रिपोर्ट खोलें</string>
     <string name="report_no_viewer">कोई PDF व्यूअर इंस्टॉल नहीं है</string>
     <string name="report_free_limit">मुफ़्त रिपोर्ट में वॉटरमार्क के साथ अधिकतम %1$d फ़ोटो शामिल होती हैं। असीमित, वॉटरमार्क-रहित रिपोर्ट के लिए Pro लें।</string>
+
+    <!-- Photo grid / collage (US-016) -->
+    <string name="collage_create">ग्रिड बनाएँ</string>
+    <string name="collage_generating">ग्रिड बन रहा है…</string>
+    <string name="collage_invalid_count">ग्रिड के लिए 2–4 फ़ोटो चुनें</string>
+    <string name="collage_saved">ग्रिड गैलरी में सहेजा गया</string>
+    <string name="collage_failed">ग्रिड नहीं बन सका</string>
+    <string name="collage_share_chooser">ग्रिड साझा करें</string>
 
     <!-- Pro subscription (US-018) -->
     <string name="pro_title">gpstools Pro</string>

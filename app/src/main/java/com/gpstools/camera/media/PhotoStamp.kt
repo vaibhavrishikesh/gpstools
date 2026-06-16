@@ -7,6 +7,8 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import com.gpstools.camera.settings.CoordinateFormat
+import com.gpstools.camera.settings.LayoutPreset
+import com.gpstools.camera.settings.StampPosition
 import com.gpstools.camera.settings.TimeFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -33,8 +35,47 @@ data class StampData(
     val address: String?,
     val projectName: String? = null,
     val note: String? = null,
+    /** Pre-formatted weather line (US-009), e.g. "28°C · Clear"; null when unavailable. */
+    val weather: String? = null,
+    /**
+     * Pre-formatted altitude + compass facing line (P2-US-013), e.g.
+     * "Altitude 342m · Facing NE"; null when neither the altitude nor a compass
+     * bearing is available. Always rendered when present (not gated by the layout
+     * preset), like the project/note/date-time fields.
+     */
+    val altitudeFacing: String? = null,
+    /**
+     * Raw GPS altitude in metres (P2-US-014); null when the fix has none. Carried
+     * separately from the pre-formatted [altitudeFacing] line so it can be written as
+     * machine-readable EXIF GPS metadata into the saved JPEG.
+     */
+    val altitudeMeters: Double? = null,
     val coordinateFormat: CoordinateFormat = CoordinateFormat.DEFAULT,
     val timeFormat: TimeFormat = TimeFormat.DEFAULT,
+    /**
+     * Which location fields render on the stamp (P2-US-010). Snapshot from the user's
+     * Settings at capture time; gates the map / address / coordinates / weather lines
+     * in every template. Project/site, note, logo and date-time ignore it.
+     */
+    val layoutPreset: LayoutPreset = LayoutPreset.DEFAULT,
+    /**
+     * Which edge the stamp panel is anchored to (P2-US-011, WYSIWYG). Snapshot from
+     * the user's Settings at capture time; the live viewfinder overlay sits at the
+     * same edge so the on-screen preview matches the burned photo.
+     */
+    val stampPosition: StampPosition = StampPosition.DEFAULT,
+    /**
+     * Whether the date/time line is rendered on the stamp (P2-US-017). Snapshot from
+     * the user's Settings at capture time. Defaults to true (the historical
+     * behaviour). When false the date/time line is omitted from every template.
+     */
+    val showDateTime: Boolean = true,
+    /**
+     * Custom watermark text (P2-US-017), e.g. a company name. When non-blank it's
+     * drawn bottom-right of the photo over a subtle backing, independent of the
+     * template — like the logo (which sits top-right).
+     */
+    val watermark: String? = null,
 )
 
 /** Reference width the stamp's type sizes are tuned against; everything scales from it. */
@@ -75,12 +116,18 @@ fun drawStamp(
         source.copy(Bitmap.Config.ARGB_8888, true)
     }
     val canvas = Canvas(result)
+    // The layout preset (P2-US-010) can suppress the map even for a map-drawing template.
+    val effectiveMap = if (stamp.layoutPreset.showMap) mapThumbnail else null
+    // WYSIWYG (P2-US-011): anchor the panel to the top edge when the user picked TOP.
+    val top = stamp.stampPosition == StampPosition.TOP
     when (template) {
-        StampTemplate.CLASSIC -> drawClassic(canvas, result, stamp, mapThumbnail)
-        StampTemplate.MINIMAL -> drawMinimal(canvas, result, stamp)
-        StampTemplate.FIELD_REPORT -> drawFieldReport(canvas, result, stamp, mapThumbnail)
+        StampTemplate.CLASSIC -> drawClassic(canvas, result, stamp, effectiveMap, top)
+        StampTemplate.MINIMAL -> drawMinimal(canvas, result, stamp, top)
+        StampTemplate.FIELD_REPORT -> drawFieldReport(canvas, result, stamp, effectiveMap, top)
     }
     if (logo != null) drawLogo(canvas, result, logo)
+    // Custom watermark (P2-US-017) — bottom-right, independent of the template.
+    stamp.watermark?.takeIf { it.isNotBlank() }?.let { drawWatermark(canvas, result, it) }
     return result
 }
 
@@ -91,7 +138,7 @@ fun drawStamp(
  * coordinates line, then date/time, with the map thumbnail (when present) on the
  * right and text wrapped in the remaining width.
  */
-private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?) {
+private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?, top: Boolean) {
     val width = result.width
     val height = result.height
     val scale = width / REFERENCE_WIDTH
@@ -113,25 +160,36 @@ private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThu
     stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
         wrapText(name, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
     }
-    stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
-        wrapText(addr, bodyPaint, maxTextWidth).forEach { lines += it to bodyPaint }
+    if (stamp.layoutPreset.showAddress) {
+        stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
+            wrapText(addr, bodyPaint, maxTextWidth).forEach { lines += it to bodyPaint }
+        }
     }
-    coordinatesLine(stamp)?.let { lines += it to monoPaint }
-    lines += dateLine(stamp) to bodyPaint
+    if (stamp.layoutPreset.showCoords) coordinatesLine(stamp)?.let { lines += it to monoPaint }
+    if (stamp.layoutPreset.showWeather) {
+        stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
+    }
+    // Altitude + compass facing (P2-US-013) — always rendered when present.
+    stamp.altitudeFacing?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
+    // Date/time (P2-US-017) — only when the user kept it enabled.
+    if (stamp.showDateTime) lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
     }
 
+    if (lines.isEmpty() && mapThumbnail == null) return
+
     val textHeight = measureLines(lines, lineSpacing)
     val contentHeight = maxOf(textHeight, mapSize)
-    val panelTop = height - (contentHeight + 2 * pad)
+    val panelHeight = contentHeight + 2 * pad
+    val panelTop = if (top) 0f else height - panelHeight
 
-    canvas.drawRect(0f, panelTop, width.toFloat(), height.toFloat(), panelFill(150))
+    canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + panelHeight, panelFill(150))
     drawLines(canvas, lines, pad, panelTop + pad, lineSpacing)
 
     if (mapThumbnail != null) {
         val mapLeft = width - pad - mapSize
-        val mapTop = panelTop + (contentHeight + 2 * pad - mapSize) / 2f
+        val mapTop = panelTop + (panelHeight - mapSize) / 2f
         drawMap(canvas, mapThumbnail, RectF(mapLeft, mapTop, mapLeft + mapSize, mapTop + mapSize), scale)
     }
 }
@@ -142,7 +200,7 @@ private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThu
  * Compact translucent strip hugging the bottom: just the coordinates and date/time
  * on a single short panel anchored bottom-left. No address, no map — the essentials.
  */
-private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData) {
+private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData, top: Boolean) {
     val width = result.width
     val height = result.height
     val scale = width / REFERENCE_WIDTH
@@ -162,18 +220,28 @@ private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData) {
     stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
         wrapText(name, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
     }
-    coordinatesLine(stamp)?.let { lines += it to monoPaint }
-    lines += dateLine(stamp) to bodyPaint
+    if (stamp.layoutPreset.showCoords) coordinatesLine(stamp)?.let { lines += it to monoPaint }
+    if (stamp.layoutPreset.showWeather) {
+        stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
+    }
+    // Altitude + compass facing (P2-US-013) — always rendered when present.
+    stamp.altitudeFacing?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
+    // Date/time (P2-US-017) — only when the user kept it enabled.
+    if (stamp.showDateTime) lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
     }
 
+    // Nothing to draw (e.g. Lat/Lng preset with no fix yet + date/time off).
+    if (lines.isEmpty()) return
+
     val textHeight = measureLines(lines, lineSpacing)
     val textWidth = lines.maxOf { (text, paint) -> paint.measureText(text) }
     val panelWidth = minOf(width.toFloat(), textWidth + 2 * pad)
-    val panelTop = height - (textHeight + 2 * pad)
+    val panelHeight = textHeight + 2 * pad
+    val panelTop = if (top) 0f else height - panelHeight
 
-    canvas.drawRect(0f, panelTop, panelWidth, height.toFloat(), panelFill(110))
+    canvas.drawRect(0f, panelTop, panelWidth, panelTop + panelHeight, panelFill(110))
     drawLines(canvas, lines, pad, panelTop + pad, lineSpacing)
 }
 
@@ -184,7 +252,7 @@ private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData) {
  * a larger map thumbnail on the LEFT, and labelled rows (ADDRESS / COORDINATES /
  * ACCURACY / DATE-TIME) on the right so it reads like a proof record.
  */
-private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?) {
+private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?, top: Boolean) {
     val width = result.width
     val height = result.height
     val scale = width / REFERENCE_WIDTH
@@ -217,16 +285,34 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
         rows += "PROJECT / SITE" to labelPaint
         wrapText(name, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
     }
-    stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
-        rows += "ADDRESS" to labelPaint
-        wrapText(addr, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
+    if (stamp.layoutPreset.showAddress) {
+        stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
+            rows += "ADDRESS" to labelPaint
+            wrapText(addr, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
+        }
     }
-    coordinatesLine(stamp)?.let {
-        rows += "COORDINATES" to labelPaint
-        rows += it to monoPaint
+    if (stamp.layoutPreset.showCoords) {
+        coordinatesLine(stamp)?.let {
+            rows += "COORDINATES" to labelPaint
+            rows += it to monoPaint
+        }
     }
-    rows += "DATE / TIME" to labelPaint
-    rows += dateLine(stamp) to valuePaint
+    if (stamp.layoutPreset.showWeather) {
+        stamp.weather?.takeIf { it.isNotBlank() }?.let {
+            rows += "WEATHER" to labelPaint
+            rows += it to valuePaint
+        }
+    }
+    // Altitude + compass facing (P2-US-013) — always rendered when present.
+    stamp.altitudeFacing?.takeIf { it.isNotBlank() }?.let {
+        rows += "ALTITUDE / FACING" to labelPaint
+        rows += it to valuePaint
+    }
+    // Date/time (P2-US-017) — only when the user kept it enabled.
+    if (stamp.showDateTime) {
+        rows += "DATE / TIME" to labelPaint
+        rows += dateLine(stamp) to valuePaint
+    }
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         rows += "NOTE" to labelPaint
         wrapText(note, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
@@ -234,10 +320,11 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
 
     val rowsHeight = measureLines(rows, lineSpacing)
     val bodyHeight = maxOf(rowsHeight, mapSize)
-    val panelTop = height - (headerHeight + bodyHeight + 2 * pad)
+    val panelHeight = headerHeight + bodyHeight + 2 * pad
+    val panelTop = if (top) 0f else height - panelHeight
 
     // Panel + header band.
-    canvas.drawRect(0f, panelTop, width.toFloat(), height.toFloat(), panelFill(175))
+    canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + panelHeight, panelFill(175))
     canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + headerHeight, Paint().apply { color = FIELD_ACCENT })
     canvas.drawText("FIELD REPORT", pad, panelTop + pad / 2f - headerPaint.ascent(), headerPaint)
 
@@ -320,6 +407,49 @@ private fun drawLogo(canvas: Canvas, result: Bitmap, logo: Bitmap) {
         radius, radius, panelFill(120),
     )
     canvas.drawBitmap(logo, null, dst, Paint(Paint.FILTER_BITMAP_FLAG))
+}
+
+/**
+ * Draws the user's custom [watermark] text (P2-US-017) into the bottom-right corner
+ * over a subtle rounded backing so it stays visible regardless of the underlying
+ * photo. Independent of the template (the burned stamp panel may sit at the bottom
+ * too — the backing keeps the watermark legible over it).
+ */
+private fun drawWatermark(canvas: Canvas, result: Bitmap, watermark: String) {
+    val width = result.width
+    val height = result.height
+    val scale = width / REFERENCE_WIDTH
+    val pad = 16f * scale
+
+    val textPaint = paint(24f * scale, Typeface.SANS_SERIF, Typeface.BOLD, 3f * scale).apply {
+        color = Color.argb(235, 255, 255, 255)
+    }
+    // Trim to the widest the photo can show so it never runs off-screen.
+    val maxWidth = width - 2 * pad
+    val text = watermark.takeIf { textPaint.measureText(it) <= maxWidth }
+        ?: ellipsize(watermark, textPaint, maxWidth)
+
+    val textWidth = textPaint.measureText(text)
+    val textHeight = textPaint.descent() - textPaint.ascent()
+    val right = width - pad
+    val left = right - textWidth
+    val bottom = height - pad
+    val top = bottom - textHeight
+
+    val bgPad = 8f * scale
+    val radius = 8f * scale
+    canvas.drawRoundRect(
+        RectF(left - bgPad, top - bgPad, right + bgPad, bottom + bgPad),
+        radius, radius, panelFill(120),
+    )
+    canvas.drawText(text, left, top - textPaint.ascent(), textPaint)
+}
+
+/** Truncates [text] with an ellipsis so it fits [maxWidth] under [paint]. */
+private fun ellipsize(text: String, paint: Paint, maxWidth: Float): String {
+    var end = text.length
+    while (end > 0 && paint.measureText(text.substring(0, end) + "…") > maxWidth) end--
+    return if (end <= 0) "…" else text.substring(0, end) + "…"
 }
 
 private fun coordinatesLine(stamp: StampData): String? {

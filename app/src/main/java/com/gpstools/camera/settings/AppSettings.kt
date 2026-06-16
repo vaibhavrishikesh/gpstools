@@ -60,14 +60,69 @@ enum class TimeFormat(@StringRes val labelRes: Int, val datePattern: String) {
 }
 
 /**
- * Persists the formatting preferences (coordinate + time format) used by the
- * stamp. Same lightweight SharedPreferences pattern as [com.gpstools.camera.locale.LocaleStore]
- * and the other stores — no DataStore dependency.
+ * Which location fields the stamp renders (P2-US-010). Each preset is a combination
+ * of map thumbnail / street address / raw lat-long / weather; the user picks one in
+ * Settings and it's snapshot into [com.gpstools.camera.media.StampData] at capture
+ * time so the chosen field set is burned into the saved photo. Project/site name,
+ * note, logo and date-time are independent of the preset (they always render when
+ * set). The map flag still composes with [com.gpstools.camera.media.StampTemplate.usesMap]
+ * — a template that never draws a map (Minimal) won't grow one just because a preset
+ * asks for it.
+ */
+enum class LayoutPreset(
+    @StringRes val labelRes: Int,
+    val showMap: Boolean,
+    val showAddress: Boolean,
+    val showCoords: Boolean,
+    val showWeather: Boolean,
+) {
+    MAP_ADDRESS_WEATHER(R.string.preset_map_address_weather, showMap = true, showAddress = true, showCoords = false, showWeather = true),
+    MAP_LATLNG_WEATHER(R.string.preset_map_latlng_weather, showMap = true, showAddress = false, showCoords = true, showWeather = true),
+    MAP_ADDRESS(R.string.preset_map_address, showMap = true, showAddress = true, showCoords = false, showWeather = false),
+    ADDRESS_WEATHER(R.string.preset_address_weather, showMap = false, showAddress = true, showCoords = false, showWeather = true),
+    ADDRESS(R.string.preset_address, showMap = false, showAddress = true, showCoords = false, showWeather = false),
+    LATLNG(R.string.preset_latlng, showMap = false, showAddress = false, showCoords = true, showWeather = false);
+
+    companion object {
+        val DEFAULT = MAP_ADDRESS_WEATHER
+
+        fun fromName(name: String?): LayoutPreset =
+            entries.firstOrNull { it.name == name } ?: DEFAULT
+    }
+}
+
+/**
+ * Where the stamp panel is burned onto the photo — and, for WYSIWYG (P2-US-011),
+ * where the live GPS card sits on the viewfinder. The on-screen overlay aligns to
+ * the SAME edge as this setting so the preview matches the saved photo. Snapshot
+ * into [com.gpstools.camera.media.StampData] at capture time. [BOTTOM] is the
+ * default (the historical stamp location).
+ */
+enum class StampPosition(@StringRes val labelRes: Int) {
+    BOTTOM(R.string.position_bottom),
+    TOP(R.string.position_top);
+
+    companion object {
+        val DEFAULT = BOTTOM
+
+        fun fromName(name: String?): StampPosition =
+            entries.firstOrNull { it.name == name } ?: DEFAULT
+    }
+}
+
+/**
+ * Persists the formatting preferences (coordinate + time format, layout preset,
+ * stamp position) used by the stamp. Same lightweight SharedPreferences pattern as
+ * [com.gpstools.camera.locale.LocaleStore] and the other stores — no DataStore dependency.
  */
 object AppSettingsStore {
     private const val PREFS = "app_settings"
     private const val KEY_COORD_FORMAT = "coordinate_format"
     private const val KEY_TIME_FORMAT = "time_format"
+    private const val KEY_LAYOUT_PRESET = "layout_preset"
+    private const val KEY_STAMP_POSITION = "stamp_position"
+    private const val KEY_SHOW_GRID = "show_grid"
+    private const val KEY_SHOW_DATETIME = "show_datetime"
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -84,5 +139,40 @@ object AppSettingsStore {
 
     fun saveTimeFormat(context: Context, format: TimeFormat) {
         prefs(context).edit().putString(KEY_TIME_FORMAT, format.name).apply()
+    }
+
+    fun loadLayoutPreset(context: Context): LayoutPreset =
+        LayoutPreset.fromName(prefs(context).getString(KEY_LAYOUT_PRESET, null))
+
+    fun saveLayoutPreset(context: Context, preset: LayoutPreset) {
+        prefs(context).edit().putString(KEY_LAYOUT_PRESET, preset.name).apply()
+    }
+
+    fun loadStampPosition(context: Context): StampPosition =
+        StampPosition.fromName(prefs(context).getString(KEY_STAMP_POSITION, null))
+
+    fun saveStampPosition(context: Context, position: StampPosition) {
+        prefs(context).edit().putString(KEY_STAMP_POSITION, position.name).apply()
+    }
+
+    /** Whether the 3×3 rule-of-thirds framing grid is drawn on the viewfinder (P2-US-012). */
+    fun loadShowGrid(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_SHOW_GRID, false)
+
+    fun saveShowGrid(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SHOW_GRID, enabled).apply()
+    }
+
+    /**
+     * Whether the date/time line is burned onto the stamp (P2-US-017). Defaults to
+     * true (the historical behaviour); snapshot into
+     * [com.gpstools.camera.media.StampData] at capture time so a setting change
+     * affects the next photo.
+     */
+    fun loadShowDateTime(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_SHOW_DATETIME, true)
+
+    fun saveShowDateTime(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SHOW_DATETIME, enabled).apply()
     }
 }

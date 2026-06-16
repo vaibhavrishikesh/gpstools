@@ -18,6 +18,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -44,6 +45,8 @@ import com.gpstools.camera.locale.LocaleStore
 import com.gpstools.camera.locale.findActivity
 import com.gpstools.camera.settings.AppSettingsStore
 import com.gpstools.camera.settings.CoordinateFormat
+import com.gpstools.camera.settings.LayoutPreset
+import com.gpstools.camera.settings.StampPosition
 import com.gpstools.camera.settings.TimeFormat
 import com.gpstools.camera.ui.navigation.Destination
 
@@ -63,6 +66,10 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     var language by remember { mutableStateOf(LocaleStore.load(context)) }
     var coordinateFormat by remember { mutableStateOf(AppSettingsStore.loadCoordinateFormat(context)) }
     var timeFormat by remember { mutableStateOf(AppSettingsStore.loadTimeFormat(context)) }
+    var layoutPreset by remember { mutableStateOf(AppSettingsStore.loadLayoutPreset(context)) }
+    var stampPosition by remember { mutableStateOf(AppSettingsStore.loadStampPosition(context)) }
+    var showGrid by remember { mutableStateOf(AppSettingsStore.loadShowGrid(context)) }
+    var showDateTime by remember { mutableStateOf(AppSettingsStore.loadShowDateTime(context)) }
 
     // One billing connection scoped to the whole screen, shared by the one-time
     // Premium section (US-016) and the Pro subscription section (US-018) so the
@@ -130,6 +137,74 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                     },
                 )
             }
+        }
+
+        // --- Stamp layout preset (P2-US-010) ---
+        SectionHeader(
+            title = stringResource(R.string.settings_layout_preset),
+            summary = stringResource(R.string.settings_layout_preset_summary),
+        )
+        OptionCard {
+            LayoutPreset.entries.forEach { option ->
+                OptionRow(
+                    label = stringResource(option.labelRes),
+                    selected = option == layoutPreset,
+                    onSelect = {
+                        layoutPreset = option
+                        AppSettingsStore.saveLayoutPreset(context, option)
+                    },
+                )
+            }
+        }
+
+        // --- Stamp position (P2-US-011, WYSIWYG) ---
+        SectionHeader(
+            title = stringResource(R.string.settings_stamp_position),
+            summary = stringResource(R.string.settings_stamp_position_summary),
+        )
+        OptionCard {
+            StampPosition.entries.forEach { option ->
+                OptionRow(
+                    label = stringResource(option.labelRes),
+                    selected = option == stampPosition,
+                    onSelect = {
+                        stampPosition = option
+                        AppSettingsStore.saveStampPosition(context, option)
+                    },
+                )
+            }
+        }
+
+        // --- Date/time on stamp (P2-US-017) ---
+        SectionHeader(
+            title = stringResource(R.string.settings_datetime),
+            summary = stringResource(R.string.settings_datetime_summary),
+        )
+        OptionCard {
+            ToggleRow(
+                label = stringResource(R.string.settings_datetime_toggle),
+                checked = showDateTime,
+                onCheckedChange = {
+                    showDateTime = it
+                    AppSettingsStore.saveShowDateTime(context, it)
+                },
+            )
+        }
+
+        // --- Framing grid (P2-US-012) ---
+        SectionHeader(
+            title = stringResource(R.string.settings_grid),
+            summary = stringResource(R.string.settings_grid_summary),
+        )
+        OptionCard {
+            ToggleRow(
+                label = stringResource(R.string.settings_grid_toggle),
+                checked = showGrid,
+                onCheckedChange = {
+                    showGrid = it
+                    AppSettingsStore.saveShowGrid(context, it)
+                },
+            )
         }
 
         // --- Time format (US-014) ---
@@ -392,6 +467,28 @@ private fun OptionRow(
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(start = 16.dp),
         )
+    }
+}
+
+/** A labelled on/off row (P2-US-012): label on the left, a [Switch] on the right. */
+@Composable
+private fun ToggleRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
