@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.Log
+import android.util.LruCache
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -96,7 +97,29 @@ class OsmStaticMapProvider(
         }
     }
 
+    /**
+     * Warms the tile cache for a coordinate without producing a thumbnail. Called
+     * while the user frames the shot (from the live GPS fix) so the tiles are already
+     * downloaded by the time they hit the shutter — that's what kept captures from
+     * blocking several seconds on the network. Safe to call repeatedly; cached tiles
+     * are reused. MUST run off the main thread.
+     */
+    fun prefetch(latitude: Double, longitude: Double, sizePx: Int = StaticMapProvider.DEFAULT_SIZE_PX) {
+        runCatching { fetchMapThumbnail(latitude, longitude, sizePx)?.recycle() }
+    }
+
     private fun fetchTile(x: Int, y: Int): Bitmap? {
+        val key = "$zoom/$x/$y"
+        // Cache the raw PNG bytes (not decoded Bitmaps, which we recycle after drawing)
+        // so the same tiles serve the live prefetch and every subsequent capture at
+        // that spot instantly, with no repeat network round-trips.
+        tileCache.get(key)?.let { return BitmapFactory.decodeByteArray(it, 0, it.size) }
+        val bytes = downloadTileBytes(x, y) ?: return null
+        tileCache.put(key, bytes)
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    }
+
+    private fun downloadTileBytes(x: Int, y: Int): ByteArray? {
         val url = URL("https://tile.openstreetmap.org/$zoom/$x/$y.png")
         val conn = (url.openConnection() as HttpURLConnection).apply {
             connectTimeout = TIMEOUT_MS
@@ -108,7 +131,7 @@ class OsmStaticMapProvider(
                 Log.w(TAG, "Tile $zoom/$x/$y returned HTTP ${conn.responseCode}")
                 return null
             }
-            conn.inputStream.use { BitmapFactory.decodeStream(it) }
+            conn.inputStream.use { it.readBytes() }
         } catch (e: IOException) {
             Log.w(TAG, "Tile $zoom/$x/$y fetch failed", e)
             null
@@ -129,10 +152,20 @@ class OsmStaticMapProvider(
         private const val TAG = "OsmStaticMap"
         private const val TILE_SIZE = 256
         const val DEFAULT_ZOOM = 15
-        private const val TIMEOUT_MS = 8000
+        // Per-tile network timeout. Kept modest so a flaky connection fails fast to a
+        // text-only stamp (US-008) instead of stalling the save for many seconds.
+        private const val TIMEOUT_MS = 5000
         private const val EMPTY_TILE_COLOR = 0xFFE8E8E8.toInt()
         private const val MARKER_RING_RADIUS = 9f
         private const val MARKER_DOT_RADIUS = 6f
         private const val DEFAULT_USER_AGENT = "gpstools/1.0 (Android; com.gpstools.camera)"
+
+        // Process-wide cache of raw tile PNG bytes, shared across every provider
+        // instance (capture creates its own each time). ~8 MB holds far more than the
+        // handful of tiles around any one spot, so revisiting a location is instant.
+        private const val TILE_CACHE_BYTES = 8 * 1024 * 1024
+        private val tileCache = object : LruCache<String, ByteArray>(TILE_CACHE_BYTES) {
+            override fun sizeOf(key: String, value: ByteArray): Int = value.size
+        }
     }
 }

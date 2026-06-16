@@ -97,6 +97,7 @@ import com.gpstools.camera.media.CustomFields
 import com.gpstools.camera.media.CustomFieldsStore
 import com.gpstools.camera.media.StampData
 import com.gpstools.camera.media.StampTemplate
+import com.gpstools.camera.media.OsmStaticMapProvider
 import com.gpstools.camera.media.StampTemplateStore
 import com.gpstools.camera.media.capturePhoto
 import com.gpstools.camera.media.label
@@ -249,6 +250,26 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     // Live compass bearing (P2-US-013) from the rotation-vector sensor; null when the
     // device has no such sensor. Shown as a cardinal "Facing NE" on the HUD + stamp.
     val compassBearing by rememberCompassBearing()
+
+    // Prefetch the static-map tiles for the live location WHILE the user frames the
+    // shot, so compositing the stamp at capture time doesn't block on the network —
+    // this was the main reason captures felt slow to save. Only runs for templates
+    // that draw a map and a layout preset that shows it; keyed on the rounded fix so
+    // it reruns when the user moves a meaningful distance, not on every GPS jitter.
+    val mapPrefetchPreset = remember { AppSettingsStore.loadLayoutPreset(context) }
+    val prefetchFix = (locationState as? LocationUiState.Available)?.fix
+    val mapPrefetchKey = if (template.usesMap && mapPrefetchPreset.showMap && prefetchFix != null) {
+        "%.4f,%.4f".format(Locale.US, prefetchFix.latitude, prefetchFix.longitude)
+    } else {
+        null
+    }
+    LaunchedEffect(mapPrefetchKey) {
+        val fix = prefetchFix ?: return@LaunchedEffect
+        if (mapPrefetchKey == null) return@LaunchedEffect
+        withContext(Dispatchers.IO) {
+            OsmStaticMapProvider().prefetch(fix.latitude, fix.longitude)
+        }
+    }
 
     // Pre-resolved so it can be applied via semantics on the non-composable shutter.
     val shutterContentDescription = stringResource(R.string.camera_shutter)
