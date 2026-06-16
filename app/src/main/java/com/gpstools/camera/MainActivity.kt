@@ -11,7 +11,6 @@ import com.gpstools.camera.billing.Premium
 import com.gpstools.camera.billing.Subscription
 import com.gpstools.camera.locale.wrapWithStoredLocale
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -129,9 +128,13 @@ private fun BottomNavBar(navController: NavHostController) {
     val taggedPhotoCount = remember(backStackEntry) {
         GeotagStore.loadAll(context).size
     }
-    // 64dp bar + 11sp labels + brand-accent selected state (navy on light /
-    // gold on dark via colorScheme.primary) per the v2 spec §5.
-    NavigationBar(modifier = Modifier.height(64.dp)) {
+    // 11sp labels + brand-accent selected state (navy on light / gold on dark
+    // via colorScheme.primary) per the v2 spec §5. NOTE: do NOT force a fixed
+    // height here — NavigationBar's default height already folds in the system
+    // navigation-bar inset (gesture pill / 3-button bar). Pinning it to 64dp
+    // collapsed that inset into the content, so labels were clipped behind the
+    // system bar on devices with on-screen navigation.
+    NavigationBar {
         Destination.entries.forEach { destination ->
             val selected = currentDestination?.hierarchy?.any {
                 it.route == destination.route

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Android 12+ (API 31) shows a system splash screen on every launch.
+        Theme.Material.Light doesn't set windowSplashScreenBackground, so the
+        platform fell back to a default tint (a sky-blue) behind the logo. Pin
+        it to white so the splash matches the launcher icon's white background
+        and the navy+gold logo reads cleanly. The default app icon is used as
+        the centered splash icon automatically.
+    -->
+    <style name="Theme.Gpstools" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@android:color/white</item>
+    </style>
+</resources>
