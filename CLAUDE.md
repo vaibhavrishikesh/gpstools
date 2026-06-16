@@ -39,8 +39,13 @@ is usually already running. Use full path `~/Library/Android/sdk/platform-tools/
 - Confirm foreground via `adb shell dumpsys window | grep mCurrentFocus`.
 
 ## App structure
-Single-activity Compose (`MainActivity`). Theme in `ui/theme/` (Material 3,
-dynamic color on API 31+). Strings in `res/values/strings.xml` (English) with Hindi
+Single-activity Compose (`MainActivity`). Theme in `ui/theme/` (Material 3).
+**Brand (Phase 2) = navy `#15294D` + gold `#F2A93B`**: tokens in `Color.kt`
+(`BrandNavy`/`BrandGold`/… + GPS accuracy tokens `AccuracyGood/Avg/Poor` with the
+`accuracyColor(meters)` helper). `Theme.kt` = light(navy primary)/dark(gold primary)
+schemes; dynamic colour is OFF by default so the brand is consistent. Screens use
+`MaterialTheme.colorScheme.*` only — NO hardcoded brand `Color(0x..)` — so brand
+changes live entirely in `ui/theme/`. Strings in `res/values/strings.xml` (English) with Hindi
 in `res/values-hi/strings.xml` — every new UI string MUST be added to BOTH files
 (localization shipped in US-013). In-app language toggle: `locale/AppLocale.kt`
 (`AppLanguage` + `LocaleStore` + `Context.wrapWithStoredLocale()`); `MainActivity`

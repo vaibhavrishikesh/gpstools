@@ -14,7 +14,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify new theme on emulator"
       ],
-      "priority": 1, "passes": false, "notes": ""
+      "priority": 1, "passes": true, "notes": "Done: Color.kt navy+gold + accuracy tokens (accuracyColor helper), Theme.kt light(navy primary)/dark(gold primary) schemes, dynamicColor off. No hardcoded brand colors elsewhere; screens consume colorScheme. Verified navy nav pill on emulator."
     },
     {
       "id": "P2-US-002",
