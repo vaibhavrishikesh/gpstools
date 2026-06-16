@@ -123,6 +123,22 @@ an EXIF write failure never discards the photo (the burned-in stamp is still the
 proof). Verify after `adb pull` with `python3` + Pillow (`Image._getexif()` +
 `PIL.ExifTags.GPSTAGS`); set emulator altitude via the 3rd arg of `adb emu geo fix`.
 
+## Photo grid / collage (P2-US-016)
+`media/PhotoCollage.kt`: `createPhotoCollage(context, photos): Uri?` combines 2–4
+(`COLLAGE_MIN_PHOTOS`/`COLLAGE_MAX_PHOTOS`) selected gallery photos into ONE 1200px-wide
+grid image. Layout = 2 columns, `rows = ceil(n/2)` (2 = side-by-side, 4 = 2×2, 3 = 2+1).
+Each photo is drawn **fit-inside (contain, NEVER cropped)** its square cell on a white bg
+so every photo's burned-in stamp is preserved (a center-crop would chop the top/bottom
+stamp). Saved as `GPS_collage_<ts>.jpg` into `Pictures/gpstools` via the same scoped-
+storage `saveBitmap` pattern, keeping the `GPS_` prefix so `queryCapturedPhotos`
+(DISPLAY_NAME LIKE 'GPS_%') lists it in the in-app gallery (no GeotagStore entry — it has
+no single location). `shareImage(context, uri, title)` = generic `ACTION_SEND` image share
+(the existing `sharePhoto` only takes a `CapturedPhoto`). `GalleryScreen` selection mode
+gained a 'Make grid' (`GridView` icon) action beside Export PDF; `createCollageSelected()`
+validates the 2–4 count, reuses the one `generating` overlay via a `generatingLabel: Int`
+string-res state (shared by PDF + collage), runs off the main thread, then refreshes +
+fires the share sheet. `collage_*` strings in BOTH values + values-hi.
+
 ## Weather on the stamp (P2-US-009)
 `location/WeatherProvider.kt`: `fetchWeather(lat,lng): Weather?` hits Open-Meteo's
 free `current_weather` API (NO key) via `HttpURLConnection` on `Dispatchers.IO` with

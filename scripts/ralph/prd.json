@@ -198,7 +198,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify grid creation + export on emulator"
       ],
-      "priority": 16, "passes": false, "notes": ""
+      "priority": 16, "passes": true, "notes": "New media/PhotoCollage.kt: createPhotoCollage(context, photos) combines 2-4 (COLLAGE_MIN/MAX_PHOTOS) selected photos into ONE 1200px-wide grid image. Layout = 2 columns, rows=ceil(n/2): 2 photos sit side-by-side, 4 form a 2x2, 3 = 2+1. Each photo is fit-inside (contain, never cropped) its square cell on a white bg so EVERY photo's burned-in stamp is preserved (verified: 3-photo collage kept all 3 full FIELD REPORT stamps). decodeScaledToMax downsamples each to ~2x cell. Saved as GPS_collage_<ts>.jpg into Pictures/gpstools via the same scoped-storage saveBitmap pattern (keeps the GPS_ prefix so it shows in the in-app gallery). shareImage(context,uri,title) fires a generic ACTION_SEND image share. GalleryScreen: GalleryActionBar gained a 'ग्रिड बनाएँ'/Make grid TextButton (GridView icon) next to Export PDF; createCollageSelected() validates 2-4 selection (else toast collage_invalid_count), shows the generating overlay (generatingLabel state, reused by both PDF+collage), creates off-main-thread, toasts collage_saved, refreshes the grid, and fires the share sheet. New collage_* strings in both values + values-hi. Verified on emulator-5554: selected 3 photos → Make grid → 'Creating grid…' overlay → share sheet 'Sharing image' with the 2x2 preview; pulled GPS_collage_20260616_132843.jpg (1200x1200 JPEG), all 3 FIELD REPORT stamps intact, 4th cell white."
     },
     {
       "id": "P2-US-017",

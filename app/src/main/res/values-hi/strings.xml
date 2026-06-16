@@ -174,6 +174,14 @@
     <string name="report_no_viewer">कोई PDF व्यूअर इंस्टॉल नहीं है</string>
     <string name="report_free_limit">मुफ़्त रिपोर्ट में वॉटरमार्क के साथ अधिकतम %1$d फ़ोटो शामिल होती हैं। असीमित, वॉटरमार्क-रहित रिपोर्ट के लिए Pro लें।</string>
 
+    <!-- Photo grid / collage (US-016) -->
+    <string name="collage_create">ग्रिड बनाएँ</string>
+    <string name="collage_generating">ग्रिड बन रहा है…</string>
+    <string name="collage_invalid_count">ग्रिड के लिए 2–4 फ़ोटो चुनें</string>
+    <string name="collage_saved">ग्रिड गैलरी में सहेजा गया</string>
+    <string name="collage_failed">ग्रिड नहीं बन सका</string>
+    <string name="collage_share_chooser">ग्रिड साझा करें</string>
+
     <!-- Pro subscription (US-018) -->
     <string name="pro_title">gpstools Pro</string>
     <string name="pro_summary">असीमित, वॉटरमार्क-रहित PDF रिपोर्ट और बैच निर्यात के लिए सदस्यता लें।</string>

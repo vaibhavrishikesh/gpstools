@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Share
@@ -56,13 +57,17 @@ import coil.compose.AsyncImage
 import com.gpstools.camera.R
 import com.gpstools.camera.ads.BannerAd
 import com.gpstools.camera.billing.Entitlements
+import com.gpstools.camera.media.COLLAGE_MAX_PHOTOS
+import com.gpstools.camera.media.COLLAGE_MIN_PHOTOS
 import com.gpstools.camera.media.CapturedPhoto
 import com.gpstools.camera.media.CustomFieldsStore
 import com.gpstools.camera.media.FREE_REPORT_MAX_PHOTOS
+import com.gpstools.camera.media.createPhotoCollage
 import com.gpstools.camera.media.deleteCapturedPhoto
 import com.gpstools.camera.media.generatePhotoReport
 import com.gpstools.camera.media.openReport
 import com.gpstools.camera.media.queryCapturedPhotos
+import com.gpstools.camera.media.shareImage
 import com.gpstools.camera.media.sharePhoto
 import com.gpstools.camera.ui.navigation.Destination
 import kotlinx.coroutines.Dispatchers
@@ -98,6 +103,7 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
     var selectionMode by remember { mutableStateOf(false) }
     val selectedUris = remember { mutableStateListOf<Uri>() }
     var generating by remember { mutableStateOf(false) }
+    var generatingLabel by remember { mutableStateOf(R.string.report_generating) }
 
     fun refresh() {
         scope.launch {
@@ -123,6 +129,7 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
             Toast.makeText(context, R.string.report_none_selected, Toast.LENGTH_SHORT).show()
             return
         }
+        generatingLabel = R.string.report_generating
         generating = true
         scope.launch {
             val projectName = withContext(Dispatchers.IO) {
@@ -153,6 +160,30 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
         }
     }
 
+    fun createCollageSelected() {
+        val current = photos ?: return
+        // Preserve the on-screen (newest-first) order of the chosen photos in the grid.
+        val chosen = current.filter { it.uri in selectedUris }
+        if (chosen.size < COLLAGE_MIN_PHOTOS || chosen.size > COLLAGE_MAX_PHOTOS) {
+            Toast.makeText(context, R.string.collage_invalid_count, Toast.LENGTH_SHORT).show()
+            return
+        }
+        generatingLabel = R.string.collage_generating
+        generating = true
+        scope.launch {
+            val uri = withContext(Dispatchers.IO) { createPhotoCollage(context, chosen) }
+            generating = false
+            if (uri == null) {
+                Toast.makeText(context, R.string.collage_failed, Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            Toast.makeText(context, R.string.collage_saved, Toast.LENGTH_SHORT).show()
+            exitSelection()
+            refresh()
+            shareImage(context, uri, context.getString(R.string.collage_share_chooser))
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             val current = photos
@@ -163,6 +194,7 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
                     onStartSelection = { selectionMode = true },
                     onCancelSelection = { exitSelection() },
                     onExport = { exportSelected() },
+                    onCollage = { createCollageSelected() },
                 )
             }
             Box(Modifier.weight(1f)) {
@@ -219,7 +251,7 @@ fun GalleryScreen(modifier: Modifier = Modifier) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = Color.White)
                     Text(
-                        text = stringResource(R.string.report_generating),
+                        text = stringResource(generatingLabel),
                         color = Color.White,
                         modifier = Modifier.padding(top = 16.dp),
                     )
@@ -236,6 +268,7 @@ private fun GalleryActionBar(
     onStartSelection: () -> Unit,
     onCancelSelection: () -> Unit,
     onExport: () -> Unit,
+    onCollage: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -254,6 +287,14 @@ private fun GalleryActionBar(
                     .weight(1f)
                     .padding(start = 4.dp),
             )
+            TextButton(onClick = onCollage) {
+                Icon(
+                    Icons.Filled.GridView,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 4.dp),
+                )
+                Text(stringResource(R.string.collage_create))
+            }
             TextButton(onClick = onExport) {
                 Icon(
                     Icons.Filled.PictureAsPdf,
