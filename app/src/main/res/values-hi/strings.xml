@@ -37,6 +37,16 @@
     <string name="settings_grid_summary">व्यूफ़ाइंडर पर 3×3 ग्रिड दिखाएँ।</string>
     <string name="settings_grid_toggle">ग्रिड दिखाएँ</string>
     <string name="viewfinder_altitude">ऊँचाई: %1$dमी</string>
+    <string name="stamp_altitude">ऊँचाई %1$dमी</string>
+    <string name="compass_facing">%1$s की ओर</string>
+    <string name="compass_n">उ</string>
+    <string name="compass_ne">उपू</string>
+    <string name="compass_e">पू</string>
+    <string name="compass_se">दपू</string>
+    <string name="compass_s">द</string>
+    <string name="compass_sw">दप</string>
+    <string name="compass_w">प</string>
+    <string name="compass_nw">उप</string>
     <string name="settings_time_format">समय प्रारूप</string>
     <string name="settings_time_format_summary">स्टैम्प पर दिनांक/समय के लिए उपयोग की जाने वाली घड़ी।</string>
     <string name="settings_time_24">24-घंटे (14:30:00)</string>

@@ -162,7 +162,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify altitude + direction render on emulator"
       ],
-      "priority": 13, "passes": false, "notes": ""
+      "priority": 13, "passes": true, "notes": "New location/CompassProvider.kt: rememberCompassBearing() subscribes to TYPE_ROTATION_VECTOR (SensorManager.getRotationMatrixFromVector + getOrientation, azimuth radians→0..360 degrees) via DisposableEffect, emits Float? (null when no sensor — graceful-null contract, no permission). bearingToCardinalRes(deg) maps to 8 cardinal string res (compass_n..nw). formatAltitudeFacing(context, altitude, bearing) builds 'Altitude 342m · Facing NE' from whichever pieces exist (null if neither). Altitude already on GpsFix (US-012). StampData.altitudeFacing (pre-formatted, snapshotted at shutter); rendered in all 3 templates (Classic/Minimal after weather, Field Report as ALTITUDE / FACING labelled row) — always shown when present, NOT gated by layout preset. ViewfinderInfoOverlay HUD now shows the same combined line (replaced the altitude-only line). New compass_facing + stamp_altitude + compass_n/ne/e/se/s/sw/w/nw strings (both values + values-hi; Hindi cardinal abbrevs उ/उपू/पू/दपू/द/दप/प/उप, 'Facing %s'→'%s की ओर'). Verified on emulator: HUD shows 'ऊँचाई 342मी · उ की ओर'; Field Report capture burned an ALTITUDE / FACING row 'ऊँचाई 342मी · उ की ओर' between COORDINATES and DATE/TIME (altitude 342 from geo fix, compass N)."
     },
     {
       "id": "P2-US-014",

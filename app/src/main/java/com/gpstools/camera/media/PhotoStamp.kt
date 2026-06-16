@@ -37,6 +37,13 @@ data class StampData(
     val note: String? = null,
     /** Pre-formatted weather line (US-009), e.g. "28°C · Clear"; null when unavailable. */
     val weather: String? = null,
+    /**
+     * Pre-formatted altitude + compass facing line (P2-US-013), e.g.
+     * "Altitude 342m · Facing NE"; null when neither the altitude nor a compass
+     * bearing is available. Always rendered when present (not gated by the layout
+     * preset), like the project/note/date-time fields.
+     */
+    val altitudeFacing: String? = null,
     val coordinateFormat: CoordinateFormat = CoordinateFormat.DEFAULT,
     val timeFormat: TimeFormat = TimeFormat.DEFAULT,
     /**
@@ -142,6 +149,8 @@ private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThu
     if (stamp.layoutPreset.showWeather) {
         stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
     }
+    // Altitude + compass facing (P2-US-013) — always rendered when present.
+    stamp.altitudeFacing?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
     lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
@@ -192,6 +201,8 @@ private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData, top: B
     if (stamp.layoutPreset.showWeather) {
         stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
     }
+    // Altitude + compass facing (P2-US-013) — always rendered when present.
+    stamp.altitudeFacing?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
     lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
@@ -264,6 +275,11 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
             rows += "WEATHER" to labelPaint
             rows += it to valuePaint
         }
+    }
+    // Altitude + compass facing (P2-US-013) — always rendered when present.
+    stamp.altitudeFacing?.takeIf { it.isNotBlank() }?.let {
+        rows += "ALTITUDE / FACING" to labelPaint
+        rows += it to valuePaint
     }
     rows += "DATE / TIME" to labelPaint
     rows += dateLine(stamp) to valuePaint

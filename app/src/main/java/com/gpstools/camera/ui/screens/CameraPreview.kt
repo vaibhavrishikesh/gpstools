@@ -83,6 +83,8 @@ import com.gpstools.camera.ads.InterstitialAdManager
 import com.gpstools.camera.billing.Premium
 import com.gpstools.camera.locale.findActivity
 import com.gpstools.camera.location.LocationUiState
+import com.gpstools.camera.location.formatAltitudeFacing
+import com.gpstools.camera.location.rememberCompassBearing
 import com.gpstools.camera.media.CustomFields
 import com.gpstools.camera.media.CustomFieldsStore
 import com.gpstools.camera.media.StampData
@@ -232,6 +234,10 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     // Live altitude for the viewfinder HUD (P2-US-012), from the current fix when known.
     val altitudeMeters = (locationState as? LocationUiState.Available)?.fix?.altitudeMeters
 
+    // Live compass bearing (P2-US-013) from the rotation-vector sensor; null when the
+    // device has no such sensor. Shown as a cardinal "Facing NE" on the HUD + stamp.
+    val compassBearing by rememberCompassBearing()
+
     // Pre-resolved so it can be applied via semantics on the non-composable shutter.
     val shutterContentDescription = stringResource(R.string.camera_shutter)
 
@@ -275,6 +281,7 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             // stack so it reads as a lower-left HUD without overlapping the controls.
             ViewfinderInfoOverlay(
                 altitudeMeters = altitudeMeters,
+                compassBearing = compassBearing,
                 modifier = Modifier
                     .align(Alignment.Start)
                     .padding(start = 16.dp, bottom = 12.dp),
@@ -348,6 +355,13 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                             address = available?.address,
                             // Weather (US-009): snapshot the loaded current weather, if any.
                             weather = available?.weather?.describe(context),
+                            // Altitude + compass facing (P2-US-013): snapshot the current
+                            // fix altitude + compass bearing into one pre-formatted line.
+                            altitudeFacing = formatAltitudeFacing(
+                                context,
+                                available?.fix?.altitudeMeters,
+                                compassBearing,
+                            ),
                             projectName = latestFields.projectName.ifBlank { null },
                             note = latestFields.note.ifBlank { null },
                             // Snapshot the user's formatting prefs (US-014) so they're
@@ -503,14 +517,16 @@ private fun RuleOfThirdsGrid(modifier: Modifier = Modifier) {
 }
 
 /**
- * Bottom-left viewfinder HUD (P2-US-012): a live ticking date/time line plus the
- * current altitude (when the fix reports one). 12sp white with a black drop shadow so
- * it stays legible over any preview. The clock follows the user's 24/12-hour
- * [TimeFormat] preference for consistency with the burned stamp.
+ * Bottom-left viewfinder HUD (P2-US-012 / P2-US-013): a live ticking date/time line
+ * plus an "Altitude 342m · Facing NE" line combining the fix's altitude (when known)
+ * with the live compass [compassBearing] mapped to a cardinal point. 12sp white with a
+ * black drop shadow so it stays legible over any preview. The clock follows the user's
+ * 24/12-hour [TimeFormat] preference for consistency with the burned stamp.
  */
 @Composable
 private fun ViewfinderInfoOverlay(
     altitudeMeters: Double?,
+    compassBearing: Float?,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -531,13 +547,11 @@ private fun ViewfinderInfoOverlay(
         fontSize = 12.sp,
         shadow = Shadow(color = Color.Black, offset = Offset(0f, 1f), blurRadius = 3f),
     )
+    val altitudeFacing = formatAltitudeFacing(context, altitudeMeters, compassBearing)
     Column(modifier = modifier) {
         Text(text = formatter.format(now), style = hudStyle)
-        if (altitudeMeters != null) {
-            Text(
-                text = stringResource(R.string.viewfinder_altitude, altitudeMeters.toInt()),
-                style = hudStyle,
-            )
+        if (altitudeFacing != null) {
+            Text(text = altitudeFacing, style = hudStyle)
         }
     }
 }

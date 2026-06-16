@@ -36,6 +36,16 @@
     <string name="settings_grid_summary">Show a 3×3 rule-of-thirds grid on the viewfinder.</string>
     <string name="settings_grid_toggle">Show grid</string>
     <string name="viewfinder_altitude">Altitude: %1$dm</string>
+    <string name="stamp_altitude">Altitude %1$dm</string>
+    <string name="compass_facing">Facing %1$s</string>
+    <string name="compass_n">N</string>
+    <string name="compass_ne">NE</string>
+    <string name="compass_e">E</string>
+    <string name="compass_se">SE</string>
+    <string name="compass_s">S</string>
+    <string name="compass_sw">SW</string>
+    <string name="compass_w">W</string>
+    <string name="compass_nw">NW</string>
     <string name="settings_time_format">Time format</string>
     <string name="settings_time_format_summary">Clock used for the date/time on the stamp.</string>
     <string name="settings_time_24">24-hour (14:30:00)</string>

@@ -80,7 +80,23 @@ via `LaunchedEffect`+`delay(1000)` using the `TimeFormat` pattern, plus an `Alti
 line when the fix has one — 12sp white with a `Shadow`). Altitude rides on
 `GpsFix.altitudeMeters` (nullable, from `Location.hasAltitude()`/`.altitude` in
 `rememberCurrentLocation`). The HUD is the first (left-aligned) child of the bottom
-controls Column so it never overlaps the variable-height controls.
+controls Column so it never overlaps the variable-height controls. The HUD's altitude
+line is now the combined altitude+facing line (P2-US-013, below).
+
+## Altitude + compass facing (P2-US-013)
+`location/CompassProvider.kt`: `rememberCompassBearing(): State<Float?>` subscribes to the
+device `TYPE_ROTATION_VECTOR` sensor (via `DisposableEffect`;
+`SensorManager.getRotationMatrixFromVector` + `getOrientation`, azimuth radians → 0–360°
+clockwise from N), emitting null when the device has no such sensor (no permission needed
+— same graceful-null contract as weather/map). `bearingToCardinalRes(deg)` maps a bearing
+to one of 8 cardinal string resources (`compass_n`..`compass_nw`).
+`formatAltitudeFacing(context, altitude, bearing)` builds the combined
+"Altitude 342m · Facing NE" line from whichever pieces exist (null if neither). The HUD
+(`ViewfinderInfoOverlay`) shows that line live; `StampData.altitudeFacing` carries the
+pre-formatted snapshot (taken at shutter), rendered in ALL 3 templates — Classic/Minimal
+after weather, Field Report as an `ALTITUDE / FACING` labelled row. It is ALWAYS rendered
+when present (like project/note/date-time), NOT gated by the `LayoutPreset`. Hindi cardinal
+abbrevs (उ/उपू/पू/…) live in `values-hi`.
 
 ## Weather on the stamp (P2-US-009)
 `location/WeatherProvider.kt`: `fetchWeather(lat,lng): Weather?` hits Open-Meteo's
