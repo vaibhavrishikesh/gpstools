@@ -27,7 +27,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify no forced dialog on capture on emulator"
       ],
-      "priority": 2, "passes": false, "notes": ""
+      "priority": 2, "passes": true, "notes": "Shutter in CameraPreview already fires capturePhoto directly — no Stamp-details modal ever blocks the shutter (the CustomFieldsDialog opens only via the Edit affordance). Stamp auto-fills address/coords/date-time from locationState snapshot; last-used project/site name + note now re-read from CustomFieldsStore.load() AT shutter time (cheap SharedPreferences read, consistent with AppSettingsStore inline reads) so they always apply silently. Weather is US-009. Verified on emulator: tapping shutter saved GPS_20260616_105606130.jpg with no dialog."
     },
     {
       "id": "P2-US-003",

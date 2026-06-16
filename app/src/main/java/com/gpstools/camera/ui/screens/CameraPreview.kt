@@ -247,6 +247,10 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             )
 
             // Shutter button — captures a full-res photo to MediaStore (US-006).
+            // P2-US-002 (one-tap capture): a tap fires capture IMMEDIATELY; no
+            // "Stamp details" modal ever blocks the shutter. The stamp auto-fills
+            // location/address/date-time, and the last-used project/site name + note
+            // (set once via the optional Edit affordance) apply silently below.
             FilledIconButton(
                 onClick = {
                     if (isCapturing) return@FilledIconButton
@@ -255,14 +259,18 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                     // gets burned into the photo's stamp (US-007). Location fields are
                     // null until a fix arrives; the date/time is always stamped.
                     val available = locationState as? LocationUiState.Available
+                    // Re-read the persisted custom fields at shutter time (cheap
+                    // SharedPreferences load) so the LAST-USED project/site name + note
+                    // always apply silently — even if they changed since composition.
+                    val latestFields = customFieldsStore.load()
                     val stamp = StampData(
                         timestamp = Date(),
                         latitude = available?.fix?.latitude,
                         longitude = available?.fix?.longitude,
                         accuracyMeters = available?.fix?.accuracyMeters,
                         address = available?.address,
-                        projectName = customFields.projectName.ifBlank { null },
-                        note = customFields.note.ifBlank { null },
+                        projectName = latestFields.projectName.ifBlank { null },
+                        note = latestFields.note.ifBlank { null },
                         // Snapshot the user's formatting prefs (US-014) so they're
                         // burned into this capture's stamp.
                         coordinateFormat = AppSettingsStore.loadCoordinateFormat(context),
