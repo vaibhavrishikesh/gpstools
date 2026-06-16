@@ -10,6 +10,7 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -62,12 +63,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,7 +94,10 @@ import com.gpstools.camera.settings.AppSettingsStore
 import com.gpstools.camera.settings.StampPosition
 import com.gpstools.camera.ui.theme.BrandGold
 import com.gpstools.camera.ui.theme.BrandNavy
+import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -217,6 +224,14 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     val stampPosition = remember { AppSettingsStore.loadStampPosition(context) }
     val stampAtTop = stampPosition == StampPosition.TOP
 
+    // Framing grid (P2-US-012): the 3×3 rule-of-thirds overlay is opt-in from Settings.
+    // Read once on entry (the camera tab re-composes when navigated back to, so a
+    // setting change applies) — same pattern as the stamp position above.
+    val showGrid = remember { AppSettingsStore.loadShowGrid(context) }
+
+    // Live altitude for the viewfinder HUD (P2-US-012), from the current fix when known.
+    val altitudeMeters = (locationState as? LocationUiState.Available)?.fix?.altitudeMeters
+
     // Pre-resolved so it can be applied via semantics on the non-composable shutter.
     val shutterContentDescription = stringResource(R.string.camera_shutter)
 
@@ -225,6 +240,11 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             factory = { previewView },
             modifier = Modifier.fillMaxSize(),
         )
+
+        // 3×3 rule-of-thirds framing grid (P2-US-012) — 30% white lines, opt-in.
+        if (showGrid) {
+            RuleOfThirdsGrid(modifier = Modifier.fillMaxSize())
+        }
 
         // WYSIWYG (P2-US-011): when the stamp position is TOP the GPS card sits at the
         // top; when BOTTOM it sits inside the bottom controls column (above the mode
@@ -250,6 +270,16 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 .padding(bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // Bottom-left viewfinder HUD (P2-US-012): live date/time + altitude, 12sp
+            // white with a black shadow. Left-aligned at the top of the bottom controls
+            // stack so it reads as a lower-left HUD without overlapping the controls.
+            ViewfinderInfoOverlay(
+                altitudeMeters = altitudeMeters,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(start = 16.dp, bottom = 12.dp),
+            )
+
             if (!stampAtTop) {
                 LocationInfoOverlay(
                     state = locationState,
@@ -450,6 +480,66 @@ private fun flashLabelRes(mode: Int): Int = when (mode) {
     ImageCapture.FLASH_MODE_ON -> R.string.camera_flash_on
     ImageCapture.FLASH_MODE_AUTO -> R.string.camera_flash_auto
     else -> R.string.camera_flash_off
+}
+
+/**
+ * 3×3 rule-of-thirds framing grid (P2-US-012): two evenly-spaced vertical + horizontal
+ * lines at 30% white over the live preview. Toggled from Settings; opt-in (off by default).
+ */
+@Composable
+private fun RuleOfThirdsGrid(modifier: Modifier = Modifier) {
+    val lineColor = Color.White.copy(alpha = 0.3f)
+    Canvas(modifier = modifier) {
+        val stroke = 1.dp.toPx()
+        val w = size.width
+        val h = size.height
+        // Vertical thirds.
+        drawLine(lineColor, Offset(w / 3f, 0f), Offset(w / 3f, h), stroke)
+        drawLine(lineColor, Offset(w * 2f / 3f, 0f), Offset(w * 2f / 3f, h), stroke)
+        // Horizontal thirds.
+        drawLine(lineColor, Offset(0f, h / 3f), Offset(w, h / 3f), stroke)
+        drawLine(lineColor, Offset(0f, h * 2f / 3f), Offset(w, h * 2f / 3f), stroke)
+    }
+}
+
+/**
+ * Bottom-left viewfinder HUD (P2-US-012): a live ticking date/time line plus the
+ * current altitude (when the fix reports one). 12sp white with a black drop shadow so
+ * it stays legible over any preview. The clock follows the user's 24/12-hour
+ * [TimeFormat] preference for consistency with the burned stamp.
+ */
+@Composable
+private fun ViewfinderInfoOverlay(
+    altitudeMeters: Double?,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val timeFormat = remember { AppSettingsStore.loadTimeFormat(context) }
+    val formatter = remember(timeFormat) {
+        SimpleDateFormat(timeFormat.datePattern, Locale.getDefault())
+    }
+    // Tick once a second so the displayed time stays current.
+    var now by remember { mutableStateOf(Date()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            now = Date()
+            delay(1000L)
+        }
+    }
+    val hudStyle = TextStyle(
+        color = Color.White,
+        fontSize = 12.sp,
+        shadow = Shadow(color = Color.Black, offset = Offset(0f, 1f), blurRadius = 3f),
+    )
+    Column(modifier = modifier) {
+        Text(text = formatter.format(now), style = hudStyle)
+        if (altitudeMeters != null) {
+            Text(
+                text = stringResource(R.string.viewfinder_altitude, altitudeMeters.toInt()),
+                style = hudStyle,
+            )
+        }
+    }
 }
 
 /**

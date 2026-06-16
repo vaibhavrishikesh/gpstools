@@ -121,6 +121,7 @@ object AppSettingsStore {
     private const val KEY_TIME_FORMAT = "time_format"
     private const val KEY_LAYOUT_PRESET = "layout_preset"
     private const val KEY_STAMP_POSITION = "stamp_position"
+    private const val KEY_SHOW_GRID = "show_grid"
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -151,5 +152,13 @@ object AppSettingsStore {
 
     fun saveStampPosition(context: Context, position: StampPosition) {
         prefs(context).edit().putString(KEY_STAMP_POSITION, position.name).apply()
+    }
+
+    /** Whether the 3×3 rule-of-thirds framing grid is drawn on the viewfinder (P2-US-012). */
+    fun loadShowGrid(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_SHOW_GRID, false)
+
+    fun saveShowGrid(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SHOW_GRID, enabled).apply()
     }
 }

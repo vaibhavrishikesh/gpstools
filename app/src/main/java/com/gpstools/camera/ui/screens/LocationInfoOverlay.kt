@@ -60,7 +60,12 @@ fun rememberCurrentLocation(): State<LocationUiState> {
             value = LocationUiState.Unavailable
             return@produceState
         }
-        val fix = GpsFix(location.latitude, location.longitude, location.accuracy)
+        val fix = GpsFix(
+            latitude = location.latitude,
+            longitude = location.longitude,
+            accuracyMeters = location.accuracy,
+            altitudeMeters = if (location.hasAltitude()) location.altitude else null,
+        )
         value = LocationUiState.Available(fix, address = null, geocoding = true)
         val address = reverseGeocode(context, fix.latitude, fix.longitude)
         value = LocationUiState.Available(fix, address, geocoding = false)

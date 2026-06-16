@@ -23,11 +23,16 @@ private const val TAG = "LocationProvider"
 /** How long to wait for a high-accuracy fix before falling back to last-known. */
 const val LOCATION_TIMEOUT_MS = 12_000L
 
-/** A single GPS fix. [accuracyMeters] is the 68% confidence radius from the OS. */
+/**
+ * A single GPS fix. [accuracyMeters] is the 68% confidence radius from the OS.
+ * [altitudeMeters] is the WGS84 altitude in metres when the fix reports one (P2-US-012),
+ * else null (e.g. a 2D fix or a last-known location with no altitude).
+ */
 data class GpsFix(
     val latitude: Double,
     val longitude: Double,
     val accuracyMeters: Float,
+    val altitudeMeters: Double? = null,
 )
 
 /**

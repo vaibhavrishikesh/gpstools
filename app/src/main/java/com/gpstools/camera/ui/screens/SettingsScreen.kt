@@ -18,6 +18,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -67,6 +68,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     var timeFormat by remember { mutableStateOf(AppSettingsStore.loadTimeFormat(context)) }
     var layoutPreset by remember { mutableStateOf(AppSettingsStore.loadLayoutPreset(context)) }
     var stampPosition by remember { mutableStateOf(AppSettingsStore.loadStampPosition(context)) }
+    var showGrid by remember { mutableStateOf(AppSettingsStore.loadShowGrid(context)) }
 
     // One billing connection scoped to the whole screen, shared by the one-time
     // Premium section (US-016) and the Pro subscription section (US-018) so the
@@ -170,6 +172,22 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                     },
                 )
             }
+        }
+
+        // --- Framing grid (P2-US-012) ---
+        SectionHeader(
+            title = stringResource(R.string.settings_grid),
+            summary = stringResource(R.string.settings_grid_summary),
+        )
+        OptionCard {
+            ToggleRow(
+                label = stringResource(R.string.settings_grid_toggle),
+                checked = showGrid,
+                onCheckedChange = {
+                    showGrid = it
+                    AppSettingsStore.saveShowGrid(context, it)
+                },
+            )
         }
 
         // --- Time format (US-014) ---
@@ -432,6 +450,28 @@ private fun OptionRow(
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(start = 16.dp),
         )
+    }
+}
+
+/** A labelled on/off row (P2-US-012): label on the left, a [Switch] on the right. */
+@Composable
+private fun ToggleRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 

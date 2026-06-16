@@ -150,7 +150,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify overlays + grid toggle on emulator"
       ],
-      "priority": 12, "passes": false, "notes": ""
+      "priority": 12, "passes": true, "notes": "Viewfinder overlays + grid. GpsFix gained altitudeMeters (nullable, from Location.hasAltitude()/.altitude in rememberCurrentLocation). New AppSettingsStore.load/saveShowGrid (plain boolean, viewfinder-only, NOT a StampData field). CameraPreview: RuleOfThirdsGrid (Canvas, 2 vertical + 2 horizontal lines at thirds, white@0.3, gated on showGrid read once via remember at tab entry) over the preview; ViewfinderInfoOverlay = bottom-left HUD (first left-aligned child of the bottom controls Column so it never overlaps controls) with a live-ticking date/time line (LaunchedEffect + delay(1000), TimeFormat.datePattern) + an Altitude: Nm line when the fix reports altitude — 12sp white with a black Shadow. Settings: new 'Framing grid' section with a ToggleRow (label + Material3 Switch) inside an OptionCard. New strings settings_grid(_summary/_toggle) + viewfinder_altitude in both values + values-hi. Verified on emulator: enabled grid in Settings → Camera shows the 3x3 grid lines + bottom-left HUD '16 जून 2026 12:48:56 pm IST' / 'ऊँचाई: 342मी' (geo fix altitude 342)."
     },
     {
       "id": "P2-US-013",

@@ -69,6 +69,18 @@ card is placed at the SAME edge in `CameraPreview` (top → `Alignment.TopCenter
 bottom → first child of the bottom controls Column, above the mode chips) so the
 on-screen preview matches the photo. The position is read once with `remember` at
 camera-tab entry (NavHost re-composes the tab on return, so a Settings change applies).
+NON-stamp viewfinder prefs also live in `AppSettings.kt`: `loadShowGrid/saveShowGrid`
+(P2-US-012) — a plain boolean (not a `StampData` field; it only affects the live
+preview, never the burned photo). The Settings UI for a boolean uses `ToggleRow`
+(label + Material3 `Switch`) inside an `OptionCard`, vs the radio `OptionRow` used for
+enums. Viewfinder overlays (P2-US-012) are drawn in `CameraPreview`: `RuleOfThirdsGrid`
+(a `Canvas` drawing 2 vertical + 2 horizontal lines at the thirds, white@0.3, gated on
+`showGrid`) and `ViewfinderInfoOverlay` (bottom-left HUD = a live-ticking date/time line
+via `LaunchedEffect`+`delay(1000)` using the `TimeFormat` pattern, plus an `Altitude: Nm`
+line when the fix has one — 12sp white with a `Shadow`). Altitude rides on
+`GpsFix.altitudeMeters` (nullable, from `Location.hasAltitude()`/`.altitude` in
+`rememberCurrentLocation`). The HUD is the first (left-aligned) child of the bottom
+controls Column so it never overlaps the variable-height controls.
 
 ## Weather on the stamp (P2-US-009)
 `location/WeatherProvider.kt`: `fetchWeather(lat,lng): Weather?` hits Open-Meteo's

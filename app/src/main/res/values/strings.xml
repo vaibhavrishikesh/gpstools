@@ -32,6 +32,10 @@
     <string name="settings_stamp_position_summary">Where the stamp appears on the photo (and the on-screen preview).</string>
     <string name="position_bottom">Bottom</string>
     <string name="position_top">Top</string>
+    <string name="settings_grid">Framing grid</string>
+    <string name="settings_grid_summary">Show a 3×3 rule-of-thirds grid on the viewfinder.</string>
+    <string name="settings_grid_toggle">Show grid</string>
+    <string name="viewfinder_altitude">Altitude: %1$dm</string>
     <string name="settings_time_format">Time format</string>
     <string name="settings_time_format_summary">Clock used for the date/time on the stamp.</string>
     <string name="settings_time_24">24-hour (14:30:00)</string>
