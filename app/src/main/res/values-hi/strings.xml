@@ -41,6 +41,10 @@
     <!-- Camera preview (US-004) -->
     <string name="camera_shutter">फ़ोटो लें</string>
     <string name="camera_flip">कैमरा बदलें</string>
+    <string name="camera_flash">फ़्लैश: %1$s</string>
+    <string name="camera_flash_off">बंद</string>
+    <string name="camera_flash_on">चालू</string>
+    <string name="camera_flash_auto">स्वतः</string>
     <string name="camera_unavailable">इस डिवाइस पर कैमरा उपलब्ध नहीं है</string>
 
     <!-- Photo capture (US-006) -->

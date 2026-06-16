@@ -10,6 +10,7 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +32,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Lens
+import androidx.compose.material.icons.filled.FlashAuto
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,12 +42,12 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -63,6 +66,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -124,6 +129,11 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     }
     // Prevents firing a second capture before the first one finishes.
     var isCapturing by remember { mutableStateOf(false) }
+
+    // Flash mode (P2-US-006): cycles off → on → auto. Applied to the shared
+    // ImageCapture use case; survives recomposition / config changes.
+    var flashMode by rememberSaveable { mutableIntStateOf(ImageCapture.FLASH_MODE_OFF) }
+    LaunchedEffect(flashMode) { imageCapture.flashMode = flashMode }
 
     // Free-tier interstitial ad shown after every Nth capture (US-015). Preloaded
     // up front; never blocks the capture itself.
@@ -200,6 +210,9 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     // and later burned into the captured photo's stamp (US-007).
     val locationState by rememberCurrentLocation()
 
+    // Pre-resolved so it can be applied via semantics on the non-composable shutter.
+    val shutterContentDescription = stringResource(R.string.camera_shutter)
+
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
             factory = { previewView },
@@ -238,91 +251,104 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(bottom = 20.dp),
             )
 
-            // Shutter button — captures a full-res photo to MediaStore (US-006).
-            // P2-US-002 (one-tap capture): a tap fires capture IMMEDIATELY; no
-            // "Stamp details" modal ever blocks the shutter. The stamp auto-fills
-            // location/address/date-time, and the last-used project/site name + note
-            // (set once via the optional Edit affordance) apply silently below.
-            FilledIconButton(
-                onClick = {
-                    if (isCapturing) return@FilledIconButton
-                    isCapturing = true
-                    // Snapshot the current location read at shutter-press time so it
-                    // gets burned into the photo's stamp (US-007). Location fields are
-                    // null until a fix arrives; the date/time is always stamped.
-                    val available = locationState as? LocationUiState.Available
-                    // Re-read the persisted custom fields at shutter time (cheap
-                    // SharedPreferences load) so the LAST-USED project/site name + note
-                    // always apply silently — even if they changed since composition.
-                    val latestFields = customFieldsStore.load()
-                    val stamp = StampData(
-                        timestamp = Date(),
-                        latitude = available?.fix?.latitude,
-                        longitude = available?.fix?.longitude,
-                        accuracyMeters = available?.fix?.accuracyMeters,
-                        address = available?.address,
-                        projectName = latestFields.projectName.ifBlank { null },
-                        note = latestFields.note.ifBlank { null },
-                        // Snapshot the user's formatting prefs (US-014) so they're
-                        // burned into this capture's stamp.
-                        coordinateFormat = AppSettingsStore.loadCoordinateFormat(context),
-                        timeFormat = AppSettingsStore.loadTimeFormat(context),
-                    )
-                    val logoFile = customFieldsStore.logoFileOrNull()
-                    // P2-US-005: premium templates (Field Report) are unlocked for now,
-                    // so the selected template always renders as-is.
-                    capturePhoto(context, imageCapture, stamp, template, logoFile) { uri ->
-                        isCapturing = false
-                        val msg = if (uri != null) {
-                            context.getString(R.string.capture_saved)
-                        } else {
-                            context.getString(R.string.capture_failed)
-                        }
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        // Photo is already saved — only now (post-save) maybe show an
-                        // interstitial, so an ad can never block or delay a capture.
-                        if (uri != null) {
-                            interstitialAds.onCaptureCompleted(context.findActivity())
-                        }
-                    }
-                },
-                enabled = !isCapturing,
-                modifier = Modifier.size(72.dp),
-                shape = CircleShape,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = Color.White,
-                ),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Lens,
-                    contentDescription = stringResource(R.string.camera_shutter),
-                    tint = Color.Black,
-                    modifier = Modifier.size(40.dp),
-                )
-            }
-        }
-
-        // Front/back toggle, sitting to the right of the shutter. Only shown
-        // when the device actually has both lenses.
-        if (hasFront && hasBack) {
-            IconButton(
-                onClick = {
-                    lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
-                        CameraSelector.LENS_FACING_FRONT
-                    } else {
-                        CameraSelector.LENS_FACING_BACK
-                    }
-                },
+            // Camera controls row (P2-US-006): flash toggle | shutter | flip.
+            // The shutter stays centered; the 48dp side buttons sit at the edges
+            // (a placeholder keeps the shutter centered when there's only one lens).
+            Row(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .navigationBarsPadding()
-                    .padding(end = 32.dp, bottom = 48.dp),
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Cameraswitch,
-                    contentDescription = stringResource(R.string.camera_flip),
-                    tint = Color.White,
+                // Flash toggle — cycles off → on → auto; applied to ImageCapture.
+                SideControlButton(
+                    onClick = { flashMode = nextFlashMode(flashMode) },
+                    icon = flashIcon(flashMode),
+                    contentDescription = stringResource(
+                        R.string.camera_flash,
+                        stringResource(flashLabelRes(flashMode)),
+                    ),
                 )
+
+                // Shutter — 72dp white fill, 4dp grey ring, 8dp elevation (US-006).
+                // P2-US-002 (one-tap capture): a tap fires capture IMMEDIATELY; no
+                // "Stamp details" modal ever blocks the shutter. The stamp auto-fills
+                // location/address/date-time, and the last-used project/site name + note
+                // (set once via the optional Edit affordance) apply silently below.
+                Surface(
+                    onClick = {
+                        if (isCapturing) return@Surface
+                        isCapturing = true
+                        // Snapshot the current location read at shutter-press time so it
+                        // gets burned into the photo's stamp (US-007). Location fields are
+                        // null until a fix arrives; the date/time is always stamped.
+                        val available = locationState as? LocationUiState.Available
+                        // Re-read the persisted custom fields at shutter time (cheap
+                        // SharedPreferences load) so the LAST-USED project/site name + note
+                        // always apply silently — even if they changed since composition.
+                        val latestFields = customFieldsStore.load()
+                        val stamp = StampData(
+                            timestamp = Date(),
+                            latitude = available?.fix?.latitude,
+                            longitude = available?.fix?.longitude,
+                            accuracyMeters = available?.fix?.accuracyMeters,
+                            address = available?.address,
+                            projectName = latestFields.projectName.ifBlank { null },
+                            note = latestFields.note.ifBlank { null },
+                            // Snapshot the user's formatting prefs (US-014) so they're
+                            // burned into this capture's stamp.
+                            coordinateFormat = AppSettingsStore.loadCoordinateFormat(context),
+                            timeFormat = AppSettingsStore.loadTimeFormat(context),
+                        )
+                        val logoFile = customFieldsStore.logoFileOrNull()
+                        // P2-US-005: premium templates (Field Report) are unlocked for now,
+                        // so the selected template always renders as-is.
+                        capturePhoto(context, imageCapture, stamp, template, logoFile) { uri ->
+                            isCapturing = false
+                            val msg = if (uri != null) {
+                                context.getString(R.string.capture_saved)
+                            } else {
+                                context.getString(R.string.capture_failed)
+                            }
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            // Photo is already saved — only now (post-save) maybe show an
+                            // interstitial, so an ad can never block or delay a capture.
+                            if (uri != null) {
+                                interstitialAds.onCaptureCompleted(context.findActivity())
+                            }
+                        }
+                    },
+                    enabled = !isCapturing,
+                    shape = CircleShape,
+                    color = Color.White,
+                    border = BorderStroke(4.dp, Color.LightGray),
+                    shadowElevation = 8.dp,
+                    modifier = Modifier
+                        .size(72.dp)
+                        .semantics {
+                            contentDescription = shutterContentDescription
+                        },
+                    content = {},
+                )
+
+                // Flip lens — only when both lenses exist, else a spacer to keep
+                // the shutter visually centered.
+                if (hasFront && hasBack) {
+                    SideControlButton(
+                        onClick = {
+                            lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                                CameraSelector.LENS_FACING_FRONT
+                            } else {
+                                CameraSelector.LENS_FACING_BACK
+                            }
+                        },
+                        icon = Icons.Filled.Cameraswitch,
+                        contentDescription = stringResource(R.string.camera_flip),
+                    )
+                } else {
+                    Spacer(Modifier.size(48.dp))
+                }
             }
         }
 
@@ -347,6 +373,55 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+/**
+ * A 48dp circular side control (flash / flip) for the camera controls row
+ * (P2-US-006): translucent grey 20% background, white icon.
+ */
+@Composable
+private fun SideControlButton(
+    onClick: () -> Unit,
+    icon: ImageVector,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+) {
+    FilledIconButton(
+        onClick = onClick,
+        modifier = modifier.size(48.dp),
+        shape = CircleShape,
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = Color.White.copy(alpha = 0.2f),
+            contentColor = Color.White,
+        ),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(24.dp),
+        )
+    }
+}
+
+/** Next flash mode in the off → on → auto cycle (P2-US-006). */
+private fun nextFlashMode(mode: Int): Int = when (mode) {
+    ImageCapture.FLASH_MODE_OFF -> ImageCapture.FLASH_MODE_ON
+    ImageCapture.FLASH_MODE_ON -> ImageCapture.FLASH_MODE_AUTO
+    else -> ImageCapture.FLASH_MODE_OFF
+}
+
+/** Icon for the current flash mode. */
+private fun flashIcon(mode: Int): ImageVector = when (mode) {
+    ImageCapture.FLASH_MODE_ON -> Icons.Filled.FlashOn
+    ImageCapture.FLASH_MODE_AUTO -> Icons.Filled.FlashAuto
+    else -> Icons.Filled.FlashOff
+}
+
+/** String resource describing the current flash mode (for content description). */
+private fun flashLabelRes(mode: Int): Int = when (mode) {
+    ImageCapture.FLASH_MODE_ON -> R.string.camera_flash_on
+    ImageCapture.FLASH_MODE_AUTO -> R.string.camera_flash_auto
+    else -> R.string.camera_flash_off
 }
 
 /**

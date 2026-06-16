@@ -78,7 +78,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify shutter + flash + flip on emulator"
       ],
-      "priority": 6, "passes": false, "notes": ""
+      "priority": 6, "passes": true, "notes": "Camera controls rebuilt as a single bottom Row (flash | shutter | flip) in CameraPreview.kt. Shutter = Material3 Surface(onClick) 72dp, white fill, 4dp LightGray ring border, 8dp shadowElevation, CircleShape (replaced FilledIconButton+Lens icon); contentDescription via Modifier.semantics (pre-resolved string, since Surface content lambda isn't @Composable for stringResource). New SideControlButton composable = 48dp FilledIconButton, white@0.2 (grey 20%) container, white icon — used for both flash and flip. Flash toggle cycles off→on→auto via nextFlashMode(); flashIcon() maps to FlashOff/FlashOn/FlashAuto; applied to the shared ImageCapture via LaunchedEffect(flashMode){imageCapture.flashMode=...} + rememberSaveable flashMode. Flip kept (Cameraswitch); shown only when both lenses exist, else a 48dp Spacer keeps the shutter centered (Arrangement.SpaceBetween). Removed the old free-floating BottomEnd flip IconButton + Lens/IconButton imports. New strings camera_flash/_off/_on/_auto (both values+values-hi). Verified on emulator: row renders flash(left)/white-ring shutter(center)/flip(right); tapping flash flipped the icon FlashOff→FlashOn (cycle works)."
     },
     {
       "id": "P2-US-007",

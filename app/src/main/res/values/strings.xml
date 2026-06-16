@@ -40,6 +40,10 @@
     <!-- Camera preview (US-004) -->
     <string name="camera_shutter">Take photo</string>
     <string name="camera_flip">Switch camera</string>
+    <string name="camera_flash">Flash: %1$s</string>
+    <string name="camera_flash_off">Off</string>
+    <string name="camera_flash_on">On</string>
+    <string name="camera_flash_auto">Auto</string>
     <string name="camera_unavailable">Camera unavailable on this device</string>
 
     <!-- Photo capture (US-006) -->
