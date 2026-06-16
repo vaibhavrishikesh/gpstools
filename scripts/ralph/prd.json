@@ -138,7 +138,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify preview matches saved photo position on emulator"
       ],
-      "priority": 11, "passes": false, "notes": ""
+      "priority": 11, "passes": true, "notes": "New StampPosition enum (BOTTOM default / TOP) in settings/AppSettings.kt + AppSettingsStore.load/saveStampPosition (same SharedPreferences pattern as the other format prefs). StampData.stampPosition snapshotted at shutter in CameraPreview. PhotoStamp: drawClassic/drawMinimal/drawFieldReport now compute panelHeight then panelTop = if(top) 0f else height-panelHeight (header band/map/lines are panelTop-relative so both edges work). WYSIWYG: CameraPreview reads the position once (remember at tab entry; NavHost re-composes the camera tab on return so a Settings change applies) and places the live LocationInfoOverlay GPS card at the SAME edge — TopCenter when TOP, or as the first child of the bottom controls Column (above the mode chips) when BOTTOM — so the on-screen preview matches the burned photo. Settings gained a 'Stamp position' radio section. New settings_stamp_position(_summary) + position_top/position_bottom strings in both values + values-hi. Verified on emulator: BOTTOM → on-screen card sits above the mode chips + Field Report stamp burns at the BOTTOM; switched to TOP → card moves to the top + the same stamp burns at the TOP (±5m), preview==photo at both edges."
     },
     {
       "id": "P2-US-012",

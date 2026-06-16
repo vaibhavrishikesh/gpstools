@@ -8,6 +8,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import com.gpstools.camera.settings.CoordinateFormat
 import com.gpstools.camera.settings.LayoutPreset
+import com.gpstools.camera.settings.StampPosition
 import com.gpstools.camera.settings.TimeFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -44,6 +45,12 @@ data class StampData(
      * in every template. Project/site, note, logo and date-time ignore it.
      */
     val layoutPreset: LayoutPreset = LayoutPreset.DEFAULT,
+    /**
+     * Which edge the stamp panel is anchored to (P2-US-011, WYSIWYG). Snapshot from
+     * the user's Settings at capture time; the live viewfinder overlay sits at the
+     * same edge so the on-screen preview matches the burned photo.
+     */
+    val stampPosition: StampPosition = StampPosition.DEFAULT,
 )
 
 /** Reference width the stamp's type sizes are tuned against; everything scales from it. */
@@ -86,10 +93,12 @@ fun drawStamp(
     val canvas = Canvas(result)
     // The layout preset (P2-US-010) can suppress the map even for a map-drawing template.
     val effectiveMap = if (stamp.layoutPreset.showMap) mapThumbnail else null
+    // WYSIWYG (P2-US-011): anchor the panel to the top edge when the user picked TOP.
+    val top = stamp.stampPosition == StampPosition.TOP
     when (template) {
-        StampTemplate.CLASSIC -> drawClassic(canvas, result, stamp, effectiveMap)
-        StampTemplate.MINIMAL -> drawMinimal(canvas, result, stamp)
-        StampTemplate.FIELD_REPORT -> drawFieldReport(canvas, result, stamp, effectiveMap)
+        StampTemplate.CLASSIC -> drawClassic(canvas, result, stamp, effectiveMap, top)
+        StampTemplate.MINIMAL -> drawMinimal(canvas, result, stamp, top)
+        StampTemplate.FIELD_REPORT -> drawFieldReport(canvas, result, stamp, effectiveMap, top)
     }
     if (logo != null) drawLogo(canvas, result, logo)
     return result
@@ -102,7 +111,7 @@ fun drawStamp(
  * coordinates line, then date/time, with the map thumbnail (when present) on the
  * right and text wrapped in the remaining width.
  */
-private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?) {
+private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?, top: Boolean) {
     val width = result.width
     val height = result.height
     val scale = width / REFERENCE_WIDTH
@@ -140,14 +149,15 @@ private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThu
 
     val textHeight = measureLines(lines, lineSpacing)
     val contentHeight = maxOf(textHeight, mapSize)
-    val panelTop = height - (contentHeight + 2 * pad)
+    val panelHeight = contentHeight + 2 * pad
+    val panelTop = if (top) 0f else height - panelHeight
 
-    canvas.drawRect(0f, panelTop, width.toFloat(), height.toFloat(), panelFill(150))
+    canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + panelHeight, panelFill(150))
     drawLines(canvas, lines, pad, panelTop + pad, lineSpacing)
 
     if (mapThumbnail != null) {
         val mapLeft = width - pad - mapSize
-        val mapTop = panelTop + (contentHeight + 2 * pad - mapSize) / 2f
+        val mapTop = panelTop + (panelHeight - mapSize) / 2f
         drawMap(canvas, mapThumbnail, RectF(mapLeft, mapTop, mapLeft + mapSize, mapTop + mapSize), scale)
     }
 }
@@ -158,7 +168,7 @@ private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThu
  * Compact translucent strip hugging the bottom: just the coordinates and date/time
  * on a single short panel anchored bottom-left. No address, no map — the essentials.
  */
-private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData) {
+private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData, top: Boolean) {
     val width = result.width
     val height = result.height
     val scale = width / REFERENCE_WIDTH
@@ -190,9 +200,10 @@ private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData) {
     val textHeight = measureLines(lines, lineSpacing)
     val textWidth = lines.maxOf { (text, paint) -> paint.measureText(text) }
     val panelWidth = minOf(width.toFloat(), textWidth + 2 * pad)
-    val panelTop = height - (textHeight + 2 * pad)
+    val panelHeight = textHeight + 2 * pad
+    val panelTop = if (top) 0f else height - panelHeight
 
-    canvas.drawRect(0f, panelTop, panelWidth, height.toFloat(), panelFill(110))
+    canvas.drawRect(0f, panelTop, panelWidth, panelTop + panelHeight, panelFill(110))
     drawLines(canvas, lines, pad, panelTop + pad, lineSpacing)
 }
 
@@ -203,7 +214,7 @@ private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData) {
  * a larger map thumbnail on the LEFT, and labelled rows (ADDRESS / COORDINATES /
  * ACCURACY / DATE-TIME) on the right so it reads like a proof record.
  */
-private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?) {
+private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?, top: Boolean) {
     val width = result.width
     val height = result.height
     val scale = width / REFERENCE_WIDTH
@@ -263,10 +274,11 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
 
     val rowsHeight = measureLines(rows, lineSpacing)
     val bodyHeight = maxOf(rowsHeight, mapSize)
-    val panelTop = height - (headerHeight + bodyHeight + 2 * pad)
+    val panelHeight = headerHeight + bodyHeight + 2 * pad
+    val panelTop = if (top) 0f else height - panelHeight
 
     // Panel + header band.
-    canvas.drawRect(0f, panelTop, width.toFloat(), height.toFloat(), panelFill(175))
+    canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + panelHeight, panelFill(175))
     canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + headerHeight, Paint().apply { color = FIELD_ACCENT })
     canvas.drawText("FIELD REPORT", pad, panelTop + pad / 2f - headerPaint.ascent(), headerPaint)
 

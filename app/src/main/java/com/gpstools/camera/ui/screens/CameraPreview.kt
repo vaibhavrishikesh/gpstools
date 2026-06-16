@@ -87,6 +87,7 @@ import com.gpstools.camera.media.StampTemplateStore
 import com.gpstools.camera.media.capturePhoto
 import com.gpstools.camera.media.label
 import com.gpstools.camera.settings.AppSettingsStore
+import com.gpstools.camera.settings.StampPosition
 import com.gpstools.camera.ui.theme.BrandGold
 import com.gpstools.camera.ui.theme.BrandNavy
 import java.util.Date
@@ -210,6 +211,12 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     // and later burned into the captured photo's stamp (US-007).
     val locationState by rememberCurrentLocation()
 
+    // WYSIWYG stamp position (P2-US-011): the live GPS card sits at the SAME edge the
+    // stamp will be burned at, so the preview matches the photo. Read once on entry
+    // (the camera tab re-composes when navigated back to, so a setting change applies).
+    val stampPosition = remember { AppSettingsStore.loadStampPosition(context) }
+    val stampAtTop = stampPosition == StampPosition.TOP
+
     // Pre-resolved so it can be applied via semantics on the non-composable shutter.
     val shutterContentDescription = stringResource(R.string.camera_shutter)
 
@@ -219,16 +226,21 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxSize(),
         )
 
-        LocationInfoOverlay(
-            state = locationState,
-            // US-003: the "Edit" affordance now lives ON the GPS card and opens the
-            // optional stamp-details bottom sheet (never blocks capture).
-            onEditClick = { showCustomFieldsSheet = true },
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-        )
+        // WYSIWYG (P2-US-011): when the stamp position is TOP the GPS card sits at the
+        // top; when BOTTOM it sits inside the bottom controls column (above the mode
+        // chips) — matching the edge the stamp is burned at.
+        if (stampAtTop) {
+            LocationInfoOverlay(
+                state = locationState,
+                // US-003: the "Edit" affordance now lives ON the GPS card and opens the
+                // optional stamp-details bottom sheet (never blocks capture).
+                onEditClick = { showCustomFieldsSheet = true },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -238,6 +250,16 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 .padding(bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            if (!stampAtTop) {
+                LocationInfoOverlay(
+                    state = locationState,
+                    onEditClick = { showCustomFieldsSheet = true },
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 20.dp),
+                )
+            }
+
             // Mode selector (P2-US-005) — centered icon chips, selection persists
             // across captures. Premium templates (Field Report) show a gold "PRO"
             // badge instead of a lock but stay selectable/usable for now.
@@ -304,6 +326,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                             timeFormat = AppSettingsStore.loadTimeFormat(context),
                             // Which location fields render (P2-US-010), snapshot at shutter.
                             layoutPreset = AppSettingsStore.loadLayoutPreset(context),
+                            // Which edge the stamp anchors to (P2-US-011), snapshot at shutter.
+                            stampPosition = AppSettingsStore.loadStampPosition(context),
                         )
                         val logoFile = customFieldsStore.logoFileOrNull()
                         // P2-US-005: premium templates (Field Report) are unlocked for now,

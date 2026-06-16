@@ -92,8 +92,27 @@ enum class LayoutPreset(
 }
 
 /**
- * Persists the formatting preferences (coordinate + time format, layout preset) used
- * by the stamp. Same lightweight SharedPreferences pattern as
+ * Where the stamp panel is burned onto the photo — and, for WYSIWYG (P2-US-011),
+ * where the live GPS card sits on the viewfinder. The on-screen overlay aligns to
+ * the SAME edge as this setting so the preview matches the saved photo. Snapshot
+ * into [com.gpstools.camera.media.StampData] at capture time. [BOTTOM] is the
+ * default (the historical stamp location).
+ */
+enum class StampPosition(@StringRes val labelRes: Int) {
+    BOTTOM(R.string.position_bottom),
+    TOP(R.string.position_top);
+
+    companion object {
+        val DEFAULT = BOTTOM
+
+        fun fromName(name: String?): StampPosition =
+            entries.firstOrNull { it.name == name } ?: DEFAULT
+    }
+}
+
+/**
+ * Persists the formatting preferences (coordinate + time format, layout preset,
+ * stamp position) used by the stamp. Same lightweight SharedPreferences pattern as
  * [com.gpstools.camera.locale.LocaleStore] and the other stores — no DataStore dependency.
  */
 object AppSettingsStore {
@@ -101,6 +120,7 @@ object AppSettingsStore {
     private const val KEY_COORD_FORMAT = "coordinate_format"
     private const val KEY_TIME_FORMAT = "time_format"
     private const val KEY_LAYOUT_PRESET = "layout_preset"
+    private const val KEY_STAMP_POSITION = "stamp_position"
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -124,5 +144,12 @@ object AppSettingsStore {
 
     fun saveLayoutPreset(context: Context, preset: LayoutPreset) {
         prefs(context).edit().putString(KEY_LAYOUT_PRESET, preset.name).apply()
+    }
+
+    fun loadStampPosition(context: Context): StampPosition =
+        StampPosition.fromName(prefs(context).getString(KEY_STAMP_POSITION, null))
+
+    fun saveStampPosition(context: Context, position: StampPosition) {
+        prefs(context).edit().putString(KEY_STAMP_POSITION, position.name).apply()
     }
 }

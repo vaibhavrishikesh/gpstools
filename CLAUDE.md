@@ -52,7 +52,8 @@ in `res/values-hi/strings.xml` — every new UI string MUST be added to BOTH fil
 applies it in `attachBaseContext`, Settings persists + `recreate()`s to apply live.
 Stamp-affecting format prefs (US-014) live in `settings/AppSettings.kt`
 (`CoordinateFormat` decimal/DMS, `TimeFormat` 24/12h, `LayoutPreset` (P2-US-010),
-`AppSettingsStore`); they work because `StampData` CARRIES the value (defaulted),
+`StampPosition` top/bottom (P2-US-011), `AppSettingsStore`); they work because
+`StampData` CARRIES the value (defaulted),
 snapshotted from the store at shutter-press in `CameraPreview` — so a setting change
 affects the next capture. `LayoutPreset` is the field-set chooser (6 presets =
 boolean `showMap/showAddress/showCoords/showWeather` combos, picked in a Settings
@@ -60,6 +61,14 @@ radio group); `drawStamp`/`PhotoStorage` gate the map and each template gates it
 address/coords/weather lines off these flags. Custom fields (project/site, note,
 logo) + date-time ALWAYS render, independent of the preset. `showMap` composes with
 `StampTemplate.usesMap` (Minimal never draws a map regardless of preset).
+`StampPosition` (P2-US-011, WYSIWYG) anchors the burned panel to the TOP or BOTTOM
+edge: each `drawClassic/drawMinimal/drawFieldReport` computes `panelHeight` then
+`panelTop = if (top) 0f else height - panelHeight` (header band / map / lines are all
+relative to `panelTop`, so they work both ways). The live `LocationInfoOverlay` GPS
+card is placed at the SAME edge in `CameraPreview` (top → `Alignment.TopCenter`;
+bottom → first child of the bottom controls Column, above the mode chips) so the
+on-screen preview matches the photo. The position is read once with `remember` at
+camera-tab entry (NavHost re-composes the tab on return, so a Settings change applies).
 
 ## Weather on the stamp (P2-US-009)
 `location/WeatherProvider.kt`: `fetchWeather(lat,lng): Weather?` hits Open-Meteo's

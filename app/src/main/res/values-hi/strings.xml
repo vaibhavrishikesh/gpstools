@@ -29,6 +29,10 @@
     <string name="preset_address_weather">पता + मौसम</string>
     <string name="preset_address">पता</string>
     <string name="preset_latlng">अक्षांश/देशांतर</string>
+    <string name="settings_stamp_position">स्टैम्प स्थिति</string>
+    <string name="settings_stamp_position_summary">फ़ोटो (और स्क्रीन पूर्वावलोकन) पर स्टैम्प कहाँ दिखे।</string>
+    <string name="position_bottom">नीचे</string>
+    <string name="position_top">ऊपर</string>
     <string name="settings_time_format">समय प्रारूप</string>
     <string name="settings_time_format_summary">स्टैम्प पर दिनांक/समय के लिए उपयोग की जाने वाली घड़ी।</string>
     <string name="settings_time_24">24-घंटे (14:30:00)</string>

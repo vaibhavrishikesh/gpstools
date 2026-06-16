@@ -28,6 +28,10 @@
     <string name="preset_address_weather">Address + Weather</string>
     <string name="preset_address">Address</string>
     <string name="preset_latlng">Lat/Lng</string>
+    <string name="settings_stamp_position">Stamp position</string>
+    <string name="settings_stamp_position_summary">Where the stamp appears on the photo (and the on-screen preview).</string>
+    <string name="position_bottom">Bottom</string>
+    <string name="position_top">Top</string>
     <string name="settings_time_format">Time format</string>
     <string name="settings_time_format_summary">Clock used for the date/time on the stamp.</string>
     <string name="settings_time_24">24-hour (14:30:00)</string>

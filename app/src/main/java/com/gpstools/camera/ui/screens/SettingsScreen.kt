@@ -45,6 +45,7 @@ import com.gpstools.camera.locale.findActivity
 import com.gpstools.camera.settings.AppSettingsStore
 import com.gpstools.camera.settings.CoordinateFormat
 import com.gpstools.camera.settings.LayoutPreset
+import com.gpstools.camera.settings.StampPosition
 import com.gpstools.camera.settings.TimeFormat
 import com.gpstools.camera.ui.navigation.Destination
 
@@ -65,6 +66,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     var coordinateFormat by remember { mutableStateOf(AppSettingsStore.loadCoordinateFormat(context)) }
     var timeFormat by remember { mutableStateOf(AppSettingsStore.loadTimeFormat(context)) }
     var layoutPreset by remember { mutableStateOf(AppSettingsStore.loadLayoutPreset(context)) }
+    var stampPosition by remember { mutableStateOf(AppSettingsStore.loadStampPosition(context)) }
 
     // One billing connection scoped to the whole screen, shared by the one-time
     // Premium section (US-016) and the Pro subscription section (US-018) so the
@@ -147,6 +149,24 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                     onSelect = {
                         layoutPreset = option
                         AppSettingsStore.saveLayoutPreset(context, option)
+                    },
+                )
+            }
+        }
+
+        // --- Stamp position (P2-US-011, WYSIWYG) ---
+        SectionHeader(
+            title = stringResource(R.string.settings_stamp_position),
+            summary = stringResource(R.string.settings_stamp_position_summary),
+        )
+        OptionCard {
+            StampPosition.entries.forEach { option ->
+                OptionRow(
+                    label = stringResource(option.labelRes),
+                    selected = option == stampPosition,
+                    onSelect = {
+                        stampPosition = option
+                        AppSettingsStore.saveStampPosition(context, option)
                     },
                 )
             }
