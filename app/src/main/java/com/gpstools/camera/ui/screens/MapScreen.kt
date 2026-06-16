@@ -125,7 +125,9 @@ private fun OsmMap(
     // permission is needed on any API level.
     val mapView = remember {
         Configuration.getInstance().apply {
-            userAgentValue = context.packageName
+            // OSM's tile-usage policy blocks generic/default user agents; send a
+            // descriptive, app-identifying value so real devices aren't 403'd.
+            userAgentValue = "GpsCameraLocation/1.0 (${context.packageName})"
             osmdroidBasePath = File(context.cacheDir, "osmdroid")
             osmdroidTileCache = File(osmdroidBasePath, "tiles")
         }
@@ -139,6 +141,13 @@ private fun OsmMap(
 
     DisposableEffect(Unit) {
         mapView.onResume()
+        // setCenter/setZoom in the builder above run before the MapView is laid out,
+        // so osmdroid ignores them and opens on the world (0,0) view. Re-apply once
+        // the view has a size so it actually opens on India.
+        mapView.post {
+            mapView.controller.setZoom(INDIA_ZOOM)
+            mapView.controller.setCenter(INDIA_CENTER)
+        }
         onDispose {
             mapView.onPause()
             mapView.onDetach()
