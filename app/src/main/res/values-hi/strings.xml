@@ -1,6 +1,6 @@
 <resources>
     <!-- App name kept as the brand (untranslated). -->
-    <string name="app_name">gpstools</string>
+    <string name="app_name">Gps Camera Location</string>
 
     <!-- Bottom navigation -->
     <string name="tab_camera">कैमरा</string>

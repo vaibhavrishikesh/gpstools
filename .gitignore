@@ -27,3 +27,4 @@ captures/
 # Logs / tmp
 *.log
 tmp/
+release.keystore
