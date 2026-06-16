@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Gpstools" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+        Base app theme. windowBackground is the launch / starting-window the launcher
+        shows the instant the app is tapped (on EVERY Android version) — point it at the
+        branded white-background splash so the pre-open screen is no longer the
+        platform's default sky-blue tint. Compose screens draw their own opaque
+        backgrounds, so this splash is only visible during the brief launch.
+        (Android 12+ also gets windowSplashScreenBackground from values-v31.)
+    -->
+    <style name="Theme.Gpstools" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
 </resources>

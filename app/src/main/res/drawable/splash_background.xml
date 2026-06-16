@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Launch / starting-window background, used as android:windowBackground in the app
+    theme. This is what the system shows the instant the app is tapped, before the
+    first Compose frame draws — on EVERY Android version (the Android-12 system splash
+    is handled separately in values-v31). White background + the centered navy+gold
+    logo, so the pre-open screen is branded instead of the platform's default tint.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/white" />
+    <item
+        android:width="180dp"
+        android:height="180dp"
+        android:gravity="center">
+        <bitmap
+            android:src="@mipmap/ic_launcher_foreground"
+            android:gravity="center" />
+    </item>
+</layer-list>
