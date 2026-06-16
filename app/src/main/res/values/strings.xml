@@ -2,10 +2,15 @@
     <string name="app_name">Gps Camera Location</string>
 
     <!-- Bottom navigation -->
+    <string name="tab_home">Home</string>
     <string name="tab_camera">Camera</string>
     <string name="tab_gallery">Gallery</string>
     <string name="tab_map">Map</string>
+    <string name="tab_reports">Reports</string>
     <string name="tab_settings">Settings</string>
+
+    <!-- Home dashboard (P2-US-015) -->
+    <string name="home_subtitle">Field photo proof, geotagged</string>
 
     <!-- Settings — language (US-013) -->
     <string name="settings_language">Language</string>

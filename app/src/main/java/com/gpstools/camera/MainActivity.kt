@@ -43,6 +43,7 @@ import com.gpstools.camera.ui.navigation.Destination
 import com.gpstools.camera.ui.navigation.START_DESTINATION
 import com.gpstools.camera.ui.screens.CameraScreen
 import com.gpstools.camera.ui.screens.GalleryScreen
+import com.gpstools.camera.ui.screens.HomeScreen
 import com.gpstools.camera.ui.screens.MapScreen
 import com.gpstools.camera.ui.screens.SettingsScreen
 import com.gpstools.camera.ui.theme.GpstoolsTheme
@@ -97,11 +98,23 @@ fun GpsToolsApp() {
             startDestination = START_DESTINATION.route,
             modifier = Modifier.padding(innerPadding),
         ) {
+            composable(Destination.Home.route) {
+                HomeScreen(onTileClick = { route -> navController.navigateTopLevel(route) })
+            }
             composable(Destination.Camera.route) { CameraScreen() }
             composable(Destination.Gallery.route) { GalleryScreen() }
             composable(Destination.Map.route) { MapScreen() }
             composable(Destination.Settings.route) { SettingsScreen() }
         }
+    }
+}
+
+/** Navigate to a top-level destination without stacking duplicate tabs. */
+private fun NavHostController.navigateTopLevel(route: String) {
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }
 
@@ -125,16 +138,7 @@ private fun BottomNavBar(navController: NavHostController) {
             } == true
             NavigationBarItem(
                 selected = selected,
-                onClick = {
-                    navController.navigate(destination.route) {
-                        // Avoid building up a back stack of top-level tabs.
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
+                onClick = { navController.navigateTopLevel(destination.route) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.primary,
                     selectedTextColor = MaterialTheme.colorScheme.primary,

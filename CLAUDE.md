@@ -39,7 +39,16 @@ is usually already running. Use full path `~/Library/Android/sdk/platform-tools/
 - Confirm foreground via `adb shell dumpsys window | grep mCurrentFocus`.
 
 ## App structure
-Single-activity Compose (`MainActivity`). Theme in `ui/theme/` (Material 3).
+Single-activity Compose (`MainActivity`). Nav = bottom `NavigationBar` over a
+`NavHost`; the 5 top-level tabs are the `Destination` enum (`ui/navigation/Destinations.kt`)
+— `Home`/Camera/Gallery/Map/Settings. **`Home` is the start destination** (P2-US-015
+dashboard). Tab clicks AND the Home tiles both go through `NavHostController.navigateTopLevel`
+(in MainActivity — `popUpTo(start){saveState}` + `launchSingleTop` + `restoreState`).
+`HomeScreen` (`ui/screens/HomeScreen.kt`) = navy-gradient landing with a 2×2 tile grid
+(Camera/Gallery/Map/Reports); each tile carries a `Destination.route` and the "Reports"
+tile routes to `Gallery.route` (the PDF report export lives there, US-017). It takes
+`onTileClick:(route)->Unit` — no NavController dependency in the screen.
+Theme in `ui/theme/` (Material 3).
 **Brand (Phase 2) = navy `#15294D` + gold `#F2A93B`**: tokens in `Color.kt`
 (`BrandNavy`/`BrandGold`/… + GPS accuracy tokens `AccuracyGood/Avg/Poor` with the
 `accuracyColor(meters)` helper). `Theme.kt` = light(navy primary)/dark(gold primary)

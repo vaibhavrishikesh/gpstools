@@ -186,7 +186,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify home tiles + navigation on emulator"
       ],
-      "priority": 15, "passes": false, "notes": ""
+      "priority": 15, "passes": true, "notes": "New Home dashboard as the launch destination. Added Destination.Home (Icons.Home, route 'home') as the FIRST entry in the Destination enum + START_DESTINATION=Home (Destinations.kt). New ui/screens/HomeScreen.kt: navy vertical-gradient (BrandNavy→BrandNavyDeep) landing — gold app_name title + Hindi-localized home_subtitle + a 2x2 grid of HomeTileCard (Material3 Card(onClick), aspectRatio 1, BrandNavySurface bg, gold icon in a BrandNavyLight circle + white label). Tiles: Camera(PhotoCamera)/Gallery(PhotoLibrary)/Map(Map)/Reports(PictureAsPdf); Reports routes to Gallery.route (PDF report export lives there, US-017). HomeScreen takes onTileClick:(route)->Unit (no NavController dep). MainActivity: NavHost gains the Home composable; extracted NavHostController.navigateTopLevel (popUpTo start saveState + launchSingleTop + restoreState) reused by BOTH the Home tiles AND the bottom-nav onClick. New strings tab_home/tab_reports/home_subtitle in both values+values-hi. Verified on emulator: Home is the launch screen (gold 'Gps Camera Location' + 4 navy tiles with gold icons), bottom nav shows होम selected (gold home icon); tapping the रिपोर्ट tile navigated to Gallery (गैलरी gold-selected in nav)."
     },
     {
       "id": "P2-US-016",

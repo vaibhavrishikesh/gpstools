@@ -3,10 +3,15 @@
     <string name="app_name">Gps Camera Location</string>
 
     <!-- Bottom navigation -->
+    <string name="tab_home">होम</string>
     <string name="tab_camera">कैमरा</string>
     <string name="tab_gallery">गैलरी</string>
     <string name="tab_map">मानचित्र</string>
+    <string name="tab_reports">रिपोर्ट</string>
     <string name="tab_settings">सेटिंग</string>
+
+    <!-- Home dashboard (P2-US-015) -->
+    <string name="home_subtitle">जियोटैग के साथ फ़ील्ड फ़ोटो प्रमाण</string>
 
     <!-- Settings — language (US-013) -->
     <string name="settings_language">भाषा</string>
