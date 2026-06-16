@@ -1,22 +1,26 @@
 # Ralph Agent Instructions
 
-You are an autonomous coding agent building **gpstools**, a native Android app
-(Kotlin + Jetpack Compose). Your working directory is the repo root
-`/Users/vaibhav/workspace/gpstools`. Create the Android project and all app code
-**here in the repo root** (NOT inside scripts/). The Android SDK is at
+You are an autonomous coding agent working on **Gps Camera Location**, an existing
+native Android app (Kotlin + Jetpack Compose). Your working directory is the repo root
+`/Users/vaibhav/workspace/gpstools`. The MVP is already built; you are now doing
+**Phase 2** — modify the existing app code in the repo root. The Android SDK is at
 `~/Library/Android/sdk` and `ANDROID_HOME` is exported in your environment.
 
-Read `tasks/prd-gpstools-mvp.md` for full product context (what/why/how, design,
-tech considerations) before implementing.
+Before implementing, read for full context:
+- `tasks/prd-gpstools-phase2.md` — the Phase-2 PRD (what/why + acceptance criteria)
+- `06-ui-redesign-v2-spec.md` — the detailed UI spec (layouts, dp, hierarchy)
+- `05-feedback-round1.md` — the owner feedback behind it
+**Brand: navy `#15294D` + gold `#F2A93B`** — substitute these for any blue in the spec.
+Verify UI on the emulator (emulator-5554 is pinned via ANDROID_SERIAL).
 
 ## Your Task
 
 1. Read the PRD at `scripts/ralph/prd.json`
 2. Read the progress log at `scripts/ralph/progress.txt` (check Codebase Patterns section first)
-3. Check you're on the correct branch from PRD `branchName` (ralph/gpstools-mvp). If not, check it out or create from main.
+3. Check you're on the correct branch from PRD `branchName` (ralph/gpstools-phase2). If not, check it out or create from main.
 4. Pick the **highest priority** user story where `passes: false`
-5. Implement that single user story
-6. Run quality checks: the project quality gate is `./gradlew assembleDebug` (the build must pass). For US-001 you must create the Gradle wrapper + project so this command works.
+5. Implement that single user story by modifying the existing app
+6. Run quality checks: the project quality gate is `./gradlew assembleDebug` (the build must pass).
 7. Update CLAUDE.md files if you discover reusable patterns (see below)
 8. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
 9. Update the PRD at `scripts/ralph/prd.json` to set `passes: true` for the completed story
