@@ -42,6 +42,8 @@ sealed interface LocationUiState {
         val fix: GpsFix,
         val address: String?,
         val geocoding: Boolean,
+        /** Current weather for the fix (US-009); null while loading or if unavailable. */
+        val weather: Weather? = null,
     ) : LocationUiState
     data object Unavailable : LocationUiState
 }

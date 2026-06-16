@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -35,6 +36,7 @@ import com.gpstools.camera.location.GpsFix
 import com.gpstools.camera.location.LocationUiState
 import com.gpstools.camera.location.encodePlusCode
 import com.gpstools.camera.location.fetchCurrentLocation
+import com.gpstools.camera.location.fetchWeather
 import com.gpstools.camera.location.reverseGeocode
 import com.gpstools.camera.ui.theme.accuracyColor
 import java.util.Locale
@@ -62,6 +64,12 @@ fun rememberCurrentLocation(): State<LocationUiState> {
         value = LocationUiState.Available(fix, address = null, geocoding = true)
         val address = reverseGeocode(context, fix.latitude, fix.longitude)
         value = LocationUiState.Available(fix, address, geocoding = false)
+        // Weather (US-009) is best-effort: fetch after the address resolves and fold it
+        // into the state when it lands. A null result (offline) just leaves it off.
+        val weather = fetchWeather(fix.latitude, fix.longitude)
+        if (weather != null) {
+            value = LocationUiState.Available(fix, address, geocoding = false, weather = weather)
+        }
     }
 }
 
@@ -162,6 +170,25 @@ fun LocationInfoOverlay(
                         color = Color.White.copy(alpha = 0.9f),
                         fontSize = 14.sp,
                     )
+                    // 2b. Weather (US-009) — temp + condition, once it has loaded.
+                    state.weather?.let { weather ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.WbSunny,
+                                contentDescription = null,
+                                tint = Color.White.copy(alpha = 0.9f),
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Text(
+                                text = weather.describe(LocalContext.current),
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontSize = 13.sp,
+                            )
+                        }
+                    }
                     // 3. Coords (12sp grey) + colour-coded accuracy chip.
                     Row(
                         modifier = Modifier.fillMaxWidth(),

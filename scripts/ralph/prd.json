@@ -114,7 +114,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify weather in overlay + saved image on emulator"
       ],
-      "priority": 9, "passes": false, "notes": ""
+      "priority": 9, "passes": true, "notes": "New location/WeatherProvider.kt: Weather(temperatureC, weatherCode) + fetchWeather(lat,lng) hits Open-Meteo current_weather (no API key) via HttpURLConnection on Dispatchers.IO with an 8s timeout, parses with org.json, returns null on any failure (offline/HTTP/parse) — same graceful contract as OsmStaticMapProvider. WMO weathercode mapped to coarse condition strings (clear/cloudy/fog/drizzle/rain/snow/showers/thunderstorm/unknown). Weather.describe(context)='28°C · Clear' via weather_stamp string. LocationUiState.Available gained weather:Weather?=null; rememberCurrentLocation fetches weather after geocode and folds it in. Overlay shows a WbSunny icon + describe() line (between plus code and coords). StampData gained weather:String? (pre-formatted, snapshotted at shutter via available.weather.describe(context)); all 3 templates render it (Classic/Minimal after coords, Field Report as a WEATHER labelled row). New weather_* strings in both values + values-hi. INTERNET perm already present. Verified on emulator: overlay shows '☀ 34°C · साफ़'; captured Field Report stamp burns 'WEATHER 34°C · साफ़'."
     },
     {
       "id": "P2-US-010",

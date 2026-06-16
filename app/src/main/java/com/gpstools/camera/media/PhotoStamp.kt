@@ -33,6 +33,8 @@ data class StampData(
     val address: String?,
     val projectName: String? = null,
     val note: String? = null,
+    /** Pre-formatted weather line (US-009), e.g. "28°C · Clear"; null when unavailable. */
+    val weather: String? = null,
     val coordinateFormat: CoordinateFormat = CoordinateFormat.DEFAULT,
     val timeFormat: TimeFormat = TimeFormat.DEFAULT,
 )
@@ -117,6 +119,7 @@ private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThu
         wrapText(addr, bodyPaint, maxTextWidth).forEach { lines += it to bodyPaint }
     }
     coordinatesLine(stamp)?.let { lines += it to monoPaint }
+    stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
     lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
@@ -163,6 +166,7 @@ private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData) {
         wrapText(name, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
     }
     coordinatesLine(stamp)?.let { lines += it to monoPaint }
+    stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
     lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
@@ -224,6 +228,10 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
     coordinatesLine(stamp)?.let {
         rows += "COORDINATES" to labelPaint
         rows += it to monoPaint
+    }
+    stamp.weather?.takeIf { it.isNotBlank() }?.let {
+        rows += "WEATHER" to labelPaint
+        rows += it to valuePaint
     }
     rows += "DATE / TIME" to labelPaint
     rows += dateLine(stamp) to valuePaint

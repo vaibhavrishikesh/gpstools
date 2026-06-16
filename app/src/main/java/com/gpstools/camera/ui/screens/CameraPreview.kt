@@ -294,6 +294,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                             longitude = available?.fix?.longitude,
                             accuracyMeters = available?.fix?.accuracyMeters,
                             address = available?.address,
+                            // Weather (US-009): snapshot the loaded current weather, if any.
+                            weather = available?.weather?.describe(context),
                             projectName = latestFields.projectName.ifBlank { null },
                             note = latestFields.note.ifBlank { null },
                             // Snapshot the user's formatting prefs (US-014) so they're

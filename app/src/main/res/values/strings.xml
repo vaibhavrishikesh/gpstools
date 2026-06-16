@@ -62,6 +62,18 @@
     <string name="accuracy_poor">Poor</string>
     <string name="gps_low_accuracy_hint">Move to open sky for better GPS</string>
 
+    <!-- Weather on the stamp (US-009): current temp + condition via Open-Meteo. -->
+    <string name="weather_stamp">%1$d°C · %2$s</string>
+    <string name="weather_clear">Clear</string>
+    <string name="weather_cloudy">Cloudy</string>
+    <string name="weather_fog">Fog</string>
+    <string name="weather_drizzle">Drizzle</string>
+    <string name="weather_rain">Rain</string>
+    <string name="weather_snow">Snow</string>
+    <string name="weather_showers">Showers</string>
+    <string name="weather_thunderstorm">Thunderstorm</string>
+    <string name="weather_unknown">Weather</string>
+
     <!-- Stamp templates (US-009) -->
     <string name="template_classic">Classic</string>
     <string name="template_minimal">Minimal</string>

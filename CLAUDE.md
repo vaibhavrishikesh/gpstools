@@ -55,6 +55,18 @@ Stamp-affecting format prefs (US-014) live in `settings/AppSettings.kt`
 work because `StampData` CARRIES the format (defaulted), snapshotted from the store
 at shutter-press in `CameraPreview` — so a setting change affects the next capture.
 
+## Weather on the stamp (P2-US-009)
+`location/WeatherProvider.kt`: `fetchWeather(lat,lng): Weather?` hits Open-Meteo's
+free `current_weather` API (NO key) via `HttpURLConnection` on `Dispatchers.IO` with
+an 8s timeout, parses with `org.json`, and returns null on ANY failure (offline / HTTP
+/ parse) — same graceful-null contract as `OsmStaticMapProvider`. `Weather`
+(temperatureC + WMO weatherCode) maps the code to a coarse condition string and
+`describe(context)` renders "28°C · Clear". `LocationUiState.Available.weather`
+carries it; `rememberCurrentLocation` fetches it after the geocode. `StampData.weather`
+is a PRE-FORMATTED string snapshotted at shutter (`available.weather.describe(context)`)
+so PhotoStamp draws it with no Context — all 3 templates render it. `weather_*` strings
+in BOTH values + values-hi. `INTERNET` perm was already present (map tiles).
+
 ## Ads (US-015)
 AdMob lives in `ads/`: `Ads` (object) holds the configurable test ad unit ids +
 the SINGLE global `adsEnabled` Compose-state flag (persisted to SharedPreferences;
