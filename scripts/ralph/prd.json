@@ -126,7 +126,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify switching presets changes the saved stamp on emulator"
       ],
-      "priority": 10, "passes": false, "notes": ""
+      "priority": 10, "passes": true, "notes": "New LayoutPreset enum in settings/AppSettings.kt: 6 presets (MAP_ADDRESS_WEATHER default / MAP_LATLNG_WEATHER / MAP_ADDRESS / ADDRESS_WEATHER / ADDRESS / LATLNG), each a combo of boolean showMap/showAddress/showCoords/showWeather flags + labelRes. Persisted via AppSettingsStore.load/saveLayoutPreset (same SharedPreferences pattern as Coordinate/Time format). Snapshotted into StampData.layoutPreset at shutter in CameraPreview. PhotoStamp: drawStamp computes effectiveMap = if(showMap) mapThumbnail else null; each template (Classic/Minimal/Field Report) gates its address/coords/weather lines on the flags; project/site/note/logo + date-time always render. PhotoStorage also gates the (network) map fetch on showMap (composes with template.usesMap). Settings gained a 'Stamp layout' radio section (OptionRow per preset). New preset_* + settings_layout_preset(_summary) strings in both values + values-hi. Verified on emulator: picked Lat/Lng preset → Field Report capture burned ONLY PROJECT/SITE + COORDINATES (DMS ±5m) + DATE/TIME rows — no map, no ADDRESS, no WEATHER."
     },
     {
       "id": "P2-US-011",

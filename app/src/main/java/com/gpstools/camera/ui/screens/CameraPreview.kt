@@ -302,6 +302,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                             // burned into this capture's stamp.
                             coordinateFormat = AppSettingsStore.loadCoordinateFormat(context),
                             timeFormat = AppSettingsStore.loadTimeFormat(context),
+                            // Which location fields render (P2-US-010), snapshot at shutter.
+                            layoutPreset = AppSettingsStore.loadLayoutPreset(context),
                         )
                         val logoFile = customFieldsStore.logoFileOrNull()
                         // P2-US-005: premium templates (Field Report) are unlocked for now,

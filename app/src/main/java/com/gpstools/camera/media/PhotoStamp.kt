@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import com.gpstools.camera.settings.CoordinateFormat
+import com.gpstools.camera.settings.LayoutPreset
 import com.gpstools.camera.settings.TimeFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -37,6 +38,12 @@ data class StampData(
     val weather: String? = null,
     val coordinateFormat: CoordinateFormat = CoordinateFormat.DEFAULT,
     val timeFormat: TimeFormat = TimeFormat.DEFAULT,
+    /**
+     * Which location fields render on the stamp (P2-US-010). Snapshot from the user's
+     * Settings at capture time; gates the map / address / coordinates / weather lines
+     * in every template. Project/site, note, logo and date-time ignore it.
+     */
+    val layoutPreset: LayoutPreset = LayoutPreset.DEFAULT,
 )
 
 /** Reference width the stamp's type sizes are tuned against; everything scales from it. */
@@ -77,10 +84,12 @@ fun drawStamp(
         source.copy(Bitmap.Config.ARGB_8888, true)
     }
     val canvas = Canvas(result)
+    // The layout preset (P2-US-010) can suppress the map even for a map-drawing template.
+    val effectiveMap = if (stamp.layoutPreset.showMap) mapThumbnail else null
     when (template) {
-        StampTemplate.CLASSIC -> drawClassic(canvas, result, stamp, mapThumbnail)
+        StampTemplate.CLASSIC -> drawClassic(canvas, result, stamp, effectiveMap)
         StampTemplate.MINIMAL -> drawMinimal(canvas, result, stamp)
-        StampTemplate.FIELD_REPORT -> drawFieldReport(canvas, result, stamp, mapThumbnail)
+        StampTemplate.FIELD_REPORT -> drawFieldReport(canvas, result, stamp, effectiveMap)
     }
     if (logo != null) drawLogo(canvas, result, logo)
     return result
@@ -115,11 +124,15 @@ private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThu
     stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
         wrapText(name, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
     }
-    stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
-        wrapText(addr, bodyPaint, maxTextWidth).forEach { lines += it to bodyPaint }
+    if (stamp.layoutPreset.showAddress) {
+        stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
+            wrapText(addr, bodyPaint, maxTextWidth).forEach { lines += it to bodyPaint }
+        }
     }
-    coordinatesLine(stamp)?.let { lines += it to monoPaint }
-    stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
+    if (stamp.layoutPreset.showCoords) coordinatesLine(stamp)?.let { lines += it to monoPaint }
+    if (stamp.layoutPreset.showWeather) {
+        stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
+    }
     lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
@@ -165,8 +178,10 @@ private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData) {
     stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
         wrapText(name, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
     }
-    coordinatesLine(stamp)?.let { lines += it to monoPaint }
-    stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
+    if (stamp.layoutPreset.showCoords) coordinatesLine(stamp)?.let { lines += it to monoPaint }
+    if (stamp.layoutPreset.showWeather) {
+        stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
+    }
     lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
@@ -221,17 +236,23 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
         rows += "PROJECT / SITE" to labelPaint
         wrapText(name, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
     }
-    stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
-        rows += "ADDRESS" to labelPaint
-        wrapText(addr, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
+    if (stamp.layoutPreset.showAddress) {
+        stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
+            rows += "ADDRESS" to labelPaint
+            wrapText(addr, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
+        }
     }
-    coordinatesLine(stamp)?.let {
-        rows += "COORDINATES" to labelPaint
-        rows += it to monoPaint
+    if (stamp.layoutPreset.showCoords) {
+        coordinatesLine(stamp)?.let {
+            rows += "COORDINATES" to labelPaint
+            rows += it to monoPaint
+        }
     }
-    stamp.weather?.takeIf { it.isNotBlank() }?.let {
-        rows += "WEATHER" to labelPaint
-        rows += it to valuePaint
+    if (stamp.layoutPreset.showWeather) {
+        stamp.weather?.takeIf { it.isNotBlank() }?.let {
+            rows += "WEATHER" to labelPaint
+            rows += it to valuePaint
+        }
     }
     rows += "DATE / TIME" to labelPaint
     rows += dateLine(stamp) to valuePaint

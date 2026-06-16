@@ -69,6 +69,7 @@ fun capturePhoto(
                     // templates that render one; null (offline / no fix) just means the
                     // stamp falls back to text-only (US-008).
                     val mapThumbnail = if (template.usesMap &&
+                        stamp.layoutPreset.showMap &&
                         stamp.latitude != null && stamp.longitude != null
                     ) {
                         mapProvider.fetchMapThumbnail(stamp.latitude, stamp.longitude)

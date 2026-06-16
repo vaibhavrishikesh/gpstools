@@ -19,6 +19,15 @@
     <string name="settings_coord_format_summary">How latitude and longitude are written on the stamp.</string>
     <string name="settings_coord_decimal">Decimal degrees (12.971599, 77.594566)</string>
     <string name="settings_coord_dms">Degrees, minutes, seconds (12°58\'17.8\"N)</string>
+    <!-- Stamp layout presets (P2-US-010) -->
+    <string name="settings_layout_preset">Stamp layout</string>
+    <string name="settings_layout_preset_summary">Which location fields appear on the stamp.</string>
+    <string name="preset_map_address_weather">Map + Address + Weather</string>
+    <string name="preset_map_latlng_weather">Map + Lat/Lng + Weather</string>
+    <string name="preset_map_address">Map + Address</string>
+    <string name="preset_address_weather">Address + Weather</string>
+    <string name="preset_address">Address</string>
+    <string name="preset_latlng">Lat/Lng</string>
     <string name="settings_time_format">Time format</string>
     <string name="settings_time_format_summary">Clock used for the date/time on the stamp.</string>
     <string name="settings_time_24">24-hour (14:30:00)</string>

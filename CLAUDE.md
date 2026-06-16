@@ -51,9 +51,15 @@ in `res/values-hi/strings.xml` — every new UI string MUST be added to BOTH fil
 (`AppLanguage` + `LocaleStore` + `Context.wrapWithStoredLocale()`); `MainActivity`
 applies it in `attachBaseContext`, Settings persists + `recreate()`s to apply live.
 Stamp-affecting format prefs (US-014) live in `settings/AppSettings.kt`
-(`CoordinateFormat` decimal/DMS, `TimeFormat` 24/12h, `AppSettingsStore`); they
-work because `StampData` CARRIES the format (defaulted), snapshotted from the store
-at shutter-press in `CameraPreview` — so a setting change affects the next capture.
+(`CoordinateFormat` decimal/DMS, `TimeFormat` 24/12h, `LayoutPreset` (P2-US-010),
+`AppSettingsStore`); they work because `StampData` CARRIES the value (defaulted),
+snapshotted from the store at shutter-press in `CameraPreview` — so a setting change
+affects the next capture. `LayoutPreset` is the field-set chooser (6 presets =
+boolean `showMap/showAddress/showCoords/showWeather` combos, picked in a Settings
+radio group); `drawStamp`/`PhotoStorage` gate the map and each template gates its
+address/coords/weather lines off these flags. Custom fields (project/site, note,
+logo) + date-time ALWAYS render, independent of the preset. `showMap` composes with
+`StampTemplate.usesMap` (Minimal never draws a map regardless of preset).
 
 ## Weather on the stamp (P2-US-009)
 `location/WeatherProvider.kt`: `fetchWeather(lat,lng): Weather?` hits Open-Meteo's

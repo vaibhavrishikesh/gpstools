@@ -20,6 +20,15 @@
     <string name="settings_coord_format_summary">स्टैम्प पर अक्षांश और देशांतर कैसे लिखे जाते हैं।</string>
     <string name="settings_coord_decimal">दशमलव डिग्री (12.971599, 77.594566)</string>
     <string name="settings_coord_dms">डिग्री, मिनट, सेकंड (12°58\'17.8\"N)</string>
+    <!-- Stamp layout presets (P2-US-010) -->
+    <string name="settings_layout_preset">स्टैम्प लेआउट</string>
+    <string name="settings_layout_preset_summary">स्टैम्प पर कौन से स्थान फ़ील्ड दिखें।</string>
+    <string name="preset_map_address_weather">मानचित्र + पता + मौसम</string>
+    <string name="preset_map_latlng_weather">मानचित्र + अक्षां/देशां + मौसम</string>
+    <string name="preset_map_address">मानचित्र + पता</string>
+    <string name="preset_address_weather">पता + मौसम</string>
+    <string name="preset_address">पता</string>
+    <string name="preset_latlng">अक्षांश/देशांतर</string>
     <string name="settings_time_format">समय प्रारूप</string>
     <string name="settings_time_format_summary">स्टैम्प पर दिनांक/समय के लिए उपयोग की जाने वाली घड़ी।</string>
     <string name="settings_time_24">24-घंटे (14:30:00)</string>
