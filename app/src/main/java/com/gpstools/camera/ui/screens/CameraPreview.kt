@@ -366,6 +366,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                             altitudeMeters = available?.fix?.altitudeMeters,
                             projectName = latestFields.projectName.ifBlank { null },
                             note = latestFields.note.ifBlank { null },
+                            // Custom watermark (P2-US-017), drawn bottom-right.
+                            watermark = latestFields.watermark.ifBlank { null },
                             // Snapshot the user's formatting prefs (US-014) so they're
                             // burned into this capture's stamp.
                             coordinateFormat = AppSettingsStore.loadCoordinateFormat(context),
@@ -374,6 +376,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                             layoutPreset = AppSettingsStore.loadLayoutPreset(context),
                             // Which edge the stamp anchors to (P2-US-011), snapshot at shutter.
                             stampPosition = AppSettingsStore.loadStampPosition(context),
+                            // Whether the date/time line is burned in (P2-US-017).
+                            showDateTime = AppSettingsStore.loadShowDateTime(context),
                         )
                         val logoFile = customFieldsStore.logoFileOrNull()
                         // P2-US-005: premium templates (Field Report) are unlocked for now,
@@ -438,8 +442,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                     customFieldsStore.clearLogo()
                     customFields = customFieldsStore.load()
                 },
-                onSave = { projectName, note ->
-                    customFieldsStore.saveFields(projectName, note)
+                onSave = { projectName, note, watermark ->
+                    customFieldsStore.saveFields(projectName, note, watermark)
                     customFields = customFieldsStore.load()
                     showCustomFieldsSheet = false
                 },
@@ -572,11 +576,12 @@ private fun CustomFieldsSheet(
     fields: CustomFields,
     onPickLogo: () -> Unit,
     onRemoveLogo: () -> Unit,
-    onSave: (projectName: String, note: String) -> Unit,
+    onSave: (projectName: String, note: String, watermark: String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var projectName by rememberSaveable(fields.projectName) { mutableStateOf(fields.projectName) }
     var note by rememberSaveable(fields.note) { mutableStateOf(fields.note) }
+    var watermark by rememberSaveable(fields.watermark) { mutableStateOf(fields.watermark) }
     val sheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(
@@ -606,6 +611,14 @@ private fun CustomFieldsSheet(
                 value = note,
                 onValueChange = { note = it },
                 label = { Text(stringResource(R.string.custom_field_note)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = watermark,
+                onValueChange = { watermark = it },
+                label = { Text(stringResource(R.string.custom_field_watermark)) },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(16.dp))
@@ -648,7 +661,7 @@ private fun CustomFieldsSheet(
                     Text(stringResource(R.string.custom_fields_cancel))
                 }
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { onSave(projectName, note) }) {
+                Button(onClick = { onSave(projectName, note, watermark) }) {
                     Text(stringResource(R.string.custom_fields_save))
                 }
             }

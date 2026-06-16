@@ -69,6 +69,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     var layoutPreset by remember { mutableStateOf(AppSettingsStore.loadLayoutPreset(context)) }
     var stampPosition by remember { mutableStateOf(AppSettingsStore.loadStampPosition(context)) }
     var showGrid by remember { mutableStateOf(AppSettingsStore.loadShowGrid(context)) }
+    var showDateTime by remember { mutableStateOf(AppSettingsStore.loadShowDateTime(context)) }
 
     // One billing connection scoped to the whole screen, shared by the one-time
     // Premium section (US-016) and the Pro subscription section (US-018) so the
@@ -172,6 +173,22 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                     },
                 )
             }
+        }
+
+        // --- Date/time on stamp (P2-US-017) ---
+        SectionHeader(
+            title = stringResource(R.string.settings_datetime),
+            summary = stringResource(R.string.settings_datetime_summary),
+        )
+        OptionCard {
+            ToggleRow(
+                label = stringResource(R.string.settings_datetime_toggle),
+                checked = showDateTime,
+                onCheckedChange = {
+                    showDateTime = it
+                    AppSettingsStore.saveShowDateTime(context, it)
+                },
+            )
         }
 
         // --- Framing grid (P2-US-012) ---

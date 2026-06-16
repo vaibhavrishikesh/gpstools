@@ -122,6 +122,7 @@ object AppSettingsStore {
     private const val KEY_LAYOUT_PRESET = "layout_preset"
     private const val KEY_STAMP_POSITION = "stamp_position"
     private const val KEY_SHOW_GRID = "show_grid"
+    private const val KEY_SHOW_DATETIME = "show_datetime"
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -160,5 +161,18 @@ object AppSettingsStore {
 
     fun saveShowGrid(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_SHOW_GRID, enabled).apply()
+    }
+
+    /**
+     * Whether the date/time line is burned onto the stamp (P2-US-017). Defaults to
+     * true (the historical behaviour); snapshot into
+     * [com.gpstools.camera.media.StampData] at capture time so a setting change
+     * affects the next photo.
+     */
+    fun loadShowDateTime(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_SHOW_DATETIME, true)
+
+    fun saveShowDateTime(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SHOW_DATETIME, enabled).apply()
     }
 }

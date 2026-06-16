@@ -64,6 +64,18 @@ data class StampData(
      * same edge so the on-screen preview matches the burned photo.
      */
     val stampPosition: StampPosition = StampPosition.DEFAULT,
+    /**
+     * Whether the date/time line is rendered on the stamp (P2-US-017). Snapshot from
+     * the user's Settings at capture time. Defaults to true (the historical
+     * behaviour). When false the date/time line is omitted from every template.
+     */
+    val showDateTime: Boolean = true,
+    /**
+     * Custom watermark text (P2-US-017), e.g. a company name. When non-blank it's
+     * drawn bottom-right of the photo over a subtle backing, independent of the
+     * template — like the logo (which sits top-right).
+     */
+    val watermark: String? = null,
 )
 
 /** Reference width the stamp's type sizes are tuned against; everything scales from it. */
@@ -114,6 +126,8 @@ fun drawStamp(
         StampTemplate.FIELD_REPORT -> drawFieldReport(canvas, result, stamp, effectiveMap, top)
     }
     if (logo != null) drawLogo(canvas, result, logo)
+    // Custom watermark (P2-US-017) — bottom-right, independent of the template.
+    stamp.watermark?.takeIf { it.isNotBlank() }?.let { drawWatermark(canvas, result, it) }
     return result
 }
 
@@ -157,10 +171,13 @@ private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThu
     }
     // Altitude + compass facing (P2-US-013) — always rendered when present.
     stamp.altitudeFacing?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
-    lines += dateLine(stamp) to bodyPaint
+    // Date/time (P2-US-017) — only when the user kept it enabled.
+    if (stamp.showDateTime) lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
     }
+
+    if (lines.isEmpty() && mapThumbnail == null) return
 
     val textHeight = measureLines(lines, lineSpacing)
     val contentHeight = maxOf(textHeight, mapSize)
@@ -209,10 +226,14 @@ private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData, top: B
     }
     // Altitude + compass facing (P2-US-013) — always rendered when present.
     stamp.altitudeFacing?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
-    lines += dateLine(stamp) to bodyPaint
+    // Date/time (P2-US-017) — only when the user kept it enabled.
+    if (stamp.showDateTime) lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
     }
+
+    // Nothing to draw (e.g. Lat/Lng preset with no fix yet + date/time off).
+    if (lines.isEmpty()) return
 
     val textHeight = measureLines(lines, lineSpacing)
     val textWidth = lines.maxOf { (text, paint) -> paint.measureText(text) }
@@ -287,8 +308,11 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
         rows += "ALTITUDE / FACING" to labelPaint
         rows += it to valuePaint
     }
-    rows += "DATE / TIME" to labelPaint
-    rows += dateLine(stamp) to valuePaint
+    // Date/time (P2-US-017) — only when the user kept it enabled.
+    if (stamp.showDateTime) {
+        rows += "DATE / TIME" to labelPaint
+        rows += dateLine(stamp) to valuePaint
+    }
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         rows += "NOTE" to labelPaint
         wrapText(note, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
@@ -383,6 +407,49 @@ private fun drawLogo(canvas: Canvas, result: Bitmap, logo: Bitmap) {
         radius, radius, panelFill(120),
     )
     canvas.drawBitmap(logo, null, dst, Paint(Paint.FILTER_BITMAP_FLAG))
+}
+
+/**
+ * Draws the user's custom [watermark] text (P2-US-017) into the bottom-right corner
+ * over a subtle rounded backing so it stays visible regardless of the underlying
+ * photo. Independent of the template (the burned stamp panel may sit at the bottom
+ * too — the backing keeps the watermark legible over it).
+ */
+private fun drawWatermark(canvas: Canvas, result: Bitmap, watermark: String) {
+    val width = result.width
+    val height = result.height
+    val scale = width / REFERENCE_WIDTH
+    val pad = 16f * scale
+
+    val textPaint = paint(24f * scale, Typeface.SANS_SERIF, Typeface.BOLD, 3f * scale).apply {
+        color = Color.argb(235, 255, 255, 255)
+    }
+    // Trim to the widest the photo can show so it never runs off-screen.
+    val maxWidth = width - 2 * pad
+    val text = watermark.takeIf { textPaint.measureText(it) <= maxWidth }
+        ?: ellipsize(watermark, textPaint, maxWidth)
+
+    val textWidth = textPaint.measureText(text)
+    val textHeight = textPaint.descent() - textPaint.ascent()
+    val right = width - pad
+    val left = right - textWidth
+    val bottom = height - pad
+    val top = bottom - textHeight
+
+    val bgPad = 8f * scale
+    val radius = 8f * scale
+    canvas.drawRoundRect(
+        RectF(left - bgPad, top - bgPad, right + bgPad, bottom + bgPad),
+        radius, radius, panelFill(120),
+    )
+    canvas.drawText(text, left, top - textPaint.ascent(), textPaint)
+}
+
+/** Truncates [text] with an ellipsis so it fits [maxWidth] under [paint]. */
+private fun ellipsize(text: String, paint: Paint, maxWidth: Float): String {
+    var end = text.length
+    while (end > 0 && paint.measureText(text.substring(0, end) + "…") > maxWidth) end--
+    return if (end <= 0) "…" else text.substring(0, end) + "…"
 }
 
 private fun coordinatesLine(stamp: StampData): String? {

@@ -78,6 +78,15 @@ card is placed at the SAME edge in `CameraPreview` (top → `Alignment.TopCenter
 bottom → first child of the bottom controls Column, above the mode chips) so the
 on-screen preview matches the photo. The position is read once with `remember` at
 camera-tab entry (NavHost re-composes the tab on return, so a Settings change applies).
+Date/time on the stamp is toggleable (P2-US-017): `AppSettingsStore.load/saveShowDateTime`
+(default true) snapshots into `StampData.showDateTime` and gates the `dateLine` in ALL 3
+templates (`drawClassic`/`drawMinimal` early-return when their line list ends up empty —
+e.g. Lat/Lng preset, no fix, date/time off). The custom watermark (P2-US-017) is a
+`watermark` text field on `CustomFields` (persisted via `CustomFieldsStore.saveFields`,
+edited in `CustomFieldsSheet`) → `StampData.watermark`; `drawWatermark` draws it
+bottom-right over a rounded backing in `drawStamp`, independent of the template (mirrors
+the top-right `drawLogo`). Both ship `settings_datetime_*` / `custom_field_watermark`
+strings in BOTH values + values-hi.
 NON-stamp viewfinder prefs also live in `AppSettings.kt`: `loadShowGrid/saveShowGrid`
 (P2-US-012) — a plain boolean (not a `StampData` field; it only affects the live
 preview, never the burned photo). The Settings UI for a boolean uses `ToggleRow`

@@ -40,6 +40,9 @@
     <string name="settings_grid">Framing grid</string>
     <string name="settings_grid_summary">Show a 3×3 rule-of-thirds grid on the viewfinder.</string>
     <string name="settings_grid_toggle">Show grid</string>
+    <string name="settings_datetime">Date &amp; time stamp</string>
+    <string name="settings_datetime_summary">Burn the capture date and time onto the photo.</string>
+    <string name="settings_datetime_toggle">Show date &amp; time</string>
     <string name="viewfinder_altitude">Altitude: %1$dm</string>
     <string name="stamp_altitude">Altitude %1$dm</string>
     <string name="compass_facing">Facing %1$s</string>
@@ -121,6 +124,7 @@
     <string name="custom_fields_title">Stamp details</string>
     <string name="custom_field_project">Project / site name</string>
     <string name="custom_field_note">Note</string>
+    <string name="custom_field_watermark">Watermark (company name)</string>
     <string name="custom_field_logo">Logo</string>
     <string name="custom_field_add_logo">Add logo</string>
     <string name="custom_field_change_logo">Change logo</string>

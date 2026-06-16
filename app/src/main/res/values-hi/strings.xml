@@ -41,6 +41,9 @@
     <string name="settings_grid">फ़्रेमिंग ग्रिड</string>
     <string name="settings_grid_summary">व्यूफ़ाइंडर पर 3×3 ग्रिड दिखाएँ।</string>
     <string name="settings_grid_toggle">ग्रिड दिखाएँ</string>
+    <string name="settings_datetime">दिनांक और समय स्टैम्प</string>
+    <string name="settings_datetime_summary">फ़ोटो पर कैप्चर की तारीख और समय अंकित करें।</string>
+    <string name="settings_datetime_toggle">दिनांक और समय दिखाएँ</string>
     <string name="viewfinder_altitude">ऊँचाई: %1$dमी</string>
     <string name="stamp_altitude">ऊँचाई %1$dमी</string>
     <string name="compass_facing">%1$s की ओर</string>
@@ -121,6 +124,7 @@
     <string name="custom_fields_title">स्टैम्प विवरण</string>
     <string name="custom_field_project">प्रोजेक्ट / साइट नाम</string>
     <string name="custom_field_note">टिप्पणी</string>
+    <string name="custom_field_watermark">वॉटरमार्क (कंपनी का नाम)</string>
     <string name="custom_field_logo">लोगो</string>
     <string name="custom_field_add_logo">लोगो जोड़ें</string>
     <string name="custom_field_change_logo">लोगो बदलें</string>
