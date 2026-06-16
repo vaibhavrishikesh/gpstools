@@ -29,10 +29,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lens
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -40,10 +40,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -138,7 +140,7 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     // across captures + launches via SharedPreferences + an app-storage logo file.
     val customFieldsStore = remember { CustomFieldsStore(context) }
     var customFields by remember { mutableStateOf(customFieldsStore.load()) }
-    var showCustomFieldsDialog by remember { mutableStateOf(false) }
+    var showCustomFieldsSheet by remember { mutableStateOf(false) }
 
     // Logo picker — copies the chosen image into app storage so it persists.
     val logoPicker = rememberLauncherForActivityResult(
@@ -208,6 +210,9 @@ fun CameraPreview(modifier: Modifier = Modifier) {
 
         LocationInfoOverlay(
             state = locationState,
+            // US-003: the "Edit" affordance now lives ON the GPS card and opens the
+            // optional stamp-details bottom sheet (never blocks capture).
+            onEditClick = { showCustomFieldsSheet = true },
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .statusBarsPadding()
@@ -313,22 +318,6 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             }
         }
 
-        // Edit custom stamp fields (US-010) — top-right, clear of the location
-        // overlay and the bottom controls.
-        IconButton(
-            onClick = { showCustomFieldsDialog = true },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .statusBarsPadding()
-                .padding(end = 12.dp, top = 12.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Edit,
-                contentDescription = stringResource(R.string.custom_fields_open),
-                tint = Color.White,
-            )
-        }
-
         // Front/back toggle, sitting to the right of the shutter. Only shown
         // when the device actually has both lenses.
         if (hasFront && hasBack) {
@@ -353,8 +342,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
             }
         }
 
-        if (showCustomFieldsDialog) {
-            CustomFieldsDialog(
+        if (showCustomFieldsSheet) {
+            CustomFieldsSheet(
                 fields = customFields,
                 onPickLogo = {
                     logoPicker.launch(
@@ -368,22 +357,25 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 onSave = { projectName, note ->
                     customFieldsStore.saveFields(projectName, note)
                     customFields = customFieldsStore.load()
-                    showCustomFieldsDialog = false
+                    showCustomFieldsSheet = false
                 },
-                onDismiss = { showCustomFieldsDialog = false },
+                onDismiss = { showCustomFieldsSheet = false },
             )
         }
     }
 }
 
 /**
- * Dialog for editing the custom stamp fields (US-010): project/site name, a
- * free-text note, and an optional logo picked from the gallery. The project name
- * and note are committed on Save; logo add/remove apply immediately (so the
- * "Logo added" state reflects the current [fields]).
+ * Bottom sheet for editing the optional custom stamp fields (US-003 / US-010):
+ * project/site name, a free-text note, and an optional logo picked from the
+ * gallery. Replaces the old blocking AlertDialog — it slides up from the bottom,
+ * is dismissible, and NEVER blocks capture (the shutter stays live behind it).
+ * The project name and note are committed on Save; logo add/remove apply
+ * immediately (so the "Logo added" state reflects the current [fields]).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CustomFieldsDialog(
+private fun CustomFieldsSheet(
     fields: CustomFields,
     onPickLogo: () -> Unit,
     onRemoveLogo: () -> Unit,
@@ -392,69 +384,83 @@ private fun CustomFieldsDialog(
 ) {
     var projectName by rememberSaveable(fields.projectName) { mutableStateOf(fields.projectName) }
     var note by rememberSaveable(fields.note) { mutableStateOf(fields.note) }
+    val sheetState = rememberModalBottomSheetState()
 
-    AlertDialog(
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.custom_fields_title)) },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = projectName,
-                    onValueChange = { projectName = it },
-                    label = { Text(stringResource(R.string.custom_field_project)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = note,
-                    onValueChange = { note = it },
-                    label = { Text(stringResource(R.string.custom_field_note)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.custom_field_logo),
-                    style = MaterialTheme.typography.labelLarge,
-                )
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedButton(onClick = onPickLogo) {
-                        Text(
-                            if (fields.hasLogo) {
-                                stringResource(R.string.custom_field_change_logo)
-                            } else {
-                                stringResource(R.string.custom_field_add_logo)
-                            },
-                        )
-                    }
-                    if (fields.hasLogo) {
-                        Spacer(Modifier.width(8.dp))
-                        TextButton(onClick = onRemoveLogo) {
-                            Text(stringResource(R.string.custom_field_remove_logo))
-                        }
-                    }
-                }
-                if (fields.hasLogo) {
-                    Spacer(Modifier.height(4.dp))
+        sheetState = sheetState,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.custom_fields_title),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Spacer(Modifier.height(16.dp))
+            OutlinedTextField(
+                value = projectName,
+                onValueChange = { projectName = it },
+                label = { Text(stringResource(R.string.custom_field_project)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = note,
+                onValueChange = { note = it },
+                label = { Text(stringResource(R.string.custom_field_note)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.custom_field_logo),
+                style = MaterialTheme.typography.labelLarge,
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedButton(onClick = onPickLogo) {
                     Text(
-                        text = stringResource(R.string.custom_field_logo_added),
-                        style = MaterialTheme.typography.bodySmall,
+                        if (fields.hasLogo) {
+                            stringResource(R.string.custom_field_change_logo)
+                        } else {
+                            stringResource(R.string.custom_field_add_logo)
+                        },
                     )
                 }
+                if (fields.hasLogo) {
+                    Spacer(Modifier.width(8.dp))
+                    TextButton(onClick = onRemoveLogo) {
+                        Text(stringResource(R.string.custom_field_remove_logo))
+                    }
+                }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { onSave(projectName, note) }) {
-                Text(stringResource(R.string.custom_fields_save))
+            if (fields.hasLogo) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.custom_field_logo_added),
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.custom_fields_cancel))
+            Spacer(Modifier.height(20.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.custom_fields_cancel))
+                }
+                Spacer(Modifier.width(8.dp))
+                Button(onClick = { onSave(projectName, note) }) {
+                    Text(stringResource(R.string.custom_fields_save))
+                }
             }
-        },
-    )
+        }
+    }
 }
 
 /**

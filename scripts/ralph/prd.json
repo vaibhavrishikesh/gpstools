@@ -39,7 +39,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify bottom sheet open/save/persist on emulator"
       ],
-      "priority": 3, "passes": false, "notes": ""
+      "priority": 3, "passes": true, "notes": "Edit affordance (pencil icon + 'Edit'/संपादित करें text) now lives ON the GPS card (LocationInfoOverlay gained an optional onEditClick param + EditAffordance composable); removed the old free-floating top-right IconButton. CustomFieldsDialog (AlertDialog) converted to CustomFieldsSheet (ModalBottomSheet, @OptIn ExperimentalMaterial3Api) — slides up, dismissible, never blocks capture; project/note committed on Save (gold Button), logo add/remove immediate. Persists via existing CustomFieldsStore. Verified on emulator: tapped Edit on card → sheet opened pre-filled with persisted 'Site-42-Bridg' → Save dismissed back to live camera."
     },
     {
       "id": "P2-US-004",

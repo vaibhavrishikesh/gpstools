@@ -62,6 +62,7 @@
 
     <!-- Custom stamp fields (US-010) -->
     <string name="custom_fields_open">स्टैम्प विवरण संपादित करें</string>
+    <string name="custom_fields_edit">संपादित करें</string>
     <string name="custom_fields_title">स्टैम्प विवरण</string>
     <string name="custom_field_project">प्रोजेक्ट / साइट नाम</string>
     <string name="custom_field_note">टिप्पणी</string>

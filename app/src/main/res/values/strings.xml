@@ -61,6 +61,7 @@
 
     <!-- Custom stamp fields (US-010) -->
     <string name="custom_fields_open">Edit stamp details</string>
+    <string name="custom_fields_edit">Edit</string>
     <string name="custom_fields_title">Stamp details</string>
     <string name="custom_field_project">Project / site name</string>
     <string name="custom_field_note">Note</string>
