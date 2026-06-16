@@ -362,6 +362,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                                 available?.fix?.altitudeMeters,
                                 compassBearing,
                             ),
+                            // Raw altitude for machine-readable EXIF GPS (P2-US-014).
+                            altitudeMeters = available?.fix?.altitudeMeters,
                             projectName = latestFields.projectName.ifBlank { null },
                             note = latestFields.note.ifBlank { null },
                             // Snapshot the user's formatting prefs (US-014) so they're

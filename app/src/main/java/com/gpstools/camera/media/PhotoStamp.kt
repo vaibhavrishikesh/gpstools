@@ -44,6 +44,12 @@ data class StampData(
      * preset), like the project/note/date-time fields.
      */
     val altitudeFacing: String? = null,
+    /**
+     * Raw GPS altitude in metres (P2-US-014); null when the fix has none. Carried
+     * separately from the pre-formatted [altitudeFacing] line so it can be written as
+     * machine-readable EXIF GPS metadata into the saved JPEG.
+     */
+    val altitudeMeters: Double? = null,
     val coordinateFormat: CoordinateFormat = CoordinateFormat.DEFAULT,
     val timeFormat: TimeFormat = TimeFormat.DEFAULT,
     /**

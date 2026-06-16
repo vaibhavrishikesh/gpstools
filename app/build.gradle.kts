@@ -73,5 +73,9 @@ dependencies {
     implementation(libs.guava)
     // Google Play Billing (US-016) — one-time IAP to remove ads + unlock premium.
     implementation(libs.billing.ktx)
+    // EXIF GPS metadata (US-014) — write machine-readable lat/long/altitude/timestamp
+    // into the saved JPEG. The platform android.media.ExifInterface can't write to a
+    // FileDescriptor pre-API24-reliably; the androidx backport does and adds GPS helpers.
+    implementation(libs.androidx.exifinterface)
     debugImplementation(libs.androidx.ui.tooling)
 }

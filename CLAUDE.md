@@ -98,6 +98,22 @@ after weather, Field Report as an `ALTITUDE / FACING` labelled row. It is ALWAYS
 when present (like project/note/date-time), NOT gated by the `LayoutPreset`. Hindi cardinal
 abbrevs (उ/उपू/पू/…) live in `values-hi`.
 
+## EXIF GPS metadata (P2-US-014)
+The capture pipeline re-encodes the JPEG (decode → stamp → encode), so the original
+frame's EXIF is lost — we write fresh, machine-readable EXIF GPS onto the SAVED file.
+Dependency `androidx.exifinterface:exifinterface` (the platform `android.media.ExifInterface`
+can't reliably write to a FileDescriptor; the androidx backport does + adds GPS helpers).
+`StampData.altitudeMeters` carries the RAW altitude (separate from the pre-formatted
+`altitudeFacing` line) for EXIF. `PhotoStorage.writeGpsExif(context, uri, stamp)` opens the
+MediaStore uri with a `"rw"` FileDescriptor → `ExifInterface(fd)` → `setLatLong` +
+`setAltitude` + `TAG_GPS_DATESTAMP`/`TAG_GPS_TIMESTAMP` (UTC; timestamp is the rational
+`h/1,m/1,s/1`, NOT "HH:mm:ss") when a fix exists, plus `TAG_DATETIME`/`_ORIGINAL`/
+`_DIGITIZED` (LOCAL, "yyyy:MM:dd HH:mm:ss") always. Called in `saveBitmap` AFTER `compress`
+and BEFORE clearing `IS_PENDING` on Q+ (entry still writable), wrapped in `runCatching` so
+an EXIF write failure never discards the photo (the burned-in stamp is still the primary
+proof). Verify after `adb pull` with `python3` + Pillow (`Image._getexif()` +
+`PIL.ExifTags.GPSTAGS`); set emulator altitude via the 3rd arg of `adb emu geo fix`.
+
 ## Weather on the stamp (P2-US-009)
 `location/WeatherProvider.kt`: `fetchWeather(lat,lng): Weather?` hits Open-Meteo's
 free `current_weather` API (NO key) via `HttpURLConnection` on `Dispatchers.IO` with
