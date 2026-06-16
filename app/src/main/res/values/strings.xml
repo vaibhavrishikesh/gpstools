@@ -80,6 +80,9 @@
     <string name="camera_flash_on">On</string>
     <string name="camera_flash_auto">Auto</string>
     <string name="camera_unavailable">Camera unavailable on this device</string>
+    <!-- Pro gestures (P2-US-018): long-press self-timer + swipe-left to last photo -->
+    <string name="camera_timer_countdown">Self-timer: %1$d</string>
+    <string name="camera_no_photos">No photos yet</string>
 
     <!-- Photo capture (US-006) -->
     <string name="capture_saved">Photo saved</string>

@@ -91,6 +91,29 @@ fun deleteCapturedPhoto(context: Context, uri: Uri): Boolean = try {
     false
 }
 
+/**
+ * Opens the most recently captured photo in a full-screen system image viewer
+ * (P2-US-018 swipe-left "quick look" gesture). Queries newest-first off the caller's
+ * thread (touches the content resolver — call from a background dispatcher), then fires
+ * an ACTION_VIEW chooser. Returns false when there are no captures yet (caller can
+ * toast) or the launch fails — never throws.
+ */
+fun openLastPhoto(context: Context): Boolean {
+    val latest = queryCapturedPhotos(context).firstOrNull() ?: return false
+    return try {
+        val view = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(latest.uri, "image/jpeg")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(view)
+        true
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to open last photo", e)
+        false
+    }
+}
+
 /** Fires a system share sheet for the given photo (read permission granted to the target). */
 fun sharePhoto(context: Context, photo: CapturedPhoto, chooserTitle: String) {
     val send = Intent(Intent.ACTION_SEND).apply {

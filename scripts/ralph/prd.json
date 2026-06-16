@@ -222,7 +222,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify both gestures on emulator"
       ],
-      "priority": 18, "passes": false, "notes": ""
+      "priority": 18, "passes": true, "notes": "Pro gestures. Shutter capture body extracted into a local captureNow() fun in CameraPreview (shared by tap + timer). Shutter is now a NON-clickable Surface (container overload — keeps ring/elevation/border) with Modifier.pointerInput{detectTapGestures(onTap=captureNow, onLongPress=startSelfTimer)}: a TAP captures immediately (one-tap US-002 preserved), a LONG-PRESS starts a 3-sec self-timer. startSelfTimer = scope.launch loop (countdown=3..1, delay(1000)) then captureNow(); countdown (nullable Int state) renders a large centered 96sp white number over the preview while ticking. Both captureNow/startSelfTimer early-return if isCapturing||countdown!=null. Swipe-left: the AndroidView preview has pointerInput{detectHorizontalDragGestures} accumulating drag → on onDragEnd past ~-80px calls openLastPhoto(context) (new fn in PhotoGallery.kt: queries newest-first off Dispatchers.IO, fires ACTION_VIEW image chooser; false→toast camera_no_photos when none). New camera_timer_countdown/camera_no_photos strings (both values+values-hi). Verified on emulator-5554: long-press shutter showed the centered '2' countdown then captured (GPS_20260616_141516537.jpg); swipe-left opened the last FIELD REPORT capture in the Google Photos full-screen viewer; single-tap still captures (GPS_20260616_141617680.jpg)."
     }
   ]
 }

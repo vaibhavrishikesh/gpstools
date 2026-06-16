@@ -101,6 +101,22 @@ line when the fix has one — 12sp white with a `Shadow`). Altitude rides on
 controls Column so it never overlaps the variable-height controls. The HUD's altitude
 line is now the combined altitude+facing line (P2-US-013, below).
 
+## Pro gestures (P2-US-018)
+The shutter's capture body is extracted into a local `captureNow()` fun in `CameraPreview`
+(shared by every trigger). The shutter is a NON-clickable `Surface` (container overload,
+keeps the ring/elevation/border) with a `Modifier.pointerInput { detectTapGestures(onTap =
+captureNow, onLongPress = startSelfTimer) }` — so a **tap** captures immediately (one-tap,
+US-002 preserved) and a **long-press** starts a 3-second self-timer. `startSelfTimer` runs a
+`scope.launch` loop (`countdown = 3..1`, `delay(1000)`) then `captureNow()`; `countdown`
+(nullable Int state) renders a large centered number over the preview while it ticks.
+Both `captureNow`/`startSelfTimer` early-return if `isCapturing || countdown != null`.
+**Swipe left** on the viewfinder opens the last capture: the `AndroidView` preview has a
+`pointerInput { detectHorizontalDragGestures(...) }` that accumulates the drag and, on
+`onDragEnd` past ~-80px, calls `openLastPhoto(context)` (in `PhotoGallery.kt` — queries
+newest-first off `Dispatchers.IO`, fires an `ACTION_VIEW` image chooser; returns false →
+toast `camera_no_photos` when none exist). `camera_timer_countdown`/`camera_no_photos`
+strings ship in BOTH values + values-hi.
+
 ## Altitude + compass facing (P2-US-013)
 `location/CompassProvider.kt`: `rememberCompassBearing(): State<Float?>` subscribes to the
 device `TYPE_ROTATION_VECTOR` sensor (via `DisposableEffect`;

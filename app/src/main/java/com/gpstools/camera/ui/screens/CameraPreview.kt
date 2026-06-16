@@ -13,6 +13,8 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,6 +61,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -67,6 +70,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -92,11 +96,15 @@ import com.gpstools.camera.media.StampTemplate
 import com.gpstools.camera.media.StampTemplateStore
 import com.gpstools.camera.media.capturePhoto
 import com.gpstools.camera.media.label
+import com.gpstools.camera.media.openLastPhoto
 import com.gpstools.camera.settings.AppSettingsStore
 import com.gpstools.camera.settings.StampPosition
 import com.gpstools.camera.ui.theme.BrandGold
 import com.gpstools.camera.ui.theme.BrandNavy
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -241,10 +249,120 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     // Pre-resolved so it can be applied via semantics on the non-composable shutter.
     val shutterContentDescription = stringResource(R.string.camera_shutter)
 
+    // Pro gestures (P2-US-018): the self-timer countdown + the swipe-left quick-look
+    // both need a coroutine scope. [countdown] is null when idle, or the visible
+    // 3-2-1 number while the long-press self-timer runs.
+    val scope = rememberCoroutineScope()
+    var countdown by remember { mutableStateOf<Int?>(null) }
+    val noPhotosMessage = stringResource(R.string.camera_no_photos)
+
+    // The actual capture, shared by a normal shutter tap and the self-timer (P2-US-018).
+    // P2-US-002 (one-tap capture): a tap fires this IMMEDIATELY; no "Stamp details" modal
+    // ever blocks the shutter. The stamp auto-fills location/address/date-time, and the
+    // last-used project/site name + note (set once via the optional Edit affordance) apply
+    // silently below.
+    fun captureNow() {
+        if (isCapturing || countdown != null) return
+        isCapturing = true
+        // Snapshot the current location read at shutter-press time so it
+        // gets burned into the photo's stamp (US-007). Location fields are
+        // null until a fix arrives; the date/time is always stamped.
+        val available = locationState as? LocationUiState.Available
+        // Re-read the persisted custom fields at shutter time (cheap
+        // SharedPreferences load) so the LAST-USED project/site name + note
+        // always apply silently — even if they changed since composition.
+        val latestFields = customFieldsStore.load()
+        val stamp = StampData(
+            timestamp = Date(),
+            latitude = available?.fix?.latitude,
+            longitude = available?.fix?.longitude,
+            accuracyMeters = available?.fix?.accuracyMeters,
+            address = available?.address,
+            // Weather (US-009): snapshot the loaded current weather, if any.
+            weather = available?.weather?.describe(context),
+            // Altitude + compass facing (P2-US-013): snapshot the current
+            // fix altitude + compass bearing into one pre-formatted line.
+            altitudeFacing = formatAltitudeFacing(
+                context,
+                available?.fix?.altitudeMeters,
+                compassBearing,
+            ),
+            // Raw altitude for machine-readable EXIF GPS (P2-US-014).
+            altitudeMeters = available?.fix?.altitudeMeters,
+            projectName = latestFields.projectName.ifBlank { null },
+            note = latestFields.note.ifBlank { null },
+            // Custom watermark (P2-US-017), drawn bottom-right.
+            watermark = latestFields.watermark.ifBlank { null },
+            // Snapshot the user's formatting prefs (US-014) so they're
+            // burned into this capture's stamp.
+            coordinateFormat = AppSettingsStore.loadCoordinateFormat(context),
+            timeFormat = AppSettingsStore.loadTimeFormat(context),
+            // Which location fields render (P2-US-010), snapshot at shutter.
+            layoutPreset = AppSettingsStore.loadLayoutPreset(context),
+            // Which edge the stamp anchors to (P2-US-011), snapshot at shutter.
+            stampPosition = AppSettingsStore.loadStampPosition(context),
+            // Whether the date/time line is burned in (P2-US-017).
+            showDateTime = AppSettingsStore.loadShowDateTime(context),
+        )
+        val logoFile = customFieldsStore.logoFileOrNull()
+        // P2-US-005: premium templates (Field Report) are unlocked for now,
+        // so the selected template always renders as-is.
+        capturePhoto(context, imageCapture, stamp, template, logoFile) { uri ->
+            isCapturing = false
+            val msg = if (uri != null) {
+                context.getString(R.string.capture_saved)
+            } else {
+                context.getString(R.string.capture_failed)
+            }
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            // Photo is already saved — only now (post-save) maybe show an
+            // interstitial, so an ad can never block or delay a capture.
+            if (uri != null) {
+                interstitialAds.onCaptureCompleted(context.findActivity())
+            }
+        }
+    }
+
+    // Long-press the shutter (P2-US-018) → a 3-second self-timer that counts 3-2-1
+    // on screen, then fires the capture. Ignored if a capture/timer is already running.
+    fun startSelfTimer() {
+        if (isCapturing || countdown != null) return
+        scope.launch {
+            for (n in 3 downTo 1) {
+                countdown = n
+                delay(1000L)
+            }
+            countdown = null
+            captureNow()
+        }
+    }
+
+    // Swipe left on the viewfinder (P2-US-018) → quick-look the most recent capture in a
+    // full-screen system viewer. Queries off the main thread; toasts when none exist yet.
+    fun openLastPhotoQuickLook() {
+        scope.launch {
+            val opened = withContext(Dispatchers.IO) { openLastPhoto(context) }
+            if (!opened) {
+                Toast.makeText(context, noPhotosMessage, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
             factory = { previewView },
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                // Swipe left → open the last captured photo (P2-US-018). A horizontal
+                // drag that ends more than ~80px to the left triggers the quick-look;
+                // vertical/short drags are ignored so they don't interfere with controls.
+                .pointerInput(Unit) {
+                    var totalDrag = 0f
+                    detectHorizontalDragGestures(
+                        onDragStart = { totalDrag = 0f },
+                        onDragEnd = { if (totalDrag < -80f) openLastPhotoQuickLook() },
+                    ) { _, dragAmount -> totalDrag += dragAmount }
+                },
         )
 
         // 3×3 rule-of-thirds framing grid (P2-US-012) — 30% white lines, opt-in.
@@ -331,73 +449,10 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 )
 
                 // Shutter — 72dp white fill, 4dp grey ring, 8dp elevation (US-006).
-                // P2-US-002 (one-tap capture): a tap fires capture IMMEDIATELY; no
-                // "Stamp details" modal ever blocks the shutter. The stamp auto-fills
-                // location/address/date-time, and the last-used project/site name + note
-                // (set once via the optional Edit affordance) apply silently below.
+                // Tap = immediate capture (P2-US-002 one-tap); long-press = a 3-second
+                // self-timer with an on-screen countdown (P2-US-018). The capture body
+                // lives in [captureNow] so both the tap and the timer share it.
                 Surface(
-                    onClick = {
-                        if (isCapturing) return@Surface
-                        isCapturing = true
-                        // Snapshot the current location read at shutter-press time so it
-                        // gets burned into the photo's stamp (US-007). Location fields are
-                        // null until a fix arrives; the date/time is always stamped.
-                        val available = locationState as? LocationUiState.Available
-                        // Re-read the persisted custom fields at shutter time (cheap
-                        // SharedPreferences load) so the LAST-USED project/site name + note
-                        // always apply silently — even if they changed since composition.
-                        val latestFields = customFieldsStore.load()
-                        val stamp = StampData(
-                            timestamp = Date(),
-                            latitude = available?.fix?.latitude,
-                            longitude = available?.fix?.longitude,
-                            accuracyMeters = available?.fix?.accuracyMeters,
-                            address = available?.address,
-                            // Weather (US-009): snapshot the loaded current weather, if any.
-                            weather = available?.weather?.describe(context),
-                            // Altitude + compass facing (P2-US-013): snapshot the current
-                            // fix altitude + compass bearing into one pre-formatted line.
-                            altitudeFacing = formatAltitudeFacing(
-                                context,
-                                available?.fix?.altitudeMeters,
-                                compassBearing,
-                            ),
-                            // Raw altitude for machine-readable EXIF GPS (P2-US-014).
-                            altitudeMeters = available?.fix?.altitudeMeters,
-                            projectName = latestFields.projectName.ifBlank { null },
-                            note = latestFields.note.ifBlank { null },
-                            // Custom watermark (P2-US-017), drawn bottom-right.
-                            watermark = latestFields.watermark.ifBlank { null },
-                            // Snapshot the user's formatting prefs (US-014) so they're
-                            // burned into this capture's stamp.
-                            coordinateFormat = AppSettingsStore.loadCoordinateFormat(context),
-                            timeFormat = AppSettingsStore.loadTimeFormat(context),
-                            // Which location fields render (P2-US-010), snapshot at shutter.
-                            layoutPreset = AppSettingsStore.loadLayoutPreset(context),
-                            // Which edge the stamp anchors to (P2-US-011), snapshot at shutter.
-                            stampPosition = AppSettingsStore.loadStampPosition(context),
-                            // Whether the date/time line is burned in (P2-US-017).
-                            showDateTime = AppSettingsStore.loadShowDateTime(context),
-                        )
-                        val logoFile = customFieldsStore.logoFileOrNull()
-                        // P2-US-005: premium templates (Field Report) are unlocked for now,
-                        // so the selected template always renders as-is.
-                        capturePhoto(context, imageCapture, stamp, template, logoFile) { uri ->
-                            isCapturing = false
-                            val msg = if (uri != null) {
-                                context.getString(R.string.capture_saved)
-                            } else {
-                                context.getString(R.string.capture_failed)
-                            }
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            // Photo is already saved — only now (post-save) maybe show an
-                            // interstitial, so an ad can never block or delay a capture.
-                            if (uri != null) {
-                                interstitialAds.onCaptureCompleted(context.findActivity())
-                            }
-                        }
-                    },
-                    enabled = !isCapturing,
                     shape = CircleShape,
                     color = Color.White,
                     border = BorderStroke(4.dp, Color.LightGray),
@@ -406,6 +461,12 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                         .size(72.dp)
                         .semantics {
                             contentDescription = shutterContentDescription
+                        }
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = { captureNow() },
+                                onLongPress = { startSelfTimer() },
+                            )
                         },
                     content = {},
                 )
@@ -427,6 +488,25 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 } else {
                     Spacer(Modifier.size(48.dp))
                 }
+            }
+        }
+
+        // Self-timer countdown (P2-US-018): a large 3-2-1 number centered over the
+        // preview while the long-press timer runs, then it captures.
+        countdown?.let { n ->
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = n.toString(),
+                    style = TextStyle(
+                        color = Color.White,
+                        fontSize = 96.sp,
+                        fontWeight = FontWeight.Bold,
+                        shadow = Shadow(color = Color.Black, offset = Offset(0f, 2f), blurRadius = 8f),
+                    ),
+                )
             }
         }
 
