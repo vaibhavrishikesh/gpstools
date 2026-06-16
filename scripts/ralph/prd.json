@@ -210,7 +210,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify toggle + watermark on saved image on emulator"
       ],
-      "priority": 17, "passes": false, "notes": ""
+      "priority": 17, "passes": true, "notes": "Date/time stamp toggle + custom watermark. AppSettingsStore.load/saveShowDateTime (KEY_SHOW_DATETIME, default true) snapshotted into StampData.showDateTime; drawClassic/drawMinimal/drawFieldReport gate the dateLine on it (Classic/Minimal early-return if their line list ends empty so an empty panel/maxOf crash can't happen). Settings gained a 'Date & time stamp' ToggleRow (Switch) before the Framing grid section. Custom watermark = a new 'watermark' text field on CustomFields (persisted via CustomFieldsStore.saveFields, edited in the CustomFieldsSheet between Note and Logo) → StampData.watermark, snapshotted at shutter; new drawWatermark() in PhotoStamp draws it bottom-right over a rounded backing (ellipsized to fit), independent of the template (mirrors top-right drawLogo). New strings settings_datetime(_summary/_toggle) + custom_field_watermark in BOTH values + values-hi. Verified on emulator-5554 (Field Report, TOP, LATLNG): with date/time ON the stamp burned a DATE/TIME row + 'ACME Surveys Pvt Ltd' watermark bottom-right; toggling date/time OFF (via show_datetime=false) re-captured the SAME stamp with NO DATE/TIME row, watermark still bottom-right."
     },
     {
       "id": "P2-US-018",
