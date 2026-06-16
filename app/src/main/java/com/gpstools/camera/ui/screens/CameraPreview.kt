@@ -10,6 +10,8 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -40,6 +42,7 @@ import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
@@ -66,6 +69,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -256,6 +260,12 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     var countdown by remember { mutableStateOf<Int?>(null) }
     val noPhotosMessage = stringResource(R.string.camera_no_photos)
 
+    // Capture feedback: a brief full-screen white flash on shutter-press (the
+    // universal "photo taken" cue) plus a progress ring on the shutter while the
+    // save runs. Without this the static white shutter gave no sign anything
+    // happened — users tapped repeatedly thinking it hadn't fired.
+    val flashAlpha = remember { Animatable(0f) }
+
     // The actual capture, shared by a normal shutter tap and the self-timer (P2-US-018).
     // P2-US-002 (one-tap capture): a tap fires this IMMEDIATELY; no "Stamp details" modal
     // ever blocks the shutter. The stamp auto-fills location/address/date-time, and the
@@ -264,6 +274,12 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     fun captureNow() {
         if (isCapturing || countdown != null) return
         isCapturing = true
+        // Fire the shutter flash immediately on tap so the press is acknowledged
+        // even before the (slower) save completes.
+        scope.launch {
+            flashAlpha.snapTo(0.8f)
+            flashAlpha.animateTo(0f, animationSpec = tween(durationMillis = 320))
+        }
         // Snapshot the current location read at shutter-press time so it
         // gets burned into the photo's stamp (US-007). Location fields are
         // null until a fix arrives; the date/time is always stamped.
@@ -468,7 +484,22 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                                 onLongPress = { startSelfTimer() },
                             )
                         },
-                    content = {},
+                    content = {
+                        // While the photo is being saved, show a navy progress ring
+                        // inside the shutter so the tap is clearly acknowledged.
+                        if (isCapturing) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(32.dp),
+                                    color = BrandNavy,
+                                    strokeWidth = 3.dp,
+                                )
+                            }
+                        }
+                    },
                 )
 
                 // Flip lens — only when both lenses exist, else a spacer to keep
@@ -508,6 +539,17 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                     ),
                 )
             }
+        }
+
+        // Full-screen white shutter flash (capture feedback). Sits above the
+        // preview/controls but below the bottom sheet; only drawn while fading.
+        if (flashAlpha.value > 0f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(flashAlpha.value)
+                    .background(Color.White),
+            )
         }
 
         if (showCustomFieldsSheet) {
