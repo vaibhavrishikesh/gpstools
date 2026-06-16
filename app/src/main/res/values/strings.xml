@@ -60,6 +60,7 @@
     <string name="accuracy_good">Good</string>
     <string name="accuracy_avg">Avg</string>
     <string name="accuracy_poor">Poor</string>
+    <string name="gps_low_accuracy_hint">Move to open sky for better GPS</string>
 
     <!-- Stamp templates (US-009) -->
     <string name="template_classic">Classic</string>

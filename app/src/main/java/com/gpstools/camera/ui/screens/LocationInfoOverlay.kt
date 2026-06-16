@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -79,10 +80,19 @@ fun LocationInfoOverlay(
     modifier: Modifier = Modifier,
     onEditClick: (() -> Unit)? = null,
 ) {
+    // Low-GPS guidance (US-008): when the fix accuracy is poor (> 20 m) the card
+    // turns the "Poor" accuracy colour and shows a "move to open sky" hint, so the
+    // user knows to relocate for a better fix.
+    val available = state as? LocationUiState.Available
+    val cardColor = if (available != null && available.fix.accuracyMeters > 20f) {
+        accuracyColor(available.fix.accuracyMeters).copy(alpha = 0.9f)
+    } else {
+        Color.Black.copy(alpha = 0.9f)
+    }
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.Black.copy(alpha = 0.9f), RoundedCornerShape(16.dp))
+            .background(cardColor, RoundedCornerShape(16.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -166,6 +176,27 @@ fun LocationInfoOverlay(
                             modifier = Modifier.weight(1f),
                         )
                         AccuracyChip(state.fix.accuracyMeters)
+                    }
+                    // 4. Low-GPS hint (US-008) — only when accuracy is poor (> 20 m):
+                    //    nudge the user to relocate for a better fix.
+                    if (state.fix.accuracyMeters > 20f) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Warning,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Text(
+                                text = stringResource(R.string.gps_low_accuracy_hint),
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
                     }
                 }
             }

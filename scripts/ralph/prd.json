@@ -102,7 +102,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify padding + low-accuracy hint on emulator"
       ],
-      "priority": 8, "passes": false, "notes": ""
+      "priority": 8, "passes": true, "notes": "statusBarsPadding was already applied to the GPS-card overlay in CameraPreview (TopCenter) — verified the card renders below the clock/battery. Added low-GPS guidance in LocationInfoOverlay: when fix accuracy > 20m the card background turns the accuracyColor (red Poor at >20m) instead of black, and a 4th line shows a Warning icon + 'Move to open sky for better GPS' hint (string gps_low_accuracy_hint in both values + values-hi). Verified on emulator: at the real ±5m the card stays black with no hint; with a temporarily-lowered threshold the card tinted to accuracyColor + the Hindi hint 'बेहतर GPS के लिए खुले आसमान में जाएँ' rendered (then reverted to >20f)."
     },
     {
       "id": "P2-US-009",

@@ -61,6 +61,7 @@
     <string name="accuracy_good">अच्छा</string>
     <string name="accuracy_avg">औसत</string>
     <string name="accuracy_poor">कमज़ोर</string>
+    <string name="gps_low_accuracy_hint">बेहतर GPS के लिए खुले आसमान में जाएँ</string>
 
     <!-- Stamp templates (US-009) -->
     <string name="template_classic">क्लासिक</string>
