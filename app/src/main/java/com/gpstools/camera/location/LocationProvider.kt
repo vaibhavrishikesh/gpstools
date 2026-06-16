@@ -125,6 +125,39 @@ private fun formatAddress(address: Address): String {
     ).distinct().joinToString(", ")
 }
 
+/**
+ * Encodes [latitude]/[longitude] as a standard 10-digit Open Location Code
+ * ("plus code", e.g. "7JWVQX2C+9F"). Self-contained — no dependency. ~14 m
+ * precision, which is plenty for the GPS card's secondary line (US-004).
+ */
+fun encodePlusCode(latitude: Double, longitude: Double): String {
+    val alphabet = "23456789CFGHJMPQRVWX"
+    val lat = latitude.coerceIn(-90.0, 89.999999)
+    // Normalize longitude into [-180, 180).
+    val lng = ((longitude + 180.0) % 360.0 + 360.0) % 360.0 - 180.0
+
+    var latLow = -90.0
+    var latHigh = 90.0
+    var lngLow = -180.0
+    var lngHigh = 180.0
+    val sb = StringBuilder()
+    repeat(5) {
+        val latStep = (latHigh - latLow) / 20.0
+        val latDigit = ((lat - latLow) / latStep).toInt().coerceIn(0, 19)
+        latLow += latDigit * latStep
+        latHigh = latLow + latStep
+        sb.append(alphabet[latDigit])
+
+        val lngStep = (lngHigh - lngLow) / 20.0
+        val lngDigit = ((lng - lngLow) / lngStep).toInt().coerceIn(0, 19)
+        lngLow += lngDigit * lngStep
+        lngHigh = lngLow + lngStep
+        sb.append(alphabet[lngDigit])
+    }
+    sb.insert(8, '+')
+    return sb.toString()
+}
+
 /** Awaits a Play Services [Task], resolving to null on failure instead of throwing. */
 private suspend fun <T> Task<T>.await(): T? = suspendCancellableCoroutine { cont ->
     addOnCompleteListener { task ->

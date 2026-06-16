@@ -51,6 +51,11 @@
     <string name="location_geocoding">Finding address…</string>
     <string name="location_unavailable">Location unavailable</string>
     <string name="location_accuracy">±%1$d m accuracy</string>
+    <!-- Accuracy chip (US-004): colour-coded quality badge on the GPS card. -->
+    <string name="accuracy_chip">±%1$dm · %2$s</string>
+    <string name="accuracy_good">Good</string>
+    <string name="accuracy_avg">Avg</string>
+    <string name="accuracy_poor">Poor</string>
 
     <!-- Stamp templates (US-009) -->
     <string name="template_classic">Classic</string>

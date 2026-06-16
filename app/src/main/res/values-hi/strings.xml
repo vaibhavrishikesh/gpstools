@@ -52,6 +52,11 @@
     <string name="location_geocoding">पता खोजा जा रहा है…</string>
     <string name="location_unavailable">स्थान उपलब्ध नहीं है</string>
     <string name="location_accuracy">±%1$d मी सटीकता</string>
+    <!-- Accuracy chip (US-004): colour-coded quality badge on the GPS card. -->
+    <string name="accuracy_chip">±%1$dमी · %2$s</string>
+    <string name="accuracy_good">अच्छा</string>
+    <string name="accuracy_avg">औसत</string>
+    <string name="accuracy_poor">कमज़ोर</string>
 
     <!-- Stamp templates (US-009) -->
     <string name="template_classic">क्लासिक</string>

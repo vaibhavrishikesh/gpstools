@@ -466,13 +466,8 @@ private fun PhotoMetadata(photo: CapturedPhoto, modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.bodySmall,
             color = Color.White,
         )
-        if (photo.width > 0 && photo.height > 0) {
-            Text(
-                text = stringResource(R.string.gallery_meta_dimensions, photo.width, photo.height),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White,
-            )
-        }
+        // US-004: the dimensions line was redundant clutter in the photo overlay —
+        // the stamp already carries the meaningful metadata. Keep date + size only.
         Text(
             text = stringResource(R.string.gallery_meta_size, size),
             style = MaterialTheme.typography.bodySmall,

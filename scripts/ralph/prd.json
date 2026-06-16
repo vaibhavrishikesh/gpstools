@@ -53,7 +53,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify card + chip + single clean stamp on emulator"
       ],
-      "priority": 4, "passes": false, "notes": ""
+      "priority": 4, "passes": true, "notes": "GPS card redesigned in LocationInfoOverlay.kt: 3-tier hierarchy (address bold 16sp white / plus code 14sp 90% white / coords 12sp grey #9AA0A6). Plus code computed locally via new encodePlusCode() in LocationProvider.kt (standard 10-digit OLC, no dep, always shows even when reverse-geocode is down on emulator). New AccuracyChip composable: colour-coded pill (accuracyColor token) Good<10m green / Avg 10-20m amber / Poor>20m red, label '±Nm · Good'. Card bg black 0.9, 16dp corners, 12dp padding. Removed redundant dimensions line from GalleryScreen PhotoMetadata. New strings accuracy_chip/good/avg/poor in both values + values-hi. Verified on emulator: card shows MP89X26F+2G + green '±5मी · अच्छा' chip at geo 30.132034,78.321448."
     },
     {
       "id": "P2-US-005",
