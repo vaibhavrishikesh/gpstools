@@ -63,6 +63,8 @@
     <string name="template_field_report">Field Report</string>
     <string name="template_picker">Stamp style</string>
     <string name="template_selected">%1$s stamp</string>
+    <!-- Gold PRO badge on premium mode chips (P2-US-005) -->
+    <string name="pro_badge">PRO</string>
 
     <!-- Custom stamp fields (US-010) -->
     <string name="custom_fields_open">Edit stamp details</string>

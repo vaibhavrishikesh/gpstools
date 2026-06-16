@@ -10,7 +10,7 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,12 +25,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
+import androidx.compose.material.icons.filled.CenterFocusStrong
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Lens
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -58,15 +60,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.gpstools.camera.R
 import com.gpstools.camera.ads.InterstitialAdManager
-import com.gpstools.camera.billing.BillingManager
 import com.gpstools.camera.billing.Premium
 import com.gpstools.camera.locale.findActivity
 import com.gpstools.camera.location.LocationUiState
@@ -78,6 +82,8 @@ import com.gpstools.camera.media.StampTemplateStore
 import com.gpstools.camera.media.capturePhoto
 import com.gpstools.camera.media.label
 import com.gpstools.camera.settings.AppSettingsStore
+import com.gpstools.camera.ui.theme.BrandGold
+import com.gpstools.camera.ui.theme.BrandNavy
 import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -127,14 +133,6 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     // Selected stamp template (US-009), persisted across captures + launches.
     val templateStore = remember { StampTemplateStore(context) }
     var template by rememberSaveable { mutableStateOf(templateStore.load()) }
-
-    // Billing connection (US-016) so tapping a locked premium template can launch
-    // the one-time purchase flow right from the picker.
-    val billing = remember { BillingManager(context) }
-    DisposableEffect(Unit) {
-        billing.start()
-        onDispose { billing.release() }
-    }
 
     // User's custom stamp fields (US-010): project/site name, note, logo. Persisted
     // across captures + launches via SharedPreferences + an app-storage logo file.
@@ -227,26 +225,15 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 .padding(bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Template picker (US-009) — selection persists across captures.
-            // Premium templates (US-016) are locked until the IAP is owned; tapping
-            // a locked one launches the purchase flow instead of selecting it.
+            // Mode selector (P2-US-005) — centered icon chips, selection persists
+            // across captures. Premium templates (Field Report) show a gold "PRO"
+            // badge instead of a lock but stay selectable/usable for now.
             TemplatePickerRow(
                 selected = template,
                 isPremium = Premium.isPremium,
                 onSelect = {
                     template = it
                     templateStore.save(it)
-                },
-                onLocked = {
-                    val activity = context.findActivity()
-                    val launched = activity != null && billing.launchPurchase(activity)
-                    if (!launched) {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.premium_unavailable),
-                            Toast.LENGTH_SHORT,
-                        ).show()
-                    }
                 },
                 modifier = Modifier.padding(bottom = 20.dp),
             )
@@ -282,12 +269,9 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                         timeFormat = AppSettingsStore.loadTimeFormat(context),
                     )
                     val logoFile = customFieldsStore.logoFileOrNull()
-                    // Never burn a premium template (US-016) without the entitlement
-                    // — e.g. it was selected before the IAP existed or after a refund.
-                    val effectiveTemplate =
-                        if (template.premium && !Premium.isPremium) StampTemplate.DEFAULT
-                        else template
-                    capturePhoto(context, imageCapture, stamp, effectiveTemplate, logoFile) { uri ->
+                    // P2-US-005: premium templates (Field Report) are unlocked for now,
+                    // so the selected template always renders as-is.
+                    capturePhoto(context, imageCapture, stamp, template, logoFile) { uri ->
                         isCapturing = false
                         val msg = if (uri != null) {
                             context.getString(R.string.capture_saved)
@@ -463,58 +447,86 @@ private fun CustomFieldsSheet(
     }
 }
 
+/** Mode-chip leading icon for each stamp template (P2-US-005): 📷 / 🎯 / 📋. */
+private fun StampTemplate.icon(): ImageVector = when (this) {
+    StampTemplate.CLASSIC -> Icons.Filled.PhotoCamera
+    StampTemplate.MINIMAL -> Icons.Filled.CenterFocusStrong
+    StampTemplate.FIELD_REPORT -> Icons.Filled.Description
+}
+
 /**
- * Horizontally-scrollable row of FilterChips for choosing the stamp template
- * (US-009). The current [selected] template is highlighted; tapping a chip calls
- * [onSelect] so the caller can apply + persist it.
+ * Centered row of mode chips for choosing the stamp template (P2-US-005). Each chip
+ * has an icon + label; the [selected] one is filled navy with white text/icon while
+ * the rest are transparent with grey [#9AA0A6] text. Tapping a chip calls [onSelect]
+ * so the caller can apply + persist it.
  *
- * Premium templates (US-016) show a lock icon while [isPremium] is false and route
- * taps to [onLocked] (which launches the purchase flow) instead of selecting them.
+ * Premium templates (Field Report) show a small gold "PRO" badge while [isPremium] is
+ * false — replacing the old lock — but stay fully selectable/usable (unlocked for now).
  */
 @Composable
 private fun TemplatePickerRow(
     selected: StampTemplate,
     isPremium: Boolean,
     onSelect: (StampTemplate) -> Unit,
-    onLocked: (StampTemplate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     Row(
         modifier = modifier
-            .horizontalScroll(rememberScrollState())
+            .fillMaxWidth()
             .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        StampTemplate.entries.forEachIndexed { index, t ->
-            if (index > 0) Spacer(Modifier.width(8.dp))
-            val locked = t.premium && !isPremium
+        StampTemplate.entries.forEach { t ->
+            val isSelected = t == selected
+            val showProBadge = t.premium && !isPremium
             FilterChip(
-                selected = t == selected && !locked,
-                onClick = { if (locked) onLocked(t) else onSelect(t) },
+                selected = isSelected,
+                onClick = { onSelect(t) },
                 label = { Text(t.label(context)) },
-                leadingIcon = if (locked) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Lock,
-                            contentDescription = stringResource(R.string.premium_locked),
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
+                leadingIcon = {
+                    Icon(
+                        imageVector = t.icon(),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                },
+                trailingIcon = if (showProBadge) {
+                    { ProBadge() }
                 } else {
                     null
                 },
+                border = null,
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = Color.Black.copy(alpha = 0.45f),
-                    labelColor = Color.White,
-                    iconColor = Color.White,
-                    selectedContainerColor = Color.White,
-                    selectedLabelColor = Color.Black,
+                    containerColor = Color.Transparent,
+                    labelColor = TextSecondary,
+                    iconColor = TextSecondary,
+                    selectedContainerColor = BrandNavy,
+                    selectedLabelColor = Color.White,
+                    selectedLeadingIconColor = Color.White,
                 ),
             )
         }
     }
 }
+
+/** Small gold "PRO" badge shown on premium mode chips (P2-US-005). */
+@Composable
+private fun ProBadge() {
+    Text(
+        text = stringResource(R.string.pro_badge),
+        color = BrandNavy,
+        fontSize = 9.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier
+            .background(BrandGold, RoundedCornerShape(4.dp))
+            .padding(horizontal = 4.dp, vertical = 1.dp),
+    )
+}
+
+/** Secondary text grey (#9AA0A6) for unselected mode chips — matches the v2 spec. */
+private val TextSecondary = Color(0xFF9AA0A6)
 
 /** Awaits the ListenableFuture from ProcessCameraProvider without pulling in guava-coroutines. */
 private suspend fun android.content.Context.awaitCameraProvider(): ProcessCameraProvider {

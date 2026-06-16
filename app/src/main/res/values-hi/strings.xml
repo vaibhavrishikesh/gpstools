@@ -64,6 +64,7 @@
     <string name="template_field_report">फ़ील्ड रिपोर्ट</string>
     <string name="template_picker">स्टैम्प शैली</string>
     <string name="template_selected">%1$s स्टैम्प</string>
+    <string name="pro_badge">PRO</string>
 
     <!-- Custom stamp fields (US-010) -->
     <string name="custom_fields_open">स्टैम्प विवरण संपादित करें</string>
