@@ -11,16 +11,27 @@ import com.gpstools.camera.billing.Premium
 import com.gpstools.camera.billing.Subscription
 import com.gpstools.camera.locale.wrapWithStoredLocale
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.gpstools.camera.media.GeotagStore
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -98,7 +109,16 @@ fun GpsToolsApp() {
 private fun BottomNavBar(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
-    NavigationBar {
+    val context = LocalContext.current
+    // Count of location-tagged photos for the Map tab badge. Re-read on each nav
+    // change (cheap SharedPreferences read) so the badge reflects new captures
+    // when the user switches tabs; hidden when 0.
+    val taggedPhotoCount = remember(backStackEntry) {
+        GeotagStore.loadAll(context).size
+    }
+    // 64dp bar + 11sp labels + brand-accent selected state (navy on light /
+    // gold on dark via colorScheme.primary) per the v2 spec §5.
+    NavigationBar(modifier = Modifier.height(64.dp)) {
         Destination.entries.forEach { destination ->
             val selected = currentDestination?.hierarchy?.any {
                 it.route == destination.route
@@ -115,13 +135,33 @@ private fun BottomNavBar(navController: NavHostController) {
                         restoreState = true
                     }
                 },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                ),
                 icon = {
-                    Icon(
-                        imageVector = destination.icon,
-                        contentDescription = null,
+                    val icon = @Composable {
+                        Icon(
+                            imageVector = destination.icon,
+                            contentDescription = null,
+                        )
+                    }
+                    if (destination == Destination.Map && taggedPhotoCount > 0) {
+                        BadgedBox(badge = { Badge { Text(taggedPhotoCount.toString()) } }) {
+                            icon()
+                        }
+                    } else {
+                        icon()
+                    }
+                },
+                label = {
+                    Text(
+                        text = stringResource(destination.labelRes),
+                        fontSize = 11.sp,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                     )
                 },
-                label = { Text(stringResource(destination.labelRes)) },
             )
         }
     }

@@ -90,7 +90,7 @@
         "./gradlew assembleDebug succeeds",
         "Verify nav styling + badge on emulator"
       ],
-      "priority": 7, "passes": false, "notes": ""
+      "priority": 7, "passes": true, "notes": "BottomNavBar in MainActivity.kt: NavigationBar height 64dp; labels 11sp, FontWeight.Bold when selected; selected icon/text = colorScheme.primary (navy on light / gold on dark) via NavigationBarItemDefaults.colors + primaryContainer indicator. Map tab wraps its icon in BadgedBox+Badge showing GeotagStore.loadAll(context).size (re-read on each backStackEntry change, hidden when 0). Verified on emulator: Camera selected = gold accent + bold; Map tab shows red '7' badge (7 location-tagged photos)."
     },
     {
       "id": "P2-US-008",
