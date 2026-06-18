@@ -34,8 +34,8 @@ android {
         applicationId = "com.gpstools.camera"
         minSdk = 24
         targetSdk = 35
-        versionCode = 6
-        versionName = "0.3.2"
+        versionCode = 7
+        versionName = "0.3.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -44,6 +44,15 @@ android {
     }
 
     buildTypes {
+        // AdMob ids are split per build type so DEBUG / emulator builds always use
+        // Google's TEST ids (never serve a real ad → no risk of self-click policy
+        // strikes during development), while RELEASE uses the real production ids.
+        // App id comes through a manifest placeholder; unit ids via BuildConfig.
+        debug {
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511712"
+            buildConfigField("String", "ADMOB_BANNER_UNIT", "\"ca-app-pub-3940256099942544/6300978111\"")
+            buildConfigField("String", "ADMOB_INTERSTITIAL_UNIT", "\"ca-app-pub-3940256099942544/1033173712\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -55,6 +64,12 @@ android {
             if (keystorePropsFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
+            // Real AdMob ids (account ca-app-pub-4765907187067298).
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-4765907187067298~4557234825"
+            buildConfigField("String", "ADMOB_BANNER_UNIT", "\"ca-app-pub-4765907187067298/2339436450\"")
+            // TODO: replace with a real Interstitial ad unit once created in AdMob;
+            // a TEST interstitial id is used until then so no invalid ad serves.
+            buildConfigField("String", "ADMOB_INTERSTITIAL_UNIT", "\"ca-app-pub-3940256099942544/1033173712\"")
         }
     }
     compileOptions {
