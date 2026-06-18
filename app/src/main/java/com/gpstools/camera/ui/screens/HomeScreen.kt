@@ -68,7 +68,11 @@ fun HomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(BrandNavy, BrandNavyDeep)))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF1B3A66), BrandNavy, BrandNavyDeep),
+                ),
+            )
             .statusBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -78,11 +82,13 @@ fun HomeScreen(
                 Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.drawer_open), tint = Color.White)
             }
         }
-        Spacer(Modifier.height(16.dp))
+        // Flexible space above so the title + tiles sit visually centred (no big empty
+        // bottom). Slightly more weight below to nudge the block a touch above centre.
+        Spacer(Modifier.weight(1f))
         Text(stringResource(R.string.app_name), color = BrandGold, fontSize = 28.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         Text(stringResource(R.string.home_subtitle), color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
-        Spacer(Modifier.height(36.dp))
+        Spacer(Modifier.height(32.dp))
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
             tiles.chunked(2).forEach { rowTiles ->
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -93,8 +99,9 @@ fun HomeScreen(
                 Spacer(Modifier.height(16.dp))
             }
         }
-        // Push the banner to the bottom edge.
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.weight(1.3f))
+        // Ad banner pinned at the bottom (only takes space once an ad fills — real ads
+        // serve once the app is published; debug builds show test ads).
         BannerAd(modifier = Modifier.navigationBarsPadding())
     }
 }
