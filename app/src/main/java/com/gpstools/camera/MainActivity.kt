@@ -40,6 +40,7 @@ import com.gpstools.camera.ui.navigation.Destination
 import com.gpstools.camera.ui.screens.AppDrawer
 import com.gpstools.camera.ui.screens.CameraScreen
 import com.gpstools.camera.ui.screens.GalleryScreen
+import com.gpstools.camera.ui.screens.HomeScreen
 import com.gpstools.camera.ui.screens.MapScreen
 import com.gpstools.camera.ui.screens.SettingsScreen
 import com.gpstools.camera.ui.screens.TemplatesScreen
@@ -87,9 +88,9 @@ class MainActivity : ComponentActivity() {
 }
 
 /**
- * Camera-first app shell (redesign v3). The app opens straight into the camera;
- * Gallery / Templates / Map / Settings are reached from the slide-in [AppDrawer]
- * (top-left ☰ on the camera, swipe-from-edge anywhere). There is no bottom nav.
+ * App shell. The app lands on the Home dashboard; the camera and the other screens
+ * are reached from the home tiles or the slide-in [AppDrawer] (top-left ☰, or
+ * swipe-from-edge). There is no bottom nav. Home + camera carry a bottom ad banner.
  */
 @Composable
 fun GpsToolsApp() {
@@ -111,9 +112,15 @@ fun GpsToolsApp() {
     ) {
         NavHost(
             navController = navController,
-            startDestination = Destination.Camera.route,
+            startDestination = Destination.Home.route,
             modifier = Modifier.fillMaxSize(),
         ) {
+            composable(Destination.Home.route) {
+                HomeScreen(
+                    onOpenDrawer = openDrawer,
+                    onTileClick = { route -> navController.navigateTopLevel(route) },
+                )
+            }
             composable(Destination.Camera.route) {
                 CameraScreen(onOpenDrawer = openDrawer)
             }
@@ -185,7 +192,7 @@ private fun SecondaryScreen(
  */
 private fun NavHostController.navigateTopLevel(route: String) {
     navigate(route) {
-        popUpTo(Destination.Camera.route) { saveState = true }
+        popUpTo(Destination.Home.route) { saveState = true }
         launchSingleTop = true
         restoreState = true
     }

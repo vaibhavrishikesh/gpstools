@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -52,6 +53,7 @@ fun AppDrawer(
     modifier: Modifier = Modifier,
 ) {
     val entries = listOf(
+        DrawerEntry(R.string.tab_home, Icons.Filled.Home, Destination.Home.route),
         DrawerEntry(R.string.tab_camera, Icons.Filled.PhotoCamera, Destination.Camera.route),
         DrawerEntry(R.string.tab_gallery, Icons.Filled.PhotoLibrary, Destination.Gallery.route),
         DrawerEntry(R.string.tab_templates, Icons.Filled.Description, Destination.Templates.route),
