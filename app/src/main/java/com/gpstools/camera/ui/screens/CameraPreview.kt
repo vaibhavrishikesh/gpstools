@@ -15,16 +15,19 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -485,18 +488,8 @@ fun CameraPreview(
                 )
             }
 
-            // Mode selector (P2-US-005) — centered icon chips, selection persists
-            // across captures. Premium templates (Field Report) show a gold "PRO"
-            // badge instead of a lock but stay selectable/usable for now.
-            TemplatePickerRow(
-                selected = template,
-                isPremium = Premium.isPremium,
-                onSelect = {
-                    template = it
-                    templateStore.save(it)
-                },
-                modifier = Modifier.padding(bottom = 20.dp),
-            )
+            // Template selection moved into the adjust sheet (the ⚙ control), freeing
+            // this space — the always-visible chip row is gone.
 
             // Camera controls row (redesign v3): gallery thumbnail | shutter | adjust.
             // Flash + flip moved to the top bar. The shutter stays centered.
@@ -657,6 +650,12 @@ fun CameraPreview(
         if (showCustomFieldsSheet) {
             CustomFieldsSheet(
                 fields = customFields,
+                selectedTemplate = template,
+                isPremium = Premium.isPremium,
+                onSelectTemplate = {
+                    template = it
+                    templateStore.save(it)
+                },
                 onPickLogo = {
                     logoPicker.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
@@ -837,6 +836,9 @@ private fun ViewfinderInfoOverlay(
 @Composable
 private fun CustomFieldsSheet(
     fields: CustomFields,
+    selectedTemplate: StampTemplate,
+    isPremium: Boolean,
+    onSelectTemplate: (StampTemplate) -> Unit,
     onPickLogo: () -> Unit,
     onRemoveLogo: () -> Unit,
     onSave: (projectName: String, note: String, watermark: String) -> Unit,
@@ -854,9 +856,22 @@ private fun CustomFieldsSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 24.dp),
         ) {
+            // Template picker — visual previews so the user sees each style.
+            Text(
+                text = stringResource(R.string.template_picker),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Spacer(Modifier.height(12.dp))
+            TemplatePreviewStrip(
+                selected = selectedTemplate,
+                isPremium = isPremium,
+                onSelect = onSelectTemplate,
+            )
+            Spacer(Modifier.height(24.dp))
             Text(
                 text = stringResource(R.string.custom_fields_title),
                 style = MaterialTheme.typography.titleLarge,
@@ -951,51 +966,61 @@ private fun StampTemplate.icon(): ImageVector = when (this) {
  * false — replacing the old lock — but stay fully selectable/usable (unlocked for now).
  */
 @Composable
-private fun TemplatePickerRow(
+private fun TemplatePreviewStrip(
     selected: StampTemplate,
     isPremium: Boolean,
     onSelect: (StampTemplate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    // 5 templates overflow a phone width, so the chip strip scrolls horizontally.
+    // Horizontally-scrolling strip of real rendered previews so the user sees how
+    // each template looks before choosing it.
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         StampTemplate.entries.forEach { t ->
             val isSelected = t == selected
-            val showProBadge = t.premium && !isPremium
-            FilterChip(
-                selected = isSelected,
-                onClick = { onSelect(t) },
-                label = { Text(t.label(context)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = t.icon(),
+            Column(
+                modifier = Modifier
+                    .width(150.dp)
+                    .clickable { onSelect(t) },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(560f / 360f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .border(
+                            width = if (isSelected) 3.dp else 1.dp,
+                            color = if (isSelected) BrandNavy else TextSecondary.copy(alpha = 0.4f),
+                            shape = RoundedCornerShape(10.dp),
+                        ),
+                ) {
+                    Image(
+                        bitmap = rememberTemplatePreview(t),
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
                     )
-                },
-                trailingIcon = if (showProBadge) {
-                    { ProBadge() }
-                } else {
-                    null
-                },
-                border = null,
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = Color.Transparent,
-                    labelColor = TextSecondary,
-                    iconColor = TextSecondary,
-                    selectedContainerColor = BrandNavy,
-                    selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White,
-                ),
-            )
+                }
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = t.label(context),
+                        fontSize = 13.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) BrandNavy else MaterialTheme.colorScheme.onSurface,
+                    )
+                    if (t.premium && !isPremium) ProBadge()
+                }
+            }
         }
     }
 }
