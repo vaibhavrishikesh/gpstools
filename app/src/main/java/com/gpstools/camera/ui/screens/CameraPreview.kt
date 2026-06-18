@@ -96,6 +96,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.gpstools.camera.R
+import com.gpstools.camera.ads.BannerAd
 import com.gpstools.camera.ads.InterstitialAdManager
 import com.gpstools.camera.billing.Premium
 import com.gpstools.camera.locale.findActivity
@@ -457,7 +458,7 @@ fun CameraPreview(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(bottom = 32.dp),
+                .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Bottom-left viewfinder HUD (P2-US-012): live date/time + altitude, 12sp
@@ -554,6 +555,10 @@ fun CameraPreview(
                     contentDescription = stringResource(R.string.custom_fields_open),
                 )
             }
+
+            // Ad banner (US-015) pinned below the controls. Renders nothing for Pro /
+            // remove-ads users (BannerAd self-hides on Ads.adsEnabled == false).
+            BannerAd(modifier = Modifier.padding(top = 12.dp))
         }
 
         // Top bar overlay (redesign v3): ☰ opens the navigation drawer + app title on
