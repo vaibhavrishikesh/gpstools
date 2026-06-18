@@ -165,10 +165,11 @@ fun CameraPreview(
     }
 
     // Full-resolution still-capture use case (US-006), bound alongside the preview.
-    // Prioritise quality over latency since these are proof photos.
+    // Minimise shutter latency — MAXIMIZE_QUALITY added a noticeable delay per shot.
+    // The stamp/encode still runs at full resolution, so proof quality is unaffected.
     val imageCapture = remember {
         ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .build()
     }
     // Prevents firing a second capture before the first one finishes.
@@ -448,6 +449,7 @@ fun CameraPreview(
         if (stampAtTop) {
             LocationInfoOverlay(
                 state = locationState,
+                template = template,
                 // US-003: the "Edit" affordance now lives ON the GPS card and opens the
                 // optional stamp-details bottom sheet (never blocks capture).
                 onEditClick = { showCustomFieldsSheet = true },
@@ -481,6 +483,7 @@ fun CameraPreview(
             if (!stampAtTop) {
                 LocationInfoOverlay(
                     state = locationState,
+                    template = template,
                     onEditClick = { showCustomFieldsSheet = true },
                     modifier = Modifier
                         .padding(horizontal = 16.dp)

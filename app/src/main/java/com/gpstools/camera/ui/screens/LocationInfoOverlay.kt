@@ -38,6 +38,7 @@ import com.gpstools.camera.location.encodePlusCode
 import com.gpstools.camera.location.fetchCurrentLocation
 import com.gpstools.camera.location.fetchWeather
 import com.gpstools.camera.location.reverseGeocode
+import com.gpstools.camera.media.StampTemplate
 import com.gpstools.camera.ui.theme.accuracyColor
 import java.util.Locale
 
@@ -93,6 +94,7 @@ fun rememberCurrentLocation(): State<LocationUiState> {
 @Composable
 fun LocationInfoOverlay(
     state: LocationUiState,
+    template: StampTemplate,
     modifier: Modifier = Modifier,
     onEditClick: (() -> Unit)? = null,
 ) {
@@ -108,14 +110,22 @@ fun LocationInfoOverlay(
     } else {
         CardNavy.copy(alpha = 0.55f)
     }
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(cardColor, RoundedCornerShape(16.dp))
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .clip(RoundedCornerShape(16.dp))
+            .background(cardColor),
     ) {
+        // Template header band — mirrors the burned stamp's style so the on-screen
+        // preview updates the moment the user changes the stamp style.
+        TemplateHeaderBar(template)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
@@ -241,10 +251,42 @@ fun LocationInfoOverlay(
         }
         }
 
-        if (onEditClick != null) {
-            EditAffordance(onClick = onEditClick)
+            if (onEditClick != null) {
+                EditAffordance(onClick = onEditClick)
+            }
         }
     }
+}
+
+/** Map of template → (header label, accent colour) shown on the live preview card. */
+private fun templateHeader(template: StampTemplate): Pair<String, Color> = when (template) {
+    StampTemplate.CLASSIC -> "CLASSIC" to Color(0xFFF2A93B)
+    StampTemplate.MODERN -> "MODERN" to Color(0xFFF2A93B)
+    StampTemplate.REPORTING -> "WORK REPORT" to Color(0xFF2EA043)
+    StampTemplate.ADVANCE -> "ADVANCE" to Color(0xFFFFC107)
+    StampTemplate.CUSTOM -> "CUSTOM" to Color(0xFF2176D2)
+}
+
+/** Thin accent header carrying the active template's name (mirrors the burned stamp). */
+@Composable
+private fun TemplateHeaderBar(template: StampTemplate) {
+    val (label, color) = templateHeader(template)
+    // Dark text on the light gold/amber accents, white on the darker green/blue.
+    val onColor = if (template == StampTemplate.REPORTING || template == StampTemplate.CUSTOM) {
+        Color.White
+    } else {
+        Color(0xFF1A1A1A)
+    }
+    Text(
+        text = label,
+        color = onColor,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color)
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+    )
 }
 
 /**
