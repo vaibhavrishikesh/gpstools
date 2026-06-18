@@ -34,8 +34,8 @@ android {
         applicationId = "com.gpstools.camera"
         minSdk = 24
         targetSdk = 35
-        versionCode = 7
-        versionName = "0.3.3"
+        versionCode = 8
+        versionName = "0.3.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -67,9 +67,7 @@ android {
             // Real AdMob ids (account ca-app-pub-4765907187067298).
             manifestPlaceholders["admobAppId"] = "ca-app-pub-4765907187067298~4557234825"
             buildConfigField("String", "ADMOB_BANNER_UNIT", "\"ca-app-pub-4765907187067298/2339436450\"")
-            // TODO: replace with a real Interstitial ad unit once created in AdMob;
-            // a TEST interstitial id is used until then so no invalid ad serves.
-            buildConfigField("String", "ADMOB_INTERSTITIAL_UNIT", "\"ca-app-pub-3940256099942544/1033173712\"")
+            buildConfigField("String", "ADMOB_INTERSTITIAL_UNIT", "\"ca-app-pub-4765907187067298/2060234853\"")
         }
     }
     compileOptions {
