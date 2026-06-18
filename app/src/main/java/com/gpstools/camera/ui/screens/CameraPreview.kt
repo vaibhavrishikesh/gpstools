@@ -18,6 +18,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +42,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FlashAuto
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
@@ -932,8 +935,10 @@ private fun CustomFieldsSheet(
 /** Mode-chip leading icon for each stamp template (P2-US-005): 📷 / 🎯 / 📋. */
 private fun StampTemplate.icon(): ImageVector = when (this) {
     StampTemplate.CLASSIC -> Icons.Filled.PhotoCamera
-    StampTemplate.MINIMAL -> Icons.Filled.CenterFocusStrong
-    StampTemplate.FIELD_REPORT -> Icons.Filled.Description
+    StampTemplate.MODERN -> Icons.Filled.CenterFocusStrong
+    StampTemplate.REPORTING -> Icons.Filled.Description
+    StampTemplate.ADVANCE -> Icons.Filled.Tune
+    StampTemplate.CUSTOM -> Icons.Filled.Edit
 }
 
 /**
@@ -953,11 +958,13 @@ private fun TemplatePickerRow(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    // 5 templates overflow a phone width, so the chip strip scrolls horizontally.
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         StampTemplate.entries.forEach { t ->

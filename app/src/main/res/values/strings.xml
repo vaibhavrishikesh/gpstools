@@ -122,6 +122,10 @@
     <string name="template_classic">Classic</string>
     <string name="template_minimal">Minimal</string>
     <string name="template_field_report">Field Report</string>
+    <string name="template_modern">Modern</string>
+    <string name="template_reporting">Reporting</string>
+    <string name="template_advance">Advance</string>
+    <string name="template_custom">Custom</string>
     <string name="template_picker">Stamp style</string>
     <string name="template_selected">%1$s stamp</string>
     <!-- Gold PRO badge on premium mode chips (P2-US-005) -->

@@ -123,6 +123,10 @@
     <string name="template_classic">क्लासिक</string>
     <string name="template_minimal">सरल</string>
     <string name="template_field_report">फ़ील्ड रिपोर्ट</string>
+    <string name="template_modern">मॉडर्न</string>
+    <string name="template_reporting">रिपोर्टिंग</string>
+    <string name="template_advance">एडवांस</string>
+    <string name="template_custom">कस्टम</string>
     <string name="template_picker">स्टैम्प शैली</string>
     <string name="template_selected">%1$s स्टैम्प</string>
     <string name="pro_badge">PRO</string>

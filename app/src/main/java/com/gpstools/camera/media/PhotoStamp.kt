@@ -86,8 +86,14 @@ private const val MAP_SIZE = 200f
 private const val FIELD_MAP_SIZE = 240f
 /** Square box the logo is fitted into, in REFERENCE_WIDTH units (top-right corner). */
 private const val LOGO_SIZE = 150f
-/** Accent colour used for the Field-Report header band + row labels. */
+/** Accent colour used for the Advance/Field-Report header band + row labels. */
 private val FIELD_ACCENT = Color.rgb(255, 193, 7)
+/** Green "WORK REPORT" header accent for the Reporting template. */
+private val REPORT_GREEN = Color.rgb(46, 160, 67)
+/** Blue header accent for the Custom template. */
+private val REPORT_BLUE = Color.rgb(33, 118, 210)
+/** Gold left accent bar for the Modern template. */
+private val MODERN_ACCENT = Color.rgb(242, 169, 59)
 
 /**
  * Draws [stamp] onto [source] in the style of [template] (US-009) and returns the
@@ -122,8 +128,13 @@ fun drawStamp(
     val top = stamp.stampPosition == StampPosition.TOP
     when (template) {
         StampTemplate.CLASSIC -> drawClassic(canvas, result, stamp, effectiveMap, top)
-        StampTemplate.MINIMAL -> drawMinimal(canvas, result, stamp, top)
-        StampTemplate.FIELD_REPORT -> drawFieldReport(canvas, result, stamp, effectiveMap, top)
+        StampTemplate.MODERN -> drawModern(canvas, result, stamp, top)
+        StampTemplate.REPORTING ->
+            drawReport(canvas, result, stamp, effectiveMap, top, "WORK REPORT", REPORT_GREEN, forceAllFields = false)
+        StampTemplate.ADVANCE ->
+            drawReport(canvas, result, stamp, effectiveMap, top, "ADVANCE", FIELD_ACCENT, forceAllFields = true)
+        StampTemplate.CUSTOM ->
+            drawReport(canvas, result, stamp, effectiveMap, top, "CUSTOM", REPORT_BLUE, forceAllFields = false)
     }
     if (logo != null) drawLogo(canvas, result, logo)
     // Custom watermark (P2-US-017) — bottom-right, independent of the template.
@@ -194,65 +205,82 @@ private fun drawClassic(canvas: Canvas, result: Bitmap, stamp: StampData, mapThu
     }
 }
 
-// --- Minimal ---------------------------------------------------------------
+// --- Modern ----------------------------------------------------------------
 
 /**
- * Compact translucent strip hugging the bottom: just the coordinates and date/time
- * on a single short panel anchored bottom-left. No address, no map — the essentials.
+ * Clean no-map panel with a gold left accent bar: bold address, then coordinates,
+ * weather, altitude/facing, date-time and note. A lighter, more contemporary take
+ * than Classic — no map thumbnail.
  */
-private fun drawMinimal(canvas: Canvas, result: Bitmap, stamp: StampData, top: Boolean) {
+private fun drawModern(canvas: Canvas, result: Bitmap, stamp: StampData, top: Boolean) {
     val width = result.width
     val height = result.height
     val scale = width / REFERENCE_WIDTH
 
-    val pad = 16f * scale
-    val lineSpacing = 6f * scale
+    val pad = 22f * scale
+    val barWidth = 10f * scale
+    val lineSpacing = 9f * scale
     val shadow = 3f * scale
 
-    val monoPaint = paint(26f * scale, Typeface.MONOSPACE, Typeface.NORMAL, shadow)
-    val bodyPaint = paint(24f * scale, Typeface.SANS_SERIF, Typeface.NORMAL, shadow)
-    val titlePaint = paint(26f * scale, Typeface.SANS_SERIF, Typeface.BOLD, shadow)
-    val notePaint = paint(24f * scale, Typeface.SANS_SERIF, Typeface.ITALIC, shadow)
+    val titlePaint = paint(32f * scale, Typeface.SANS_SERIF, Typeface.BOLD, shadow)
+    val bodyPaint = paint(27f * scale, Typeface.SANS_SERIF, Typeface.NORMAL, shadow)
+    val monoPaint = paint(27f * scale, Typeface.MONOSPACE, Typeface.NORMAL, shadow)
+    val notePaint = paint(25f * scale, Typeface.SANS_SERIF, Typeface.ITALIC, shadow)
 
-    // Minimal stays compact, but still honours the user's custom fields when set.
-    val maxTextWidth = width - 2 * pad
+    val textLeft = pad + barWidth + pad
+    val maxTextWidth = width - textLeft - pad
+
     val lines = mutableListOf<Pair<String, Paint>>()
     stamp.projectName?.takeIf { it.isNotBlank() }?.let { name ->
         wrapText(name, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
+    }
+    if (stamp.layoutPreset.showAddress) {
+        stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
+            wrapText(addr, titlePaint, maxTextWidth).forEach { lines += it to titlePaint }
+        }
     }
     if (stamp.layoutPreset.showCoords) coordinatesLine(stamp)?.let { lines += it to monoPaint }
     if (stamp.layoutPreset.showWeather) {
         stamp.weather?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
     }
-    // Altitude + compass facing (P2-US-013) — always rendered when present.
     stamp.altitudeFacing?.takeIf { it.isNotBlank() }?.let { lines += it to bodyPaint }
-    // Date/time (P2-US-017) — only when the user kept it enabled.
     if (stamp.showDateTime) lines += dateLine(stamp) to bodyPaint
     stamp.note?.takeIf { it.isNotBlank() }?.let { note ->
         wrapText(note, notePaint, maxTextWidth).forEach { lines += it to notePaint }
     }
 
-    // Nothing to draw (e.g. Lat/Lng preset with no fix yet + date/time off).
     if (lines.isEmpty()) return
 
     val textHeight = measureLines(lines, lineSpacing)
-    val textWidth = lines.maxOf { (text, paint) -> paint.measureText(text) }
-    val panelWidth = minOf(width.toFloat(), textWidth + 2 * pad)
     val panelHeight = textHeight + 2 * pad
     val panelTop = if (top) 0f else height - panelHeight
 
-    canvas.drawRect(0f, panelTop, panelWidth, panelTop + panelHeight, panelFill(110))
-    drawLines(canvas, lines, pad, panelTop + pad, lineSpacing)
+    canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + panelHeight, panelFill(140))
+    // Gold left accent bar.
+    canvas.drawRect(pad, panelTop + pad, pad + barWidth, panelTop + panelHeight - pad,
+        Paint().apply { color = MODERN_ACCENT })
+    drawLines(canvas, lines, textLeft, panelTop + pad, lineSpacing)
 }
 
-// --- Field-Report ----------------------------------------------------------
+// --- Report (Reporting / Advance / Custom) ---------------------------------
 
 /**
- * Documentation-style layout: an accent header band across the top of the panel,
- * a larger map thumbnail on the LEFT, and labelled rows (ADDRESS / COORDINATES /
- * ACCURACY / DATE-TIME) on the right so it reads like a proof record.
+ * Documentation-style layout shared by the Reporting, Advance and Custom templates:
+ * an [accent]-coloured header band carrying [headerText], a larger map thumbnail on
+ * the LEFT, and labelled rows on the right so it reads like a proof record. When
+ * [forceAllFields] is true (Advance) the address / coordinates / weather rows are
+ * always shown, ignoring the layout-preset suppression.
  */
-private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, mapThumbnail: Bitmap?, top: Boolean) {
+private fun drawReport(
+    canvas: Canvas,
+    result: Bitmap,
+    stamp: StampData,
+    mapThumbnail: Bitmap?,
+    top: Boolean,
+    headerText: String,
+    accent: Int,
+    forceAllFields: Boolean,
+) {
     val width = result.width
     val height = result.height
     val scale = width / REFERENCE_WIDTH
@@ -266,7 +294,7 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
         letterSpacing = 0.15f
     }
     val labelPaint = paint(20f * scale, Typeface.SANS_SERIF, Typeface.BOLD, shadow).apply {
-        color = FIELD_ACCENT
+        color = accent
         letterSpacing = 0.08f
     }
     val valuePaint = paint(26f * scale, Typeface.SANS_SERIF, Typeface.NORMAL, shadow)
@@ -285,19 +313,19 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
         rows += "PROJECT / SITE" to labelPaint
         wrapText(name, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
     }
-    if (stamp.layoutPreset.showAddress) {
+    if (forceAllFields || stamp.layoutPreset.showAddress) {
         stamp.address?.takeIf { it.isNotBlank() }?.let { addr ->
             rows += "ADDRESS" to labelPaint
             wrapText(addr, valuePaint, maxTextWidth).forEach { rows += it to valuePaint }
         }
     }
-    if (stamp.layoutPreset.showCoords) {
+    if (forceAllFields || stamp.layoutPreset.showCoords) {
         coordinatesLine(stamp)?.let {
             rows += "COORDINATES" to labelPaint
             rows += it to monoPaint
         }
     }
-    if (stamp.layoutPreset.showWeather) {
+    if (forceAllFields || stamp.layoutPreset.showWeather) {
         stamp.weather?.takeIf { it.isNotBlank() }?.let {
             rows += "WEATHER" to labelPaint
             rows += it to valuePaint
@@ -325,8 +353,8 @@ private fun drawFieldReport(canvas: Canvas, result: Bitmap, stamp: StampData, ma
 
     // Panel + header band.
     canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + panelHeight, panelFill(175))
-    canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + headerHeight, Paint().apply { color = FIELD_ACCENT })
-    canvas.drawText("FIELD REPORT", pad, panelTop + pad / 2f - headerPaint.ascent(), headerPaint)
+    canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + headerHeight, Paint().apply { color = accent })
+    canvas.drawText(headerText, pad, panelTop + pad / 2f - headerPaint.ascent(), headerPaint)
 
     val bodyTop = panelTop + headerHeight + pad
     drawLines(canvas, rows, textLeft, bodyTop, lineSpacing)
