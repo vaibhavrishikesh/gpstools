@@ -1,5 +1,12 @@
 package com.gpstools.camera.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,11 +35,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -65,6 +75,17 @@ fun HomeScreen(
         HomeTile(R.string.tab_map, Icons.Filled.Map, Destination.Map.route),
         HomeTile(R.string.tab_reports, Icons.Filled.PictureAsPdf, Destination.Gallery.route),
     )
+    // Gentle continuous "breathing" pulse on the hero logo — subtle life on the home
+    // screen without being distracting.
+    val pulse by rememberInfiniteTransition(label = "logo").animateFloat(
+        initialValue = 1f,
+        targetValue = 1.06f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "pulse",
+    )
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -82,13 +103,18 @@ fun HomeScreen(
                 Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.drawer_open), tint = Color.White)
             }
         }
-        // Flexible space above so the title + tiles sit visually centred (no big empty
-        // bottom). Slightly more weight below to nudge the block a touch above centre.
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(12.dp))
+        // Animated hero logo — fills the top and gives the screen some motion.
+        Image(
+            painter = painterResource(R.mipmap.ic_launcher_foreground),
+            contentDescription = null,
+            modifier = Modifier.size(132.dp).scale(pulse),
+        )
+        Spacer(Modifier.height(4.dp))
         Text(stringResource(R.string.app_name), color = BrandGold, fontSize = 28.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         Text(stringResource(R.string.home_subtitle), color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(28.dp))
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
             tiles.chunked(2).forEach { rowTiles ->
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -99,7 +125,8 @@ fun HomeScreen(
                 Spacer(Modifier.height(16.dp))
             }
         }
-        Spacer(Modifier.weight(1.3f))
+        // Pushes the banner to the bottom; content stays in the upper-middle.
+        Spacer(Modifier.weight(1f))
         // Ad banner pinned at the bottom (only takes space once an ad fills — real ads
         // serve once the app is published; debug builds show test ads).
         BannerAd(modifier = Modifier.navigationBarsPadding())
