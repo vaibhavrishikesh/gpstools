@@ -450,9 +450,8 @@ fun CameraPreview(
             LocationInfoOverlay(
                 state = locationState,
                 template = template,
-                // US-003: the "Edit" affordance now lives ON the GPS card and opens the
-                // optional stamp-details bottom sheet (never blocks capture).
-                onEditClick = { showCustomFieldsSheet = true },
+                // Edit moved off the card — the ⚙ adjust button (bottom-right) opens
+                // the stamp-details sheet, so the card stays compact.
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .statusBarsPadding()
@@ -484,7 +483,6 @@ fun CameraPreview(
                 LocationInfoOverlay(
                     state = locationState,
                     template = template,
-                    onEditClick = { showCustomFieldsSheet = true },
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 20.dp),

@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gpstools.camera.R
@@ -122,14 +123,14 @@ fun LocationInfoOverlay(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
         when (state) {
             is LocationUiState.Locating -> {
@@ -160,15 +161,9 @@ fun LocationInfoOverlay(
             }
 
             is LocationUiState.Available -> {
-                Icon(
-                    imageVector = Icons.Filled.LocationOn,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp),
-                )
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalArrangement = Arrangement.spacedBy(1.dp),
                 ) {
                     // 1. Address — bold 16sp white. Placeholder while geocoding,
                     //    the result once resolved, omitted if geocoding found nothing.
@@ -180,16 +175,18 @@ fun LocationInfoOverlay(
                         Text(
                             text = addressLine,
                             color = Color.White,
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    // 2. Plus code — 14sp 90% white. Computed locally from the fix,
-                    //    so it always shows even when reverse-geocoding is down.
+                    // 2. Plus code — computed locally from the fix, so it always shows
+                    //    even when reverse-geocoding is down.
                     Text(
                         text = encodePlusCode(state.fix.latitude, state.fix.longitude),
                         color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
                     )
                     // 2b. Weather (US-009) — temp + condition, once it has loaded.
                     state.weather?.let { weather ->
