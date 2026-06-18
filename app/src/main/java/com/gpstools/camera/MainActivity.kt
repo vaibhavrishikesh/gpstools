@@ -10,42 +10,43 @@ import com.gpstools.camera.billing.BillingManager
 import com.gpstools.camera.billing.Premium
 import com.gpstools.camera.billing.Subscription
 import com.gpstools.camera.locale.wrapWithStoredLocale
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.gpstools.camera.media.GeotagStore
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.gpstools.camera.ads.BannerAd
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gpstools.camera.ui.navigation.Destination
-import com.gpstools.camera.ui.navigation.START_DESTINATION
+import com.gpstools.camera.ui.screens.AppDrawer
 import com.gpstools.camera.ui.screens.CameraScreen
 import com.gpstools.camera.ui.screens.GalleryScreen
-import com.gpstools.camera.ui.screens.HomeScreen
 import com.gpstools.camera.ui.screens.MapScreen
 import com.gpstools.camera.ui.screens.SettingsScreen
+import com.gpstools.camera.ui.screens.TemplatesScreen
+import com.gpstools.camera.ui.theme.BrandGold
+import com.gpstools.camera.ui.theme.BrandNavy
 import com.gpstools.camera.ui.theme.GpstoolsTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     // Connects to Play Billing on launch to RESTORE the one-time entitlement
@@ -85,91 +86,107 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Camera-first app shell (redesign v3). The app opens straight into the camera;
+ * Gallery / Templates / Map / Settings are reached from the slide-in [AppDrawer]
+ * (top-left ☰ on the camera, swipe-from-edge anywhere). There is no bottom nav.
+ */
 @Composable
 fun GpsToolsApp() {
     val navController = rememberNavController()
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        bottomBar = { BottomNavBar(navController) },
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = START_DESTINATION.route,
-            modifier = Modifier.padding(innerPadding),
-        ) {
-            composable(Destination.Home.route) {
-                HomeScreen(onTileClick = { route -> navController.navigateTopLevel(route) })
-            }
-            composable(Destination.Camera.route) { CameraScreen() }
-            composable(Destination.Gallery.route) { GalleryScreen() }
-            composable(Destination.Map.route) { MapScreen() }
-            composable(Destination.Settings.route) { SettingsScreen() }
-        }
-    }
-}
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    val openDrawer: () -> Unit = { scope.launch { drawerState.open() } }
 
-/** Navigate to a top-level destination without stacking duplicate tabs. */
-private fun NavHostController.navigateTopLevel(route: String) {
-    navigate(route) {
-        popUpTo(graph.findStartDestination().id) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
-    }
-}
-
-@Composable
-private fun BottomNavBar(navController: NavHostController) {
-    val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = backStackEntry?.destination
-    val context = LocalContext.current
-    // Count of location-tagged photos for the Map tab badge. Re-read on each nav
-    // change (cheap SharedPreferences read) so the badge reflects new captures
-    // when the user switches tabs; hidden when 0.
-    val taggedPhotoCount = remember(backStackEntry) {
-        GeotagStore.loadAll(context).size
-    }
-    // 11sp labels + brand-accent selected state (navy on light / gold on dark
-    // via colorScheme.primary) per the v2 spec §5. NOTE: do NOT force a fixed
-    // height here — NavigationBar's default height already folds in the system
-    // navigation-bar inset (gesture pill / 3-button bar). Pinning it to 64dp
-    // collapsed that inset into the content, so labels were clipped behind the
-    // system bar on devices with on-screen navigation.
-    NavigationBar {
-        Destination.entries.forEach { destination ->
-            val selected = currentDestination?.hierarchy?.any {
-                it.route == destination.route
-            } == true
-            NavigationBarItem(
-                selected = selected,
-                onClick = { navController.navigateTopLevel(destination.route) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                ),
-                icon = {
-                    val icon = @Composable {
-                        Icon(
-                            imageVector = destination.icon,
-                            contentDescription = null,
-                        )
-                    }
-                    if (destination == Destination.Map && taggedPhotoCount > 0) {
-                        BadgedBox(badge = { Badge { Text(taggedPhotoCount.toString()) } }) {
-                            icon()
-                        }
-                    } else {
-                        icon()
-                    }
-                },
-                label = {
-                    Text(
-                        text = stringResource(destination.labelRes),
-                        fontSize = 11.sp,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                    )
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            AppDrawer(
+                onNavigate = { route ->
+                    scope.launch { drawerState.close() }
+                    navController.navigateTopLevel(route)
                 },
             )
+        },
+    ) {
+        NavHost(
+            navController = navController,
+            startDestination = Destination.Camera.route,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            composable(Destination.Camera.route) {
+                CameraScreen(onOpenDrawer = openDrawer)
+            }
+            composable(Destination.Gallery.route) {
+                SecondaryScreen(R.string.tab_gallery, onBack = { navController.popBackStack() }) {
+                    GalleryScreen()
+                }
+            }
+            composable(Destination.Templates.route) {
+                SecondaryScreen(R.string.tab_templates, onBack = { navController.popBackStack() }) {
+                    TemplatesScreen()
+                }
+            }
+            composable(Destination.Map.route) {
+                SecondaryScreen(R.string.tab_map, onBack = { navController.popBackStack() }) {
+                    MapScreen()
+                }
+            }
+            composable(Destination.Settings.route) {
+                SecondaryScreen(R.string.tab_settings, onBack = { navController.popBackStack() }) {
+                    SettingsScreen()
+                }
+            }
         }
+    }
+}
+
+/**
+ * Chrome for a non-camera destination: a navy top bar with a back arrow (returns to
+ * the camera) and an ad banner pinned to the bottom (US-015; auto-hidden for Pro).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SecondaryScreen(
+    @StringRes titleRes: Int,
+    onBack: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(titleRes)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.nav_back),
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BrandNavy,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = BrandGold,
+                ),
+            )
+        },
+        bottomBar = { BannerAd() },
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            content()
+        }
+    }
+}
+
+/**
+ * Navigate to a drawer destination, keeping Camera as the single root so the back
+ * stack stays flat (Camera → current) and back always returns to the camera.
+ */
+private fun NavHostController.navigateTopLevel(route: String) {
+    navigate(route) {
+        popUpTo(Destination.Camera.route) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }

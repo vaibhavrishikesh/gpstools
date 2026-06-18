@@ -1,6 +1,6 @@
 # Play Store release prep — Gps Camera Location
 
-Package: `com.gpstools.camera` · versionName `0.2.1` · versionCode `3`
+Package: `com.gpstools.camera` · versionName `0.3.0` · versionCode `4`
 
 ## 1. Build artifacts (already generated)
 
@@ -8,7 +8,7 @@ Package: `com.gpstools.camera` · versionName `0.2.1` · versionCode `3`
 |------|------|-----|
 | **AAB** (upload this) | `app/build/outputs/bundle/release/app-release.aab` | Play Console → Production / Internal testing |
 | Signed APK | `app/build/outputs/apk/release/app-release.apk` | Sideload / WhatsApp share |
-| Desktop copies | `~/Desktop/GpsCameraLocation-v0.2.1.aab` and `.apk` | hand-off |
+| Desktop copies | `~/Desktop/GpsCameraLocation-v0.3.0.aab` and `.apk` | hand-off |
 
 Rebuild anytime: `./gradlew clean bundleRelease assembleRelease`
 (signed automatically via `keystore.properties` → `release.keystore`).

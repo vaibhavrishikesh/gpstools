@@ -23,19 +23,32 @@ enum class StampTemplate(
     /** Full-width panel: bold wrapped address, coords, date/time + map on the right. */
     CLASSIC(R.string.template_classic, usesMap = true),
 
-    /** Compact translucent strip: coordinates + date/time only, no map, no address. */
-    MINIMAL(R.string.template_minimal, usesMap = false),
+    /** Clean no-map panel with a gold left accent bar — address + fields, modern look. */
+    MODERN(R.string.template_modern, usesMap = false),
 
-    /** Documentation layout: header band + labelled rows and a larger map on the left. */
-    FIELD_REPORT(R.string.template_field_report, usesMap = true, premium = true);
+    /** Documentation layout with a green "WORK REPORT" header + map on the left. */
+    REPORTING(R.string.template_reporting, usesMap = true),
+
+    /** Most detailed: header band + labelled rows; forces every field on. Premium. */
+    ADVANCE(R.string.template_advance, usesMap = true, premium = true),
+
+    /** Report-style layout the user can later tailor field-by-field. Premium. */
+    CUSTOM(R.string.template_custom, usesMap = true, premium = true);
 
     companion object {
         /** The template applied when the user hasn't picked one yet. */
         val DEFAULT = CLASSIC
 
-        /** Resolves a persisted [name] back to a template, falling back to [DEFAULT]. */
-        fun fromName(name: String?): StampTemplate =
-            entries.firstOrNull { it.name == name } ?: DEFAULT
+        /**
+         * Resolves a persisted [name] back to a template, falling back to [DEFAULT].
+         * Old v2 names (MINIMAL → MODERN, FIELD_REPORT → REPORTING) are migrated so a
+         * previously-saved choice still resolves to the nearest new template.
+         */
+        fun fromName(name: String?): StampTemplate = when (name) {
+            "MINIMAL" -> MODERN
+            "FIELD_REPORT" -> REPORTING
+            else -> entries.firstOrNull { it.name == name } ?: DEFAULT
+        }
     }
 }
 

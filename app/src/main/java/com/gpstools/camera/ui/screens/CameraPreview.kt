@@ -1,5 +1,6 @@
 package com.gpstools.camera.ui.screens
 
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,6 +16,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -37,10 +42,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FlashAuto
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +57,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -70,7 +80,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -87,6 +99,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.gpstools.camera.R
+import com.gpstools.camera.ads.BannerAd
 import com.gpstools.camera.ads.InterstitialAdManager
 import com.gpstools.camera.billing.Premium
 import com.gpstools.camera.locale.findActivity
@@ -102,6 +115,8 @@ import com.gpstools.camera.media.StampTemplateStore
 import com.gpstools.camera.media.capturePhoto
 import com.gpstools.camera.media.label
 import com.gpstools.camera.media.openLastPhoto
+import com.gpstools.camera.media.queryCapturedPhotos
+import coil.compose.AsyncImage
 import com.gpstools.camera.settings.AppSettingsStore
 import com.gpstools.camera.settings.StampPosition
 import com.gpstools.camera.ui.theme.BrandGold
@@ -126,7 +141,10 @@ private const val TAG = "CameraPreview"
  * LifecycleOwner so pause/resume releases and reacquires the camera cleanly.
  */
 @Composable
-fun CameraPreview(modifier: Modifier = Modifier) {
+fun CameraPreview(
+    onOpenDrawer: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -287,6 +305,16 @@ fun CameraPreview(modifier: Modifier = Modifier) {
     // happened — users tapped repeatedly thinking it hadn't fired.
     val flashAlpha = remember { Animatable(0f) }
 
+    // Last captured photo (redesign v3): shown as the bottom-left gallery thumbnail.
+    // Loaded once on entry and refreshed after every capture so it always shows the
+    // most recent shot; tapping it quick-looks that photo.
+    var lastPhotoUri by remember { mutableStateOf<Uri?>(null) }
+    LaunchedEffect(Unit) {
+        lastPhotoUri = withContext(Dispatchers.IO) {
+            queryCapturedPhotos(context).firstOrNull()?.uri
+        }
+    }
+
     // The actual capture, shared by a normal shutter tap and the self-timer (P2-US-018).
     // P2-US-002 (one-tap capture): a tap fires this IMMEDIATELY; no "Stamp details" modal
     // ever blocks the shutter. The stamp auto-fills location/address/date-time, and the
@@ -352,6 +380,10 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 context.getString(R.string.capture_failed)
             }
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            // Refresh the bottom-left thumbnail to the photo just saved.
+            if (uri != null) {
+                lastPhotoUri = uri
+            }
             // Photo is already saved — only now (post-save) maybe show an
             // interstitial, so an ad can never block or delay a capture.
             if (uri != null) {
@@ -419,7 +451,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    // Extra top inset so the card clears the ☰ top bar overlay.
+                    .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 12.dp),
             )
         }
 
@@ -428,7 +461,7 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(bottom = 32.dp),
+                .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Bottom-left viewfinder HUD (P2-US-012): live date/time + altitude, 12sp
@@ -465,9 +498,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(bottom = 20.dp),
             )
 
-            // Camera controls row (P2-US-006): flash toggle | shutter | flip.
-            // The shutter stays centered; the 48dp side buttons sit at the edges
-            // (a placeholder keeps the shutter centered when there's only one lens).
+            // Camera controls row (redesign v3): gallery thumbnail | shutter | adjust.
+            // Flash + flip moved to the top bar. The shutter stays centered.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -475,14 +507,10 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Flash toggle — cycles off → on → auto; applied to ImageCapture.
-                SideControlButton(
-                    onClick = { flashMode = nextFlashMode(flashMode) },
-                    icon = flashIcon(flashMode),
-                    contentDescription = stringResource(
-                        R.string.camera_flash,
-                        stringResource(flashLabelRes(flashMode)),
-                    ),
+                // Gallery thumbnail — the most recent capture; tap to quick-look it.
+                GalleryThumbButton(
+                    photoUri = lastPhotoUri,
+                    onClick = { openLastPhotoQuickLook() },
                 )
 
                 // Shutter — 72dp white fill, 4dp grey ring, 8dp elevation (US-006).
@@ -523,22 +551,75 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                     },
                 )
 
-                // Flip lens — only when both lenses exist, else a spacer to keep
-                // the shutter visually centered.
-                if (hasFront && hasBack) {
-                    SideControlButton(
-                        onClick = {
-                            lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
-                                CameraSelector.LENS_FACING_FRONT
-                            } else {
-                                CameraSelector.LENS_FACING_BACK
-                            }
-                        },
-                        icon = Icons.Filled.Cameraswitch,
+                // Adjust — opens the stamp-details / template options sheet.
+                SideControlButton(
+                    onClick = { showCustomFieldsSheet = true },
+                    icon = Icons.Filled.Tune,
+                    contentDescription = stringResource(R.string.custom_fields_open),
+                )
+            }
+
+            // Ad banner (US-015) pinned below the controls. Renders nothing for Pro /
+            // remove-ads users (BannerAd self-hides on Ads.adsEnabled == false).
+            BannerAd(modifier = Modifier.padding(top = 12.dp))
+        }
+
+        // Top bar overlay (redesign v3): ☰ opens the navigation drawer + app title on
+        // the left; flip + flash on the right (moved up from the bottom controls so the
+        // bottom row is gallery-thumb · shutter · adjust, like the reference design).
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 4.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            IconButton(onClick = onOpenDrawer) {
+                Icon(
+                    imageVector = Icons.Filled.Menu,
+                    contentDescription = stringResource(R.string.drawer_open),
+                    tint = Color.White,
+                )
+            }
+            Text(
+                text = stringResource(R.string.app_name),
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                style = TextStyle(
+                    shadow = Shadow(color = Color.Black, offset = Offset(0f, 1f), blurRadius = 6f),
+                ),
+            )
+            Spacer(Modifier.weight(1f))
+            // Flash — cycles off → on → auto; applied to ImageCapture.
+            IconButton(onClick = { flashMode = nextFlashMode(flashMode) }) {
+                Icon(
+                    imageVector = flashIcon(flashMode),
+                    contentDescription = stringResource(
+                        R.string.camera_flash,
+                        stringResource(flashLabelRes(flashMode)),
+                    ),
+                    tint = Color.White,
+                )
+            }
+            // Flip lens — only when both lenses exist.
+            if (hasFront && hasBack) {
+                IconButton(
+                    onClick = {
+                        lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                            CameraSelector.LENS_FACING_FRONT
+                        } else {
+                            CameraSelector.LENS_FACING_BACK
+                        }
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Cameraswitch,
                         contentDescription = stringResource(R.string.camera_flip),
+                        tint = Color.White,
                     )
-                } else {
-                    Spacer(Modifier.size(48.dp))
                 }
             }
         }
@@ -621,6 +702,45 @@ private fun SideControlButton(
             contentDescription = contentDescription,
             modifier = Modifier.size(24.dp),
         )
+    }
+}
+
+/**
+ * Bottom-left gallery thumbnail (redesign v3): a 48dp circular preview of the most
+ * recent capture, tapped to quick-look it. Falls back to a photo-library icon on the
+ * translucent control background when there are no photos yet.
+ */
+@Composable
+private fun GalleryThumbButton(
+    photoUri: Uri?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = CircleShape
+    val base = modifier
+        .size(48.dp)
+        .clip(shape)
+        .border(2.dp, Color.White, shape)
+        .clickable(onClick = onClick)
+    if (photoUri != null) {
+        AsyncImage(
+            model = photoUri,
+            contentDescription = stringResource(R.string.tab_gallery),
+            contentScale = ContentScale.Crop,
+            modifier = base,
+        )
+    } else {
+        Box(
+            modifier = base.background(Color.White.copy(alpha = 0.2f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.PhotoLibrary,
+                contentDescription = stringResource(R.string.tab_gallery),
+                tint = Color.White,
+                modifier = Modifier.size(22.dp),
+            )
+        }
     }
 }
 
@@ -815,8 +935,10 @@ private fun CustomFieldsSheet(
 /** Mode-chip leading icon for each stamp template (P2-US-005): 📷 / 🎯 / 📋. */
 private fun StampTemplate.icon(): ImageVector = when (this) {
     StampTemplate.CLASSIC -> Icons.Filled.PhotoCamera
-    StampTemplate.MINIMAL -> Icons.Filled.CenterFocusStrong
-    StampTemplate.FIELD_REPORT -> Icons.Filled.Description
+    StampTemplate.MODERN -> Icons.Filled.CenterFocusStrong
+    StampTemplate.REPORTING -> Icons.Filled.Description
+    StampTemplate.ADVANCE -> Icons.Filled.Tune
+    StampTemplate.CUSTOM -> Icons.Filled.Edit
 }
 
 /**
@@ -836,11 +958,13 @@ private fun TemplatePickerRow(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    // 5 templates overflow a phone width, so the chip strip scrolls horizontally.
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         StampTemplate.entries.forEach { t ->

@@ -8,6 +8,12 @@
     <string name="tab_map">Map</string>
     <string name="tab_reports">Reports</string>
     <string name="tab_settings">Settings</string>
+    <string name="tab_templates">Templates</string>
+
+    <!-- Navigation drawer (redesign v3) -->
+    <string name="drawer_go_pro">Go Pro</string>
+    <string name="drawer_open">Open menu</string>
+    <string name="nav_back">Back</string>
 
     <!-- Home dashboard (P2-US-015) -->
     <string name="home_subtitle">Field photo proof, geotagged</string>
@@ -116,6 +122,10 @@
     <string name="template_classic">Classic</string>
     <string name="template_minimal">Minimal</string>
     <string name="template_field_report">Field Report</string>
+    <string name="template_modern">Modern</string>
+    <string name="template_reporting">Reporting</string>
+    <string name="template_advance">Advance</string>
+    <string name="template_custom">Custom</string>
     <string name="template_picker">Stamp style</string>
     <string name="template_selected">%1$s stamp</string>
     <!-- Gold PRO badge on premium mode chips (P2-US-005) -->

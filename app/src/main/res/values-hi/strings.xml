@@ -9,6 +9,12 @@
     <string name="tab_map">मानचित्र</string>
     <string name="tab_reports">रिपोर्ट</string>
     <string name="tab_settings">सेटिंग</string>
+    <string name="tab_templates">टेम्पलेट</string>
+
+    <!-- Navigation drawer (redesign v3) -->
+    <string name="drawer_go_pro">प्रो लें</string>
+    <string name="drawer_open">मेन्यू खोलें</string>
+    <string name="nav_back">वापस</string>
 
     <!-- Home dashboard (P2-US-015) -->
     <string name="home_subtitle">जियोटैग के साथ फ़ील्ड फ़ोटो प्रमाण</string>
@@ -117,6 +123,10 @@
     <string name="template_classic">क्लासिक</string>
     <string name="template_minimal">सरल</string>
     <string name="template_field_report">फ़ील्ड रिपोर्ट</string>
+    <string name="template_modern">मॉडर्न</string>
+    <string name="template_reporting">रिपोर्टिंग</string>
+    <string name="template_advance">एडवांस</string>
+    <string name="template_custom">कस्टम</string>
     <string name="template_picker">स्टैम्प शैली</string>
     <string name="template_selected">%1$s स्टैम्प</string>
     <string name="pro_badge">PRO</string>
