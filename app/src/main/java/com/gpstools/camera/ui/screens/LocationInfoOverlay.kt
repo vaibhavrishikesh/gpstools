@@ -44,6 +44,9 @@ import java.util.Locale
 /** Secondary text grey (#9AA0A6) from the v2 spec — coords / muted labels. */
 private val TextSecondary = Color(0xFF9AA0A6)
 
+/** Deep navy used (translucent) as the GPS card background. */
+private val CardNavy = Color(0xFF0E1B30)
+
 /**
  * Acquires the current location once and reverse-geocodes it (US-005). Emits
  * Locating -> Available(coords, address=null) -> Available(coords, address) so the
@@ -96,11 +99,14 @@ fun LocationInfoOverlay(
     // Low-GPS guidance (US-008): when the fix accuracy is poor (> 20 m) the card
     // turns the "Poor" accuracy colour and shows a "move to open sky" hint, so the
     // user knows to relocate for a better fix.
+    // The card is a translucent dark-navy so the viewfinder reads through it; white
+    // text stays legible thanks to the text shadows. Poor-accuracy tint is a touch
+    // more opaque so the warning colour still registers.
     val available = state as? LocationUiState.Available
     val cardColor = if (available != null && available.fix.accuracyMeters > 20f) {
-        accuracyColor(available.fix.accuracyMeters).copy(alpha = 0.9f)
+        accuracyColor(available.fix.accuracyMeters).copy(alpha = 0.62f)
     } else {
-        Color.Black.copy(alpha = 0.9f)
+        CardNavy.copy(alpha = 0.55f)
     }
     Row(
         modifier = modifier
