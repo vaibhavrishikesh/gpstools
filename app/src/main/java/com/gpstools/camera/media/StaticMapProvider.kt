@@ -152,9 +152,9 @@ class OsmStaticMapProvider(
         private const val TAG = "OsmStaticMap"
         private const val TILE_SIZE = 256
         const val DEFAULT_ZOOM = 15
-        // Per-tile network timeout. Kept modest so a flaky connection fails fast to a
+        // Per-tile network timeout. Kept short so a flaky connection fails fast to a
         // text-only stamp (US-008) instead of stalling the save for many seconds.
-        private const val TIMEOUT_MS = 5000
+        private const val TIMEOUT_MS = 3000
         private const val EMPTY_TILE_COLOR = 0xFFE8E8E8.toInt()
         private const val MARKER_RING_RADIUS = 9f
         private const val MARKER_DOT_RADIUS = 6f
