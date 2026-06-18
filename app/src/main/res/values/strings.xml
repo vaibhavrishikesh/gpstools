@@ -8,6 +8,12 @@
     <string name="tab_map">Map</string>
     <string name="tab_reports">Reports</string>
     <string name="tab_settings">Settings</string>
+    <string name="tab_templates">Templates</string>
+
+    <!-- Navigation drawer (redesign v3) -->
+    <string name="drawer_go_pro">Go Pro</string>
+    <string name="drawer_open">Open menu</string>
+    <string name="nav_back">Back</string>
 
     <!-- Home dashboard (P2-US-015) -->
     <string name="home_subtitle">Field photo proof, geotagged</string>

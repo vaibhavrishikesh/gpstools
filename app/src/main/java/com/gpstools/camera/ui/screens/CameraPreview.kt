@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FlashAuto
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,6 +49,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -126,7 +128,10 @@ private const val TAG = "CameraPreview"
  * LifecycleOwner so pause/resume releases and reacquires the camera cleanly.
  */
 @Composable
-fun CameraPreview(modifier: Modifier = Modifier) {
+fun CameraPreview(
+    onOpenDrawer: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -419,7 +424,8 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    // Extra top inset so the card clears the ☰ top bar overlay.
+                    .padding(start = 16.dp, end = 16.dp, top = 56.dp, bottom = 12.dp),
             )
         }
 
@@ -541,6 +547,36 @@ fun CameraPreview(modifier: Modifier = Modifier) {
                     Spacer(Modifier.size(48.dp))
                 }
             }
+        }
+
+        // Top bar overlay (redesign v3): ☰ opens the navigation drawer, with the app
+        // title alongside. Translucent so the viewfinder reads through it. Flip/flash
+        // stay in the bottom controls row.
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 4.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            IconButton(onClick = onOpenDrawer) {
+                Icon(
+                    imageVector = Icons.Filled.Menu,
+                    contentDescription = stringResource(R.string.drawer_open),
+                    tint = Color.White,
+                )
+            }
+            Text(
+                text = stringResource(R.string.app_name),
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                style = TextStyle(
+                    shadow = Shadow(color = Color.Black, offset = Offset(0f, 1f), blurRadius = 6f),
+                ),
+            )
         }
 
         // Self-timer countdown (P2-US-018): a large 3-2-1 number centered over the

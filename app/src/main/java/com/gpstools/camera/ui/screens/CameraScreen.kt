@@ -40,7 +40,10 @@ import com.gpstools.camera.ui.navigation.Destination
  */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CameraScreen(modifier: Modifier = Modifier) {
+fun CameraScreen(
+    onOpenDrawer: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.CAMERA,
@@ -62,7 +65,7 @@ fun CameraScreen(modifier: Modifier = Modifier) {
     }
 
     when {
-        permissionsState.allPermissionsGranted -> CameraReadyContent(modifier)
+        permissionsState.allPermissionsGranted -> CameraReadyContent(onOpenDrawer, modifier)
         else -> PermissionGate(
             permissionsState = permissionsState,
             hasRequested = hasRequested,
@@ -77,7 +80,10 @@ fun CameraScreen(modifier: Modifier = Modifier) {
 
 /** Live CameraX preview with shutter + lens toggle (US-004). */
 @Composable
-private fun CameraReadyContent(modifier: Modifier = Modifier) = CameraPreview(modifier)
+private fun CameraReadyContent(
+    onOpenDrawer: () -> Unit,
+    modifier: Modifier = Modifier,
+) = CameraPreview(onOpenDrawer = onOpenDrawer, modifier = modifier)
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
