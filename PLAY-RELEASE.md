@@ -37,7 +37,7 @@ Rebuild anytime: `./gradlew clean bundleRelease assembleRelease`
 | Full description | ≤4000 chars | ❌ draft below |
 | App category | "Photography" or "Tools" | decide |
 | Contact email | required | `vaibhavgupta.rishikesh@gmail.com` |
-| Privacy policy URL | **required** (app uses camera+location) | ❌ TODO — must host a page |
+| Privacy policy URL | **required** (app uses camera+location) | ✅ `https://vaibhavrishikesh.github.io/gpstools/` (docs/index.html via GitHub Pages) |
 
 ### Draft short description
 > Geotag your photos with GPS location, address, map, date-time & weather — field-proof.
@@ -72,10 +72,9 @@ Rebuild anytime: `./gradlew clean bundleRelease assembleRelease`
 
 ## 5. Code TODOs before a REAL public launch (currently stubbed/test-mode)
 
-- [x] **AdMob**: real App ID + Banner unit wired (release build only; debug keeps
-      TEST ids). App ID `ca-app-pub-4765907187067298~4557234825`, Banner
-      `ca-app-pub-4765907187067298/2339436450`. **TODO: create an Interstitial ad
-      unit in AdMob and replace the TEST interstitial id in `build.gradle.kts`.**
+- [x] **AdMob**: real App ID + Banner + Interstitial wired (release only; debug keeps
+      TEST ids). App `ca-app-pub-4765907187067298~4557234825`, Banner
+      `.../2339436450`, Interstitial `.../2060234853`.
 - [ ] **Play Billing products**: create in Play Console and verify IDs match —
       `remove_ads_premium` (IAP), `pro_monthly`, `pro_yearly` (subs). (`US-016/018`.)
 - [ ] Remove the DEBUG-only "simulate purchase / subscription" affordances from the
