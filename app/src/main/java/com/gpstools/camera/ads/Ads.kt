@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.android.gms.ads.MobileAds
+import com.gpstools.camera.BuildConfig
 
 /**
  * AdMob configuration + the single global ads-enabled flag (US-015).
@@ -28,9 +29,11 @@ object Ads {
     /** Show an interstitial after every Nth successful capture (non-intrusive). */
     const val CAPTURES_PER_INTERSTITIAL = 5
 
-    // Configurable ad unit ids (default to the test ids).
-    var bannerUnitId: String = TEST_BANNER_UNIT_ID
-    var interstitialUnitId: String = TEST_INTERSTITIAL_UNIT_ID
+    // Ad unit ids come from BuildConfig (build.gradle.kts) so debug builds use the
+    // TEST ids and release builds use the real production ids — no manual swapping.
+    // Still vars so a future remote config could override them at runtime.
+    var bannerUnitId: String = BuildConfig.ADMOB_BANNER_UNIT
+    var interstitialUnitId: String = BuildConfig.ADMOB_INTERSTITIAL_UNIT
 
     private const val PREFS = "ads_settings"
     private const val KEY_ADS_ENABLED = "ads_enabled"

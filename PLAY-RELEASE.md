@@ -72,8 +72,10 @@ Rebuild anytime: `./gradlew clean bundleRelease assembleRelease`
 
 ## 5. Code TODOs before a REAL public launch (currently stubbed/test-mode)
 
-- [ ] **AdMob**: replace test ad unit IDs with real ones + set the real
-      `applicationId` in `AndroidManifest` meta-data. (Currently test/stub — `US-015`.)
+- [x] **AdMob**: real App ID + Banner unit wired (release build only; debug keeps
+      TEST ids). App ID `ca-app-pub-4765907187067298~4557234825`, Banner
+      `ca-app-pub-4765907187067298/2339436450`. **TODO: create an Interstitial ad
+      unit in AdMob and replace the TEST interstitial id in `build.gradle.kts`.**
 - [ ] **Play Billing products**: create in Play Console and verify IDs match —
       `remove_ads_premium` (IAP), `pro_monthly`, `pro_yearly` (subs). (`US-016/018`.)
 - [ ] Remove the DEBUG-only "simulate purchase / subscription" affordances from the

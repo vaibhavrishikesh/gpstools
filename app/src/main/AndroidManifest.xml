@@ -26,12 +26,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Gpstools">
 
-        <!-- AdMob app id (US-015). This is Google's official TEST app id so no real
-             ads serve during development; swap for the production id before release.
-             The Mobile Ads SDK requires this meta-data or it throws on init. -->
+        <!-- AdMob app id (US-015). Supplied per build type via the admobAppId manifest
+             placeholder (build.gradle.kts): TEST id for debug, the real production id
+             for release. The Mobile Ads SDK requires this meta-data or it throws. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511712" />
+            android:value="${admobAppId}" />
 
         <activity
             android:name=".MainActivity"
