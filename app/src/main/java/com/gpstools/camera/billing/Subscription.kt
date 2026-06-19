@@ -20,14 +20,18 @@ import androidx.compose.runtime.setValue
  * subscription does not touch ads.
  */
 object Subscription {
-    /** Monthly subscription product id, configured in Play Console. */
-    const val MONTHLY_PRODUCT_ID = "pro_monthly"
+    /**
+     * The single Pro subscription product configured in Play Console. It carries two
+     * base plans (monthly + yearly) as offers — the modern Play Billing model — rather
+     * than two separate subscription products.
+     */
+    const val PRODUCT_ID = "gpstools_pro"
 
-    /** Yearly subscription product id, configured in Play Console. */
-    const val YEARLY_PRODUCT_ID = "pro_yearly"
+    /** Monthly base-plan id (an offer within [PRODUCT_ID]). */
+    const val BASE_PLAN_MONTHLY = "pro-monthly"
 
-    /** Both subscription product ids, queried together. */
-    val PRODUCT_IDS = listOf(MONTHLY_PRODUCT_ID, YEARLY_PRODUCT_ID)
+    /** Yearly base-plan id (an offer within [PRODUCT_ID]). */
+    const val BASE_PLAN_YEARLY = "pro-yearly"
 
     private const val PREFS = "subscription_settings"
     private const val KEY_SUBSCRIBED = "is_subscribed"

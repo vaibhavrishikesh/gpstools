@@ -388,9 +388,9 @@ private fun ProSubscriptionSection(billing: BillingManager) {
 
     if (showPaywall) {
         PaywallDialog(
-            monthlyPrice = billing.subscriptionPrice(Subscription.MONTHLY_PRODUCT_ID)
+            monthlyPrice = billing.subscriptionPrice(Subscription.BASE_PLAN_MONTHLY)
                 ?: stringResource(R.string.pro_price_monthly),
-            yearlyPrice = billing.subscriptionPrice(Subscription.YEARLY_PRODUCT_ID)
+            yearlyPrice = billing.subscriptionPrice(Subscription.BASE_PLAN_YEARLY)
                 ?: stringResource(R.string.pro_price_yearly),
             onSubscribe = { productId ->
                 val activity = context.findActivity()
@@ -414,7 +414,7 @@ private fun ProSubscriptionSection(billing: BillingManager) {
             onDismiss = { showPaywall = false },
             showDebug = BuildConfig.DEBUG,
             onDebugSimulate = {
-                Subscription.grant(context, Subscription.YEARLY_PRODUCT_ID)
+                Subscription.grant(context, Subscription.BASE_PLAN_YEARLY)
                 showPaywall = false
             },
         )

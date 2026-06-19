@@ -45,8 +45,9 @@ class BillingManager(context: Context) {
     var productDetails: ProductDetails? = null
         private set
 
-    /** Latest subscription product details keyed by product id (empty until queried). */
-    var subscriptionDetails: Map<String, ProductDetails> = emptyMap()
+    /** The Pro subscription product's details (with its monthly+yearly base-plan
+     *  offers); null until queried. */
+    var subscriptionDetails: ProductDetails? = null
         private set
 
     private val purchasesListener = PurchasesUpdatedListener { result, purchases ->
@@ -116,17 +117,17 @@ class BillingManager(context: Context) {
         runCatching {
             val params = QueryProductDetailsParams.newBuilder()
                 .setProductList(
-                    Subscription.PRODUCT_IDS.map { id ->
+                    listOf(
                         QueryProductDetailsParams.Product.newBuilder()
-                            .setProductId(id)
+                            .setProductId(Subscription.PRODUCT_ID)
                             .setProductType(BillingClient.ProductType.SUBS)
-                            .build()
-                    },
+                            .build(),
+                    ),
                 )
                 .build()
             billingClient.queryProductDetailsAsync(params) { result, details ->
                 if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                    subscriptionDetails = details.associateBy { it.productId }
+                    subscriptionDetails = details.firstOrNull()
                 } else {
                     Log.d(TAG, "querySubscriptionDetails: ${result.responseCode}")
                 }
@@ -186,15 +187,17 @@ class BillingManager(context: Context) {
         }
     }
 
+    /** The offer matching a base-plan id within the Pro subscription, if loaded. */
+    private fun offerFor(basePlanId: String): ProductDetails.SubscriptionOfferDetails? =
+        subscriptionDetails?.subscriptionOfferDetails?.firstOrNull { it.basePlanId == basePlanId }
+
     /**
-     * The formatted, locale-aware price of a Pro subscription (e.g. "₹149.00") once
-     * its details have loaded; null until then. Reads the first pricing phase of the
-     * first offer.
+     * The formatted, locale-aware price of a base plan (e.g. "₹99.00" / "$1.99") once
+     * the details have loaded; null until then. Reads the first pricing phase of the
+     * base plan's offer — Play returns it in the user's local currency automatically.
      */
-    fun subscriptionPrice(productId: String): String? = runCatching {
-        subscriptionDetails[productId]
-            ?.subscriptionOfferDetails
-            ?.firstOrNull()
+    fun subscriptionPrice(basePlanId: String): String? = runCatching {
+        offerFor(basePlanId)
             ?.pricingPhases
             ?.pricingPhaseList
             ?.firstOrNull()
@@ -202,13 +205,13 @@ class BillingManager(context: Context) {
     }.getOrNull()
 
     /**
-     * Launch the subscribe flow for a Pro subscription [productId]. Returns false
-     * (and does nothing) if billing isn't connected, the details/offer aren't loaded
-     * yet — the caller should surface an "unavailable, try later" message.
+     * Launch the subscribe flow for a Pro base plan ([basePlanId] = pro-monthly /
+     * pro-yearly). Returns false (and does nothing) if billing isn't connected or the
+     * details/offer aren't loaded yet — the caller surfaces an "unavailable" message.
      */
-    fun launchSubscriptionPurchase(activity: Activity, productId: String): Boolean {
-        val details = subscriptionDetails[productId]
-        val offerToken = details?.subscriptionOfferDetails?.firstOrNull()?.offerToken
+    fun launchSubscriptionPurchase(activity: Activity, basePlanId: String): Boolean {
+        val details = subscriptionDetails
+        val offerToken = offerFor(basePlanId)?.offerToken
         if (!connected || details == null || offerToken == null) {
             Log.d(TAG, "launchSubscription unavailable (connected=$connected, details=${details != null})")
             return false
@@ -236,10 +239,10 @@ class BillingManager(context: Context) {
     private fun handlePurchase(purchase: Purchase) {
         if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return
 
-        val subProduct = Subscription.PRODUCT_IDS.firstOrNull { it in purchase.products }
         when {
             Premium.PRODUCT_ID in purchase.products -> Premium.grant(appContext)
-            subProduct != null -> Subscription.grant(appContext, subProduct)
+            Subscription.PRODUCT_ID in purchase.products ->
+                Subscription.grant(appContext, Subscription.PRODUCT_ID)
             else -> return
         }
 

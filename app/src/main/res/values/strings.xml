@@ -212,8 +212,8 @@
     <string name="pro_subscribe_monthly">Subscribe monthly — %1$s</string>
     <string name="pro_yearly_note">Best value — save vs paying monthly</string>
     <string name="pro_not_now">Not now</string>
-    <string name="pro_price_monthly">₹149 / month</string>
-    <string name="pro_price_yearly">₹999 / year</string>
+    <string name="pro_price_monthly">₹99 / month</string>
+    <string name="pro_price_yearly">₹599 / year</string>
     <string name="pro_debug_simulate">(debug) Simulate subscription</string>
     <string name="pro_debug_reset">(debug) Cancel subscription</string>
 </resources>
