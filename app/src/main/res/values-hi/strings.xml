@@ -212,8 +212,8 @@
     <string name="pro_subscribe_monthly">मासिक सदस्यता — %1$s</string>
     <string name="pro_yearly_note">सर्वोत्तम मूल्य — मासिक की तुलना में बचत</string>
     <string name="pro_not_now">अभी नहीं</string>
-    <string name="pro_price_monthly">₹149 / माह</string>
-    <string name="pro_price_yearly">₹999 / वर्ष</string>
+    <string name="pro_price_monthly">₹99 / माह</string>
+    <string name="pro_price_yearly">₹599 / वर्ष</string>
     <string name="pro_debug_simulate">(डीबग) सदस्यता का अनुकरण करें</string>
     <string name="pro_debug_reset">(डीबग) सदस्यता रद्द करें</string>
 </resources>

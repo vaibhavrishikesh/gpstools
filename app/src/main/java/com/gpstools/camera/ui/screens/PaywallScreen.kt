@@ -70,7 +70,7 @@ fun PaywallDialog(
                 BenefitRow(stringResource(R.string.pro_benefit_watermark))
 
                 Button(
-                    onClick = { onSubscribe(Subscription.YEARLY_PRODUCT_ID) },
+                    onClick = { onSubscribe(Subscription.BASE_PLAN_YEARLY) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.pro_subscribe_yearly, yearlyPrice))
@@ -82,7 +82,7 @@ fun PaywallDialog(
                 )
 
                 OutlinedButton(
-                    onClick = { onSubscribe(Subscription.MONTHLY_PRODUCT_ID) },
+                    onClick = { onSubscribe(Subscription.BASE_PLAN_MONTHLY) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.pro_subscribe_monthly, monthlyPrice))
