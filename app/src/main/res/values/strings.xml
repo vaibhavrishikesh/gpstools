@@ -65,15 +65,15 @@
     <string name="settings_time_24">24-hour (14:30:00)</string>
     <string name="settings_time_12">12-hour (02:30:00 PM)</string>
     <string name="settings_navic_title">Location accuracy &amp; NavIC</string>
-    <string name="settings_navic_body">gpstools uses your device\'s GNSS hardware for high-accuracy positioning. Most phones sold in India support NavIC (IRNSS), India\'s own satellite navigation system, alongside GPS, GLONASS, Galileo and BeiDou. Using more constellations means a faster, more reliable fix — especially across India. The accuracy shown on the stamp (±N m) is the device\'s own estimate; NavIC support and real-world accuracy depend on your phone and surroundings (open sky is best).</string>
+    <string name="settings_navic_body">Gps Camera Location uses your device\'s GNSS hardware for high-accuracy positioning. Most phones sold in India support NavIC (IRNSS), India\'s own satellite navigation system, alongside GPS, GLONASS, Galileo and BeiDou. Using more constellations means a faster, more reliable fix — especially across India. The accuracy shown on the stamp (±N m) is the device\'s own estimate; NavIC support and real-world accuracy depend on your phone and surroundings (open sky is best).</string>
     <string name="settings_about_title">About</string>
     <string name="settings_about_version">Version %1$s</string>
-    <string name="settings_about_tagline">gpstools — geotag GPS camera with proof-ready location stamps.</string>
+    <string name="settings_about_tagline">Gps Camera Location — geotag GPS camera with proof-ready location stamps.</string>
     <string name="settings_privacy_policy">Privacy policy</string>
 
     <!-- Camera/location permissions (US-003) -->
     <string name="permission_title">Camera &amp; location needed</string>
-    <string name="permission_rationale">gpstools stamps each photo with where and when it was taken. To do that, it needs access to your camera and location.</string>
+    <string name="permission_rationale">Gps Camera Location stamps each photo with where and when it was taken. To do that, it needs access to your camera and location.</string>
     <string name="permission_denied_body">Camera and location are turned off. Open Settings to grant them, then come back to start capturing geotagged photos.</string>
     <string name="permission_grant">Grant permissions</string>
     <string name="permission_open_settings">Open settings</string>
@@ -200,7 +200,7 @@
     <string name="collage_share_chooser">Share grid</string>
 
     <!-- Pro subscription (US-018) -->
-    <string name="pro_title">gpstools Pro</string>
+    <string name="pro_title">Gps Camera Location Pro</string>
     <string name="pro_summary">Subscribe for unlimited, watermark-free PDF reports and batch export.</string>
     <string name="pro_settings_summary">Unlimited PDF reports, batch export, no watermark.</string>
     <string name="pro_go_pro">Go Pro</string>
