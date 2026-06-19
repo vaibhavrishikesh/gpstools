@@ -52,7 +52,6 @@ import com.gpstools.camera.ads.BannerAd
 import com.gpstools.camera.ui.navigation.Destination
 import com.gpstools.camera.ui.theme.BrandGold
 import com.gpstools.camera.ui.theme.BrandNavy
-import com.gpstools.camera.ui.theme.BrandNavyDeep
 import com.gpstools.camera.ui.theme.BrandNavyLight
 import com.gpstools.camera.ui.theme.BrandNavySurface
 
@@ -90,8 +89,10 @@ fun HomeScreen(
         modifier = modifier
             .fillMaxSize()
             .background(
+                // Softer, lighter navy gradient — less dark/harsh than before
+                // (no near-black bottom), so the top doesn't read as "blackish".
                 Brush.verticalGradient(
-                    listOf(Color(0xFF1B3A66), BrandNavy, BrandNavyDeep),
+                    listOf(Color(0xFF274673), Color(0xFF1E3458), BrandNavy),
                 ),
             )
             .statusBarsPadding(),

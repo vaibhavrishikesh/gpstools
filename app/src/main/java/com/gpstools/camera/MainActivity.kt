@@ -13,6 +13,7 @@ import com.gpstools.camera.locale.wrapWithStoredLocale
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -178,7 +179,7 @@ private fun SecondaryScreen(
                 ),
             )
         },
-        bottomBar = { BannerAd() },
+        bottomBar = { BannerAd(modifier = Modifier.navigationBarsPadding()) },
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             content()
