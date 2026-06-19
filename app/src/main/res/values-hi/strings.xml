@@ -66,15 +66,15 @@
     <string name="settings_time_24">24-घंटे (14:30:00)</string>
     <string name="settings_time_12">12-घंटे (02:30:00 PM)</string>
     <string name="settings_navic_title">स्थान सटीकता और NavIC</string>
-    <string name="settings_navic_body">gpstools उच्च-सटीक स्थिति के लिए आपके डिवाइस के GNSS हार्डवेयर का उपयोग करता है। भारत में बिकने वाले अधिकांश फ़ोन GPS, GLONASS, Galileo और BeiDou के साथ-साथ भारत की अपनी उपग्रह नेविगेशन प्रणाली NavIC (IRNSS) का समर्थन करते हैं। अधिक तारामंडलों का उपयोग करने से तेज़ और अधिक विश्वसनीय फ़िक्स मिलता है — विशेषकर भारत भर में। स्टैम्प पर दिखाई गई सटीकता (±N मी) डिवाइस का अपना अनुमान है; NavIC समर्थन और वास्तविक सटीकता आपके फ़ोन और परिवेश पर निर्भर करती है (खुला आसमान सबसे अच्छा है)।</string>
+    <string name="settings_navic_body">Gps Camera Location उच्च-सटीक स्थिति के लिए आपके डिवाइस के GNSS हार्डवेयर का उपयोग करता है। भारत में बिकने वाले अधिकांश फ़ोन GPS, GLONASS, Galileo और BeiDou के साथ-साथ भारत की अपनी उपग्रह नेविगेशन प्रणाली NavIC (IRNSS) का समर्थन करते हैं। अधिक तारामंडलों का उपयोग करने से तेज़ और अधिक विश्वसनीय फ़िक्स मिलता है — विशेषकर भारत भर में। स्टैम्प पर दिखाई गई सटीकता (±N मी) डिवाइस का अपना अनुमान है; NavIC समर्थन और वास्तविक सटीकता आपके फ़ोन और परिवेश पर निर्भर करती है (खुला आसमान सबसे अच्छा है)।</string>
     <string name="settings_about_title">के बारे में</string>
     <string name="settings_about_version">संस्करण %1$s</string>
-    <string name="settings_about_tagline">gpstools — प्रमाण-तैयार स्थान स्टैम्प के साथ जियोटैग GPS कैमरा।</string>
+    <string name="settings_about_tagline">Gps Camera Location — प्रमाण-तैयार स्थान स्टैम्प के साथ जियोटैग GPS कैमरा।</string>
     <string name="settings_privacy_policy">गोपनीयता नीति</string>
 
     <!-- Camera/location permissions (US-003) -->
     <string name="permission_title">कैमरा और स्थान आवश्यक</string>
-    <string name="permission_rationale">gpstools हर फ़ोटो पर यह अंकित करता है कि वह कहाँ और कब ली गई। इसके लिए उसे आपके कैमरा और स्थान तक पहुँच चाहिए।</string>
+    <string name="permission_rationale">Gps Camera Location हर फ़ोटो पर यह अंकित करता है कि वह कहाँ और कब ली गई। इसके लिए उसे आपके कैमरा और स्थान तक पहुँच चाहिए।</string>
     <string name="permission_denied_body">कैमरा और स्थान बंद हैं। उन्हें अनुमति देने के लिए सेटिंग खोलें, फिर जियोटैग की गई फ़ोटो लेना शुरू करने के लिए वापस आएँ।</string>
     <string name="permission_grant">अनुमतियाँ दें</string>
     <string name="permission_open_settings">सेटिंग खोलें</string>
@@ -200,7 +200,7 @@
     <string name="collage_share_chooser">ग्रिड साझा करें</string>
 
     <!-- Pro subscription (US-018) -->
-    <string name="pro_title">gpstools Pro</string>
+    <string name="pro_title">Gps Camera Location Pro</string>
     <string name="pro_summary">असीमित, वॉटरमार्क-रहित PDF रिपोर्ट और बैच निर्यात के लिए सदस्यता लें।</string>
     <string name="pro_settings_summary">असीमित PDF रिपोर्ट, बैच निर्यात, कोई वॉटरमार्क नहीं।</string>
     <string name="pro_go_pro">Pro लें</string>
