@@ -130,11 +130,11 @@ fun drawStamp(
         StampTemplate.CLASSIC -> drawClassic(canvas, result, stamp, effectiveMap, top)
         StampTemplate.MODERN -> drawModern(canvas, result, stamp, top)
         StampTemplate.REPORTING ->
-            drawReport(canvas, result, stamp, effectiveMap, top, "WORK REPORT", REPORT_GREEN, forceAllFields = false)
+            drawReport(canvas, result, stamp, effectiveMap, top, "", REPORT_GREEN, forceAllFields = false)
         StampTemplate.ADVANCE ->
-            drawReport(canvas, result, stamp, effectiveMap, top, "ADVANCE", FIELD_ACCENT, forceAllFields = true)
+            drawReport(canvas, result, stamp, effectiveMap, top, "", FIELD_ACCENT, forceAllFields = true)
         StampTemplate.CUSTOM ->
-            drawReport(canvas, result, stamp, effectiveMap, top, "CUSTOM", REPORT_BLUE, forceAllFields = false)
+            drawReport(canvas, result, stamp, effectiveMap, top, "", REPORT_BLUE, forceAllFields = false)
     }
     if (logo != null) drawLogo(canvas, result, logo)
     // Custom watermark (P2-US-017) — bottom-right, independent of the template.
@@ -300,7 +300,8 @@ private fun drawReport(
     val valuePaint = paint(26f * scale, Typeface.SANS_SERIF, Typeface.NORMAL, shadow)
     val monoPaint = paint(26f * scale, Typeface.MONOSPACE, Typeface.NORMAL, shadow)
 
-    val headerHeight = headerPaint.descent() - headerPaint.ascent() + pad
+    val hasHeader = headerText.isNotBlank()
+    val headerHeight = if (hasHeader) headerPaint.descent() - headerPaint.ascent() + pad else 0f
 
     val mapSize = if (mapThumbnail != null) FIELD_MAP_SIZE * scale else 0f
     val mapGap = if (mapThumbnail != null) pad else 0f
@@ -351,10 +352,12 @@ private fun drawReport(
     val panelHeight = headerHeight + bodyHeight + 2 * pad
     val panelTop = if (top) 0f else height - panelHeight
 
-    // Panel + header band.
+    // Panel; coloured header band only when a header label is set (Work Report).
     canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + panelHeight, panelFill(175))
-    canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + headerHeight, Paint().apply { color = accent })
-    canvas.drawText(headerText, pad, panelTop + pad / 2f - headerPaint.ascent(), headerPaint)
+    if (hasHeader) {
+        canvas.drawRect(0f, panelTop, width.toFloat(), panelTop + headerHeight, Paint().apply { color = accent })
+        canvas.drawText(headerText, pad, panelTop + pad / 2f - headerPaint.ascent(), headerPaint)
+    }
 
     val bodyTop = panelTop + headerHeight + pad
     drawLines(canvas, rows, textLeft, bodyTop, lineSpacing)

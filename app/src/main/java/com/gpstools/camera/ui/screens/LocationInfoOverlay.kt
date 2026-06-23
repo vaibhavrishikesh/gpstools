@@ -266,6 +266,8 @@ private fun templateHeader(template: StampTemplate): Pair<String, Color> = when 
 /** Thin accent header carrying the active template's name (mirrors the burned stamp). */
 @Composable
 private fun TemplateHeaderBar(template: StampTemplate) {
+    // Preview-only template indicator — shown for ALL templates. The strip is
+    // intentionally NOT burned onto the saved photo (see PhotoStamp.drawReport).
     val (label, color) = templateHeader(template)
     // Dark text on the light gold/amber accents, white on the darker green/blue.
     val onColor = if (template == StampTemplate.REPORTING || template == StampTemplate.CUSTOM) {
